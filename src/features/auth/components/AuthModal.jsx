@@ -234,12 +234,12 @@ function AuthModal({ open, isOpen, onClose, onAuthenticated, onSuccess }) {
               </div>
             </div>
 
-            {otpChallenge.developmentOtp && (
+            {(otpChallenge.developmentOtp || otpChallenge.otp) && (
               <div className={styles.developmentOtp} role="status">
-                <span>Development OTP</span>
-                <strong>{otpChallenge.developmentOtp}</strong>
-                <button type="button" onClick={() => setOtp(otpChallenge.developmentOtp)}>Use this OTP</button>
-                <small>This code appears only while the backend is in development mode.</small>
+                <span>Verification OTP</span>
+                <strong>{otpChallenge.developmentOtp || otpChallenge.otp}</strong>
+                <button type="button" onClick={() => setOtp(otpChallenge.developmentOtp || otpChallenge.otp)}>Use this OTP</button>
+                <small>One-time verification code for your mobile number.</small>
               </div>
             )}
 

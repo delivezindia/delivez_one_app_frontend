@@ -199,10 +199,10 @@ function UserLoginPage() {
                   </div>
                 </div>
 
-                {otpChallenge.developmentOtp && (
+                {(otpChallenge.developmentOtp || otpChallenge.otp) && (
                   <div className={styles.devOtpBox}>
-                    <span>Development OTP: <b>{otpChallenge.developmentOtp}</b></span>
-                    <button type="button" onClick={() => setOtp(otpChallenge.developmentOtp)}>
+                    <span>Verification OTP: <b>{otpChallenge.developmentOtp || otpChallenge.otp}</b></span>
+                    <button type="button" onClick={() => setOtp(otpChallenge.developmentOtp || otpChallenge.otp)}>
                       Use this OTP
                     </button>
                   </div>
