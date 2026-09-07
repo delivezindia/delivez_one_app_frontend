@@ -1,0 +1,544 @@
+.trackingPage {
+  min-height: 100vh;
+  background-color: #F8FAFC;
+  color: #0F172A;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  padding-bottom: 60px;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  background: #FFFFFF;
+  border-bottom: 1px solid #E2E8F0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.headerContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.backBtn, .refreshBtn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 8px;
+  color: #1E293B;
+  transition: background 0.2s;
+}
+
+.backBtn:hover, .refreshBtn:hover {
+  background: #F1F5F9;
+}
+
+.headerTitle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.headerTitle h2 {
+  font-size: 17px;
+  font-weight: 800;
+  margin: 0;
+}
+
+.headerTitle span {
+  font-size: 12px;
+  color: #64748B;
+}
+
+.mainContent {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 20px;
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+@media (max-width: 860px) {
+  .mainContent {
+    grid-template-columns: 1fr;
+  }
+}
+
+.leftTrackingCol, .rightTrackingCol {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.loadingContainer {
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #64748B;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+  color: #E11D48;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.errorBanner {
+  background: #FEE2E2;
+  color: #991B1B;
+  padding: 12px 16px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  grid-column: 1 / -1;
+}
+
+/* Map simulation */
+.mapContainer {
+  position: relative;
+  width: 100%;
+  height: 320px;
+  background: linear-gradient(135deg, #1E293B, #0F172A);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.15);
+}
+
+.mapOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 24px;
+}
+
+.mapRouteLine {
+  position: absolute;
+  top: 50%;
+  left: 18%;
+  right: 18%;
+  height: 3px;
+  background: repeating-linear-gradient(90deg, #F59E0B, #F59E0B 8px, transparent 8px, transparent 16px);
+  z-index: 1;
+}
+
+.mapPinHub, .mapPinDest, .mapPinPartner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: #FFFFFF;
+  font-size: 12px;
+  font-weight: 700;
+  z-index: 2;
+}
+
+.mapPinPartner {
+  background: #E11D48;
+  padding: 10px 16px;
+  border-radius: 24px;
+  box-shadow: 0 4px 14px rgba(225, 29, 72, 0.4);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.partnerNavIcon {
+  color: #FFFFFF;
+}
+
+.mapEtaCard {
+  position: absolute;
+  bottom: 14px;
+  left: 14px;
+  right: 14px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border-radius: 14px;
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  z-index: 5;
+}
+
+.etaIcon {
+  color: #E11D48;
+}
+
+.etaLabel {
+  font-size: 11px;
+  color: #64748B;
+  display: block;
+}
+
+.etaTime {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0F172A;
+}
+
+.etaDist {
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 700;
+  color: #10B981;
+}
+
+/* OTP Card */
+.otpCard {
+  background: #FEF3C7;
+  border: 1.5px dashed #F59E0B;
+  border-radius: 16px;
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.otpLeft {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.otpIconCircle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #FDE68A;
+  color: #B45309;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.otpLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: #92400E;
+  display: block;
+}
+
+.otpNumber {
+  font-size: 24px;
+  font-weight: 900;
+  color: #78350F;
+  letter-spacing: 2px;
+}
+
+.otpHint {
+  font-size: 11px;
+  color: #B45309;
+  margin: 2px 0 0 0;
+}
+
+.copyOtpBtn {
+  background: #FFFFFF;
+  border: 1px solid #FCD34D;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #92400E;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+/* Partner Card */
+.partnerCard {
+  background: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 16px;
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.partnerAvatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #0F172A;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 16px;
+}
+
+.partnerInfo {
+  flex: 1;
+}
+
+.partnerNameRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.partnerNameRow strong {
+  font-size: 16px;
+  color: #0F172A;
+}
+
+.starBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #FEF3C7;
+  color: #B45309;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.partnerVehicle {
+  font-size: 13px;
+  color: #64748B;
+  display: block;
+}
+
+.partnerHub {
+  font-size: 12px;
+  color: #94A3B8;
+  display: block;
+}
+
+.partnerActions {
+  display: flex;
+  gap: 10px;
+}
+
+.partnerActionBtn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #F1F5F9;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0F172A;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.partnerActionBtn:hover {
+  background: #E2E8F0;
+}
+
+/* Milestones Card */
+.milestonesCard, .summaryCard, .simulatorCard {
+  background: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.cardHeading {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0F172A;
+  margin: 0 0 16px 0;
+}
+
+.milestonesList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.milestoneItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  opacity: 0.5;
+}
+
+.milestoneCompleted {
+  opacity: 1;
+}
+
+.milestoneIcon {
+  margin-top: 2px;
+}
+
+.milestoneDetails strong {
+  font-size: 14px;
+  color: #0F172A;
+  display: block;
+}
+
+.milestoneDetails p {
+  font-size: 13px;
+  color: #64748B;
+  margin: 2px 0 0 0;
+}
+
+/* Summary Card */
+.giftSummaryRow {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.giftThumb {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.giftSummaryInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.giftSummaryInfo strong {
+  font-size: 15px;
+  color: #0F172A;
+}
+
+.giftSummaryInfo span {
+  font-size: 13px;
+  color: #64748B;
+}
+
+.giftMessageBox {
+  background: #FFF1F2;
+  border-left: 3px solid #E11D48;
+  padding: 10px 14px;
+  border-radius: 0 10px 10px 0;
+  margin-bottom: 14px;
+}
+
+.msgLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: #BE185D;
+}
+
+.msgText {
+  font-size: 13px;
+  font-style: italic;
+  color: #881337;
+  margin: 2px 0 0 0;
+}
+
+.addressBox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #475569;
+}
+
+/* Simulator Card */
+.simHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.simulatorCard p {
+  font-size: 13px;
+  color: #64748B;
+  margin: 0 0 14px 0;
+}
+
+.simBtnsGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+@media (max-width: 600px) {
+  .simBtnsGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.simBtnsGrid button {
+  background: #F1F5F9;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 10px 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.simBtnsGrid button:hover {
+  background: #E2E8F0;
+}
+
+.simOtpRow {
+  display: flex;
+  gap: 10px;
+}
+
+.simOtpRow input {
+  flex: 1;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 14px;
+}
+
+.simOtpRow button {
+  background: #10B981;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.successNote {
+  font-size: 13px;
+  font-weight: 700;
+  color: #10B981;
+  margin-top: 8px;
+  display: block;
+}

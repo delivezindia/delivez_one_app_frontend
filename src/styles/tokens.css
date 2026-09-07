@@ -1,0 +1,22 @@
+:root {
+  --color-background: #f7f8fa;
+  --color-surface: #ffffff;
+  --color-text: #111418;
+  --color-text-muted: #59636e;
+  --color-danger: #e00014;
+  --color-danger-dark: #bd0011;
+  --color-danger-soft: #fff0f2;
+  --color-accent: #ffc400;
+  --color-border: #e8eaed;
+  --color-border-strong: #d9dde2;
+
+  --space-3: 0.75rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-16: 4rem;
+
+  --radius-sm: 0.375rem;
+  --radius-xl: 1.5rem;
+  --shadow-card: 0 1.25rem 4rem rgb(23 32 42 / 9%);
+  --shadow-menu: 0 1rem 3rem rgb(23 32 42 / 14%);
+}

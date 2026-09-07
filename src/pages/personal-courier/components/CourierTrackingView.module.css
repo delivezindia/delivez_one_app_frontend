@@ -1,0 +1,918 @@
+.container {
+  min-height: 100vh;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 60px;
+}
+
+.topBar {
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 1.25rem 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.backBtn {
+  background: #f1f5f9;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.backBtn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.titleWrap {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.mainTitle {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.bookingIdRow {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.15rem;
+}
+
+.bookingIdText {
+  font-family: monospace;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.copyBtn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 2px;
+  transition: color 0.2s;
+}
+
+.copyBtn:hover {
+  color: #e11d48;
+}
+
+.copiedIcon {
+  color: #059669;
+}
+
+.statusBadge {
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  border: 1px solid #bfdbfe;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.contentWrap {
+  max-width: 820px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.75rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Switcher */
+.viewSwitcher {
+  display: flex;
+  background: #e2e8f0;
+  border-radius: 12px;
+  padding: 4px;
+}
+
+.switchTab {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 0.7rem 1rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #64748b;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.switchTabActive {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* Live Map Card (Screens 28 & 29) */
+.mapCard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.mapCanvas {
+  height: 240px;
+  background: #f1f5f9;
+  position: relative;
+  overflow: hidden;
+}
+
+.mapGridPattern {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+  opacity: 0.6;
+}
+
+.routeSvg {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  inset: 0;
+}
+
+.mapPin {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translate(-50%, -50%);
+}
+
+.pinDot {
+  width: 18px;
+  height: 18px;
+  background: #0f172a;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+.pinDotDest {
+  width: 18px;
+  height: 18px;
+  background: #059669;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+.pinLabel {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-top: 4px;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.pinDriver {
+  z-index: 10;
+}
+
+.driverPulse {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  background: rgba(225, 29, 72, 0.3);
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+  transform: translate(-50%, -50%);
+  top: 18px;
+  left: 50%;
+}
+
+.driverIconBox {
+  background: #e11d48;
+  color: #ffffff;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid #ffffff;
+  box-shadow: 0 4px 10px rgba(225, 29, 72, 0.4);
+  position: relative;
+  z-index: 2;
+}
+
+.driverLabel {
+  background: #0f172a;
+  color: #ffffff;
+  padding: 0.3rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  margin-top: 6px;
+  white-space: nowrap;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.mapFooter {
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid #e2e8f0;
+  background: #ffffff;
+}
+
+.etaBox, .currentLocBox {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.etaIcon {
+  color: #e11d48;
+}
+
+.locIcon {
+  color: #2563eb;
+}
+
+.etaLabel, .locLabel {
+  display: block;
+  font-size: 0.72rem;
+  color: #64748b;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.etaVal, .locVal {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+/* Seal Banner */
+.sealBanner {
+  background: #fffbeb;
+  border: 1.5px solid #fde68a;
+  border-radius: 14px;
+  padding: 1rem 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.sealLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.sealIcon {
+  color: #d97706;
+}
+
+.sealTag {
+  font-size: 0.7rem;
+  color: #b45309;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.sealNumberText {
+  font-family: monospace;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #78350f;
+}
+
+.sealStatusBadge {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+/* Agent Card (Screen 29) */
+.agentCard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+.agentLeft {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.agentAvatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #0f172a;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  font-weight: 800;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.avatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.agentMeta {
+  display: flex;
+  flex-direction: column;
+}
+
+.agentHeaderRow {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.agentName {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.agentRating {
+  background: #fef9c3;
+  color: #854d0e;
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.agentSub {
+  font-size: 0.82rem;
+  color: #64748b;
+  margin: 0.15rem 0;
+}
+
+.agentTrips {
+  font-size: 0.75rem;
+  color: #059669;
+  font-weight: 600;
+  margin: 0;
+}
+
+.agentActions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.callBtn {
+  background: #0f172a;
+  color: #ffffff;
+  border-radius: 10px;
+  padding: 0.65rem 1.1rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s;
+}
+
+.callBtn:hover {
+  background: #1e293b;
+}
+
+.msgBtn {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.msgBtn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+/* Stepper Card */
+.stepperCard, .timelineCard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 1.75rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.cardHeaderWithAction {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.sectionTitle {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.sectionSubtitle {
+  font-size: 0.82rem;
+  color: #64748b;
+  margin: 0.2rem 0 0;
+}
+
+.editBtn {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.editBtn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+/* Stepper List */
+.stepperList {
+  display: flex;
+  flex-direction: column;
+}
+
+.stepperItem {
+  display: flex;
+  gap: 1.25rem;
+  position: relative;
+  min-height: 56px;
+}
+
+.stepperIndicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 32px;
+  flex-shrink: 0;
+}
+
+.stepCircle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #cbd5e1;
+  background: #ffffff;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  transition: all 0.2s;
+}
+
+.stepConnector {
+  flex: 1;
+  width: 2px;
+  background: #e2e8f0;
+  margin: 4px 0;
+}
+
+.stepCompleted .stepCircle {
+  background: #059669;
+  border-color: #059669;
+  color: #ffffff;
+}
+
+.stepCompleted .stepConnector {
+  background: #059669;
+}
+
+.stepCurrent .stepCircle {
+  background: #e11d48;
+  border-color: #e11d48;
+  color: #ffffff;
+  box-shadow: 0 0 0 4px rgba(225, 29, 72, 0.2);
+}
+
+.stepDetails {
+  flex: 1;
+  padding-bottom: 1.25rem;
+}
+
+.stepTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.stepTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.stepPending .stepTitle {
+  color: #94a3b8;
+}
+
+.currentBadge {
+  background: #fee2e2;
+  color: #e11d48;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.completedBadge {
+  background: #d1fae5;
+  color: #059669;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.stepDesc {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: 0.2rem 0 0;
+}
+
+.stepPending .stepDesc {
+  color: #cbd5e1;
+}
+
+/* 10-Milestone Detailed Timeline */
+.milestoneList {
+  display: flex;
+  flex-direction: column;
+}
+
+.milestoneItem {
+  display: flex;
+  gap: 1.25rem;
+  min-height: 70px;
+}
+
+.milestoneIndicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 28px;
+  flex-shrink: 0;
+}
+
+.milestoneDot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid #cbd5e1;
+  background: #ffffff;
+  color: #94a3b8;
+  font-size: 0.72rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.milestoneLine {
+  flex: 1;
+  width: 2px;
+  background: #e2e8f0;
+  margin: 4px 0;
+}
+
+.milestoneCompleted .milestoneDot {
+  background: #059669;
+  border-color: #059669;
+  color: #ffffff;
+}
+
+.milestoneCompleted .milestoneLine {
+  background: #059669;
+}
+
+.milestoneCurrent .milestoneDot {
+  background: #e11d48;
+  border-color: #e11d48;
+  color: #ffffff;
+  box-shadow: 0 0 0 4px rgba(225, 29, 72, 0.2);
+}
+
+.milestoneContent {
+  flex: 1;
+  padding-bottom: 1.5rem;
+}
+
+.milestoneTop {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.milestoneTitle {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.milestoneTime {
+  font-size: 0.78rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.milestoneLocation {
+  font-size: 0.8rem;
+  color: #e11d48;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 0.2rem;
+}
+
+.milestoneDesc {
+  font-size: 0.82rem;
+  color: #475569;
+  margin: 0.25rem 0 0;
+  line-height: 1.4;
+}
+
+.timelineSealBox {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  margin-top: 0.4rem;
+}
+
+/* POD CTA Card */
+.podCtaCard {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  color: #ffffff;
+  border-radius: 18px;
+  padding: 1.25rem 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.podCtaLeft {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.podCtaIcon {
+  color: #38bdf8;
+  flex-shrink: 0;
+}
+
+.podCtaTitle {
+  font-size: 1.05rem;
+  font-weight: 800;
+  margin: 0 0 0.2rem;
+}
+
+.podCtaDesc {
+  font-size: 0.82rem;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.viewPodBtn {
+  background: #38bdf8;
+  color: #0f172a;
+  border: none;
+  border-radius: 10px;
+  padding: 0.75rem 1.4rem;
+  font-size: 0.9rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.viewPodBtn:hover {
+  background: #7dd3fc;
+  transform: translateY(-1px);
+}
+
+/* Edit Modal */
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modalBox {
+  background: #ffffff;
+  border-radius: 18px;
+  max-width: 500px;
+  width: 100%;
+  padding: 1.75rem;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+}
+
+.modalTitle {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 0.2rem;
+}
+
+.modalSub {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: 0 0 1.25rem;
+}
+
+.alertSuccess {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+  border-radius: 8px;
+  padding: 0.65rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.editForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.formGroup label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.formGroup input, .formGroup textarea {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.9rem;
+  color: #0f172a;
+}
+
+.formGroup input:focus, .formGroup textarea:focus {
+  outline: none;
+  border-color: #e11d48;
+  box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.15);
+}
+
+.modalActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.cancelBtn {
+  background: #f1f5f9;
+  border: none;
+  border-radius: 8px;
+  padding: 0.65rem 1.2rem;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+}
+
+.saveBtn {
+  background: #e11d48;
+  border: none;
+  border-radius: 8px;
+  padding: 0.65rem 1.4rem;
+  font-weight: 700;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+@keyframes pulse {
+  0% { transform: translate(-50%, -50%) scale(0.6); opacity: 0.8; }
+  100% { transform: translate(-50%, -50%) scale(1.6); opacity: 0; }
+}
+
+@media (max-width: 640px) {
+  .agentCard {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .agentActions {
+    width: 100%;
+  }
+  .callBtn {
+    flex: 1;
+    justify-content: center;
+  }
+  .podCtaCard {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .viewPodBtn {
+    width: 100%;
+    justify-content: center;
+  }
+}

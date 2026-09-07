@@ -1,0 +1,59 @@
+.loading {
+  display: grid;
+  min-height: 100vh;
+  place-content: center;
+  justify-items: center;
+  gap: 12px;
+  color: #707982;
+  background: #f7f8fa;
+}
+
+.spinner {
+  color: var(--color-danger);
+  animation: spin 850ms linear infinite;
+}
+
+.errorIcon {
+  color: var(--color-danger);
+}
+
+.loading h1 {
+  margin: 2px 0 0;
+  color: #202832;
+  font-size: 1.2rem;
+}
+
+.loading p {
+  margin: 0;
+  max-width: 440px;
+  font-size: 0.82rem;
+  font-weight: 650;
+  text-align: center;
+}
+
+.actions {
+  display: flex;
+  gap: 9px;
+  margin-top: 8px;
+}
+
+.actions button {
+  min-height: 39px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 9px;
+  color: #fff;
+  background: var(--color-danger);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.actions .secondaryAction {
+  border: 1px solid #dfe3e7;
+  color: #525d67;
+  background: #fff;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

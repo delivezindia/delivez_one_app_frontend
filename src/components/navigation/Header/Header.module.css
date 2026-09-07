@@ -1,0 +1,271 @@
+.header {
+  position: sticky;
+  z-index: 50;
+  top: 0;
+  border-bottom: 1px solid var(--color-border);
+  background: rgb(255 255 255 / 92%);
+  backdrop-filter: blur(16px);
+}
+
+.inner {
+  display: flex;
+  align-items: center;
+  width: min(100% - 42px, 1478px);
+  height: 86px;
+  margin-inline: auto;
+}
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-danger);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: clamp(1.9rem, 3.25vw, 3.12rem);
+  font-style: italic;
+  font-weight: 900;
+  letter-spacing: -0.085em;
+  line-height: 1;
+  margin-left: 7px;
+}
+
+.logo b {
+  margin-left: 0.6rem;
+  padding: 0.4rem 0.78rem 0.33rem;
+  border-radius: 0.4rem;
+  color: #111;
+  background: var(--color-accent);
+  font-size: 0.9rem;
+  font-style: normal;
+  letter-spacing: 0.22em;
+}
+
+.nav {
+  display: flex;
+  align-items: stretch;
+  align-self: stretch;
+  gap: clamp(24px, 2.7vw, 42px);
+  margin-left: auto;
+}
+
+.nav > a,
+.navGroup > button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  color: var(--color-text);
+  background: transparent;
+  font-size: 0.93rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.nav > a:hover,
+.navGroup > button:hover {
+  color: var(--color-danger);
+}
+
+.activeLink {
+  color: var(--color-danger) !important;
+}
+
+.activeLink::after {
+  position: absolute;
+  right: 0;
+  bottom: 11px;
+  left: 0;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--color-danger);
+  content: '';
+}
+
+.navGroup {
+  position: relative;
+  display: flex;
+}
+
+.dropdown {
+  position: absolute;
+  top: calc(100% - 9px);
+  left: 50%;
+  width: 220px;
+  padding: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: var(--shadow-menu);
+  transform: translateX(-50%);
+}
+
+.dropdownLink {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  border-radius: 10px;
+  color: var(--color-text-muted);
+  font-size: 0.88rem;
+  font-weight: 650;
+}
+
+.dropdownLink:hover {
+  color: var(--color-danger);
+  background: var(--color-danger-soft);
+}
+
+.desktopActions,
+.mobileActions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-left: clamp(22px, 4vw, 72px);
+}
+
+.desktopActions {
+  margin-left: 102px;
+  margin-right: 3px;
+  gap: 18px;
+}
+
+.mobileActions {
+  display: none;
+}
+
+.languageControl {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  height: 43px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.languageControl select {
+  border: 0;
+  outline: 0;
+  color: var(--color-text);
+  background: transparent;
+  font-weight: 650;
+}
+
+.loginButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 0 11.5px;
+  border: 0;
+  border-radius: 11px;
+  color: #fff;
+  background: var(--color-danger);
+  font-weight: 750;
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.loginButton:hover {
+  box-shadow: 0 10px 22px rgb(224 0 20 / 22%);
+  transform: translateY(-1px);
+}
+
+.menuButton {
+  display: none;
+  margin-left: auto;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+@media (max-width: 1100px) {
+  .desktopActions {
+    display: none;
+  }
+
+  .menuButton {
+    display: grid;
+    place-items: center;
+  }
+
+  .nav {
+    position: absolute;
+    top: 86px;
+    right: 20px;
+    left: 20px;
+    display: none;
+    align-items: stretch;
+    gap: 0;
+    height: auto;
+    max-height: calc(100vh - 110px);
+    padding: 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 18px;
+    overflow-y: auto;
+    background: #fff;
+    box-shadow: var(--shadow-menu);
+  }
+
+  .navOpen {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .nav > a,
+  .navGroup > button {
+    min-height: 48px;
+    padding: 0 12px;
+  }
+
+  .activeLink::after {
+    display: none;
+  }
+
+  .navGroup {
+    display: block;
+  }
+
+  .navGroup > button {
+    width: 100%;
+  }
+
+  .dropdown {
+    position: static;
+    width: 100%;
+    border: 0;
+    box-shadow: none;
+    transform: none;
+  }
+
+  .mobileActions {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 12px 0 0;
+    padding: 14px 10px 6px;
+    border-top: 1px solid var(--color-border);
+  }
+}
+
+@media (max-width: 560px) {
+  .inner {
+    width: min(100% - 28px, 1450px);
+    height: 72px;
+  }
+
+  .nav {
+    top: 72px;
+    right: 14px;
+    left: 14px;
+  }
+
+  .mobileActions > * {
+    flex: 1 1 100%;
+  }
+
+  .languageControl select {
+    flex: 1;
+  }
+}

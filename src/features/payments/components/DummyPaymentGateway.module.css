@@ -1,0 +1,66 @@
+.page { min-height: 100vh; padding-bottom: 40px; background: #f4f6f8; color: #171a20; font-family: Inter, system-ui, sans-serif; }
+.page * { box-sizing: border-box; }
+.page > header { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; min-height: 76px; padding: 0 max(18px, calc((100vw - 820px) / 2)); border-bottom: 1px solid #e0e3e7; background: #fff; }
+.page > header button, .page > header > span { display: grid; width: 42px; height: 42px; place-items: center; border: 1px solid #dce0e5; border-radius: 12px; background: #fff; cursor: pointer; }
+.page > header > span { justify-self: end; border-color: #f0cc65; background: #fff8de; color: #c78a00; }
+.page > header div { display: flex; flex-direction: column; align-items: center; }
+.page > header strong { color: #e00014; font-size: 22px; font-style: italic; }
+.page > header div span { margin-top: 4px; font-size: 9px; font-weight: 850; letter-spacing: 1.5px; }
+.shell { width: min(720px, calc(100% - 30px)); margin: 28px auto; }
+.sandboxBanner { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; padding: 14px 16px; border: 1px solid #ebc557; border-radius: 13px; background: #fff8db; color: #805a00; }
+.sandboxBanner > svg { flex: 0 0 23px; }
+.sandboxBanner strong, .sandboxBanner small { display: block; }
+.sandboxBanner strong { font-size: 13px; }
+.sandboxBanner small { margin-top: 3px; font-size: 10px; line-height: 1.45; }
+.amountCard, .gatewayCard { border: 1px solid #dce0e5; border-radius: 18px; background: #fff; box-shadow: 0 12px 35px rgba(25, 32, 44, .06); }
+.amountCard { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 20px 22px; }
+.amountCard small, .amountCard strong { display: block; }
+.amountCard small { color: #858b94; font-size: 9px; font-weight: 750; letter-spacing: .7px; }
+.amountCard div strong { margin-top: 5px; font-size: 14px; }
+.amountCard p { margin: 0; text-align: right; }
+.amountCard p strong { margin-top: 4px; color: #d80018; font-size: 24px; }
+.gatewayCard { margin-top: 14px; padding: 25px; }
+.cardHeading { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 20px; }
+.cardHeading p { margin: 0 0 5px; color: #e00014; font-size: 9px; font-weight: 850; letter-spacing: 1px; }
+.cardHeading h1 { margin: 0; font-size: 25px; letter-spacing: -.8px; }
+.cardHeading span { display: block; margin-top: 7px; color: #6f7680; font-size: 12px; }
+.cardHeading > svg { width: 31px; height: 31px; color: #248242; }
+.methods { display: grid; gap: 9px; }
+.methods button { display: grid; grid-template-columns: 21px 43px 1fr; align-items: center; gap: 11px; width: 100%; min-height: 73px; padding: 11px 14px; border: 1px solid #dde0e4; border-radius: 13px; background: #fff; text-align: left; cursor: pointer; }
+.methods button:hover { border-color: #e6ac0c; }
+.methods button > i { display: grid; width: 19px; height: 19px; place-items: center; border: 2px solid #9ca1a8; border-radius: 50%; }
+.methods button > i svg { width: 12px; }
+.methods button > span { display: grid; width: 43px; height: 43px; place-items: center; border-radius: 10px; background: #f4f5f7; color: #444a52; }
+.methods button > span svg { width: 21px; }
+.methods strong, .methods small { display: block; }
+.methods strong { font-size: 13px; }
+.methods small { margin-top: 4px; color: #7a8089; font-size: 10px; }
+.methods .selected { border-color: #df0018; box-shadow: inset 0 0 0 1px #df0018; background: #fffafb; }
+.methods .selected > i { border-color: #df0018; background: #df0018; color: #fff; }
+.methods .selected > span { background: #ffecef; color: #df0018; }
+.error { margin-top: 14px; padding: 12px 14px; border: 1px solid #f1b8bf; border-radius: 11px; background: #fff0f2; color: #ad0013; font-size: 11px; font-weight: 650; }
+.payButton, .failButton, .laterButton { display: flex; width: 100%; align-items: center; justify-content: center; gap: 8px; border-radius: 11px; font-weight: 800; cursor: pointer; }
+.payButton { min-height: 53px; margin-top: 18px; border: 0; background: #e00014; color: #fff; }
+.payButton svg { width: 18px; }
+.payButton .spinner { animation: spin .8s linear infinite; }
+.payButton:disabled, .failButton:disabled, .laterButton:disabled { opacity: .55; cursor: not-allowed; }
+.failButton, .laterButton { min-height: 39px; margin-top: 7px; border: 0; background: transparent; font-size: 11px; }
+.failButton { color: #c80017; }
+.laterButton { color: #696f78; }
+.secureNote { display: flex; align-items: center; gap: 10px; margin-top: 14px; padding: 15px; border-radius: 12px; background: #eaf7ef; color: #216e39; }
+.secureNote svg { flex: 0 0 22px; }
+.secureNote strong, .secureNote small { display: block; }
+.secureNote strong { font-size: 12px; }
+.secureNote small { margin-top: 3px; font-size: 9px; line-height: 1.4; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (max-width: 560px) {
+  .shell { margin-top: 18px; }
+  .gatewayCard { padding: 20px 15px; }
+  .cardHeading h1 { font-size: 22px; }
+  .cardHeading > svg { display: none; }
+  .amountCard { padding: 16px; }
+  .amountCard p strong { font-size: 20px; }
+  .methods button { grid-template-columns: 20px 38px 1fr; padding: 10px; }
+  .methods button > span { width: 38px; height: 38px; }
+  .payButton { padding: 0 12px; font-size: 12px; }
+}
