@@ -25,6 +25,8 @@ import SandboxPaymentPage from '@/pages/payments/SandboxPaymentPage.jsx'
 import UserDashboardPage from '@/pages/user-dashboard/UserDashboardPage.jsx'
 import UserLoginPage from '@/pages/user-login/UserLoginPage.jsx'
 import { navigateTo, scrollToCurrentHash } from '@/app/router/navigation.js'
+import { getAdminAccessToken } from '@/features/admin-auth/services/adminAuthService.js'
+import { getStoredUser } from '@/features/auth/services/userAuthService.js'
 import { getServiceBySlug } from '@/features/services/serviceCatalog.js'
 
 function App() {
@@ -40,8 +42,19 @@ function App() {
     scrollToCurrentHash()
   }, [pathname])
 
-  if (pathname === '/login' || pathname === '/user/login') {
-    return <UserLoginPage />
+  if (
+    pathname === '/login' ||
+    pathname === '/user/login' ||
+    pathname === '/signup' ||
+    pathname === '/register' ||
+    pathname === '/user/signup' ||
+    pathname === '/user/register'
+  ) {
+    return (
+      <UserLoginPage
+        initialMode={pathname.includes('signup') || pathname.includes('register') ? 'signup' : 'login'}
+      />
+    )
   }
 
   if (pathname === '/admin/login') {
@@ -49,10 +62,19 @@ function App() {
   }
 
   if (pathname === '/dashboard') {
+    const stored = getStoredUser()
+    const isAdmin = stored?.role === 'ADMIN' || Boolean(getAdminAccessToken())
+    if (isAdmin) {
+      return (
+        <AdminAuthGuard>
+          <DashboardPage />
+        </AdminAuthGuard>
+      )
+    }
     return (
-      <AdminAuthGuard>
-        <DashboardPage />
-      </AdminAuthGuard>
+      <UserAuthGuard>
+        <UserDashboardPage />
+      </UserAuthGuard>
     )
   }
 
@@ -64,9 +86,10 @@ function App() {
     )
   }
 
-  // Gift Delivery Booking Route
+  // Gift Delivery Booking Route (Redirect to services since module was replaced with Know More)
   if (/^\/(book\/(gift-delivery|gift-and-surprise|gifts)|gift-delivery|gifts|gift-and-surprise)\/?$/.test(pathname)) {
-    return <GiftDeliveryBookingPage />
+    window.location.replace('/#services')
+    return null
   }
 
   // Gift Delivery Live Tracking Route

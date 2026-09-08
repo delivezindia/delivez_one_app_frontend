@@ -7,6 +7,7 @@ import {
   Gift,
   Headphones,
   IndianRupee,
+  Info,
   Luggage,
   MapPinned,
   PackageCheck,
@@ -15,7 +16,9 @@ import {
   ShieldCheck,
   ShoppingBag,
   Smartphone,
+  Sparkles,
   Truck,
+  X,
 } from 'lucide-react'
 import deliveryHero from '@/assets/images/delivery-hero-v2.png'
 import ServiceCard from '@/components/cards/ServiceCard/ServiceCard.jsx'
@@ -43,8 +46,7 @@ const servicePresentation = {
   'forgot-something': { icon: ShoppingBag, tint: '#fff9e6', accent: '#e5a100' },
   'return-pickup': { icon: RotateCcw, tint: '#fff4e8', accent: '#ed5b08' },
   'personal-return-pickup': { icon: RotateCcw, tint: '#fff4e8', accent: '#ed5b08' },
-  'gift-delivery': { icon: Gift, tint: '#fff0f3', accent: '#e83e62' },
-  'gift-and-surprise': { icon: Gift, tint: '#fff0f3', accent: '#e83e62' },
+  'know-more': { icon: Info, tint: '#f5f3ff', accent: '#7c3aed' },
 }
 
 const trustItems = [
@@ -58,6 +60,7 @@ const trustItems = [
 function HomePage() {
   const [serviceCatalog, setServiceCatalog] = useState({ items: SERVICE_CATALOG, error: '' })
   const [trackingStatus, setTrackingStatus] = useState(null)
+  const [knowMoreOpen, setKnowMoreOpen] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -89,6 +92,8 @@ function HomePage() {
       service.slug === 'personal-courier'
     ) {
       navigateTo('/courier')
+    } else if (service.slug === 'know-more' || service.slug === 'gift-delivery') {
+      setKnowMoreOpen(true)
     } else {
       navigateTo(`/book/${service.slug}`)
     }
@@ -245,6 +250,118 @@ function HomePage() {
           <a href="https://www.apple.com/app-store/" target="_blank" rel="noreferrer"><small>DOWNLOAD ON THE</small><strong>App Store</strong></a>
         </div>
       </section>
+
+      {/* Know More Interactive Modal */}
+      {knowMoreOpen && (
+        <div className={styles.knowMoreOverlay} onClick={() => setKnowMoreOpen(false)}>
+          <div className={styles.knowMoreModal} onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              className={styles.knowMoreClose}
+              onClick={() => setKnowMoreOpen(false)}
+              aria-label="Close"
+            >
+              <X size={18} />
+            </button>
+
+            <div className={styles.knowMoreKicker}>
+              <Sparkles size={14} />
+              <span>Delivez ONE Ecosystem</span>
+            </div>
+
+            <h2 className={styles.knowMoreTitle}>Know More About Delivez One</h2>
+            <p className={styles.knowMoreSubtitle}>
+              On-demand, hyper-local, and specialized logistics built for speed, safety, and confidentiality.
+            </p>
+
+            <div className={styles.knowMoreServicesList}>
+              <div className={styles.knowMoreServiceItem}>
+                <div className={styles.knowMoreServiceIcon} style={{ background: '#fee2e2', color: '#dc2626' }}>
+                  <ShieldCheck size={20} />
+                </div>
+                <div className={styles.knowMoreServiceInfo}>
+                  <strong>Delivez Vault (Confidential Delivery)</strong>
+                  <p>Bank-grade encrypted custody, tamper-evident packaging, and high-security document transit.</p>
+                </div>
+              </div>
+
+              <div className={styles.knowMoreServiceItem}>
+                <div className={styles.knowMoreServiceIcon} style={{ background: '#e0f2fe', color: '#0284c7' }}>
+                  <Truck size={20} />
+                </div>
+                <div className={styles.knowMoreServiceInfo}>
+                  <strong>Courier Delivery</strong>
+                  <p>Rapid city-wide point-to-point dispatch for everyday parcels, packages, and documents.</p>
+                </div>
+              </div>
+
+              <div className={styles.knowMoreServiceItem}>
+                <div className={styles.knowMoreServiceIcon} style={{ background: '#fef3c7', color: '#d97706' }}>
+                  <Luggage size={20} />
+                </div>
+                <div className={styles.knowMoreServiceInfo}>
+                  <strong>Luggage Delivery</strong>
+                  <p>Airport pickups, hotel baggage transfers, and luggage deliveries without having to wait.</p>
+                </div>
+              </div>
+
+              <div className={styles.knowMoreServiceItem}>
+                <div className={styles.knowMoreServiceIcon} style={{ background: '#dcfce7', color: '#16a34a' }}>
+                  <ShoppingBag size={20} />
+                </div>
+                <div className={styles.knowMoreServiceInfo}>
+                  <strong>Delivez Fetch (Forgot Something?)</strong>
+                  <p>Left your charger, keys, or medicines behind? We pick them up and bring them straight to you.</p>
+                </div>
+              </div>
+
+              <div className={styles.knowMoreServiceItem}>
+                <div className={styles.knowMoreServiceIcon} style={{ background: '#ffedd5', color: '#ea580c' }}>
+                  <RotateCcw size={20} />
+                </div>
+                <div className={styles.knowMoreServiceInfo}>
+                  <strong>Delivez Back (Return Pickup)</strong>
+                  <p>Fast doorstep pickups for e-commerce return parcels, retail exchanges, and personal returns.</p>
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.knowMoreEnterpriseBox}>
+              <strong>Enterprise & Custom Business Logistics</strong>
+              <p>
+                Need scheduled daily routes, dedicated corporate couriers, or bulk consignment rates?
+                Our enterprise logistics team provides dedicated account managers and GST invoicing.
+              </p>
+            </div>
+
+            <div className={styles.knowMoreFooterActions}>
+              <button
+                type="button"
+                className={styles.knowMorePrimaryBtn}
+                onClick={() => {
+                  setKnowMoreOpen(false)
+                  const el = document.getElementById('services')
+                  el?.scrollIntoView({ behavior: 'smooth' })
+                }}
+              >
+                <span>Explore Services</span>
+                <ArrowRight size={16} />
+              </button>
+              <button
+                type="button"
+                className={styles.knowMoreSecondaryBtn}
+                onClick={() => {
+                  setKnowMoreOpen(false)
+                  const el = document.getElementById('support')
+                  el?.scrollIntoView({ behavior: 'smooth' })
+                }}
+              >
+                <span>Contact Support</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

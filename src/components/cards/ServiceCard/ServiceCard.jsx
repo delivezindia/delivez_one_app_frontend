@@ -3,6 +3,7 @@ import styles from './ServiceCard.module.css'
 
 function ServiceCard({ service, onBook }) {
   const Icon = service.icon
+  const isKnowMore = service.slug === 'know-more' || service.title === 'Know More'
   return (
     <article
       className={styles.card}
@@ -10,7 +11,9 @@ function ServiceCard({ service, onBook }) {
       onClick={() => service.available && onBook(service)}
     >
       <span className={styles.number}>{service.number}</span>
-      <span className={`${styles.availability} ${service.available ? styles.live : ''}`}>{service.available ? 'Available' : 'Coming soon'}</span>
+      <span className={`${styles.availability} ${service.available ? styles.live : ''}`}>
+        {isKnowMore ? 'Explore' : service.available ? 'Available' : 'Coming soon'}
+      </span>
       <div className={styles.artwork} aria-hidden="true"><span className={styles.artworkShadow} />{service.imageUrl ? <img src={service.imageUrl} alt="" /> : <Icon size={68} strokeWidth={1.65} />}</div>
       <h3>{service.title}</h3>
       <p>{service.description}</p>
@@ -22,7 +25,7 @@ function ServiceCard({ service, onBook }) {
           onBook(service);
         }}
       >
-        {service.available ? 'Start Booking' : 'Not Available Yet'} {service.available && <ArrowRight size={18} />}
+        {isKnowMore ? 'Know More' : service.available ? 'Start Booking' : 'Not Available Yet'} {service.available && <ArrowRight size={18} />}
       </button>
     </article>
   )

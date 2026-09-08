@@ -13,13 +13,15 @@ import {
   Smartphone,
   Truck,
   UserCheck,
+  UserRound,
 } from 'lucide-react'
 import { navigateTo } from '@/app/router/navigation.js'
-import AuthModal from '@/features/auth/components/AuthModal.jsx'
 import {
   fetchCurrentUser,
+  getDeviceId,
   getUserAccessToken,
   loginUser,
+  registerUser,
   resendUserOtp,
   verifyUserOtp,
 } from '@/features/auth/services/userAuthService.js'
@@ -28,16 +30,24 @@ import styles from './UserLoginPage.module.css'
 
 function getReturnUrl() {
   const returnTo = new URLSearchParams(window.location.search).get('returnTo')
-  return returnTo || '/user/dashboard'
+  if (returnTo && !returnTo.startsWith('/login') && !returnTo.startsWith('/register') && !returnTo.startsWith('/signup')) {
+    return returnTo
+  }
+  return '/dashboard'
 }
 
-function UserLoginPage() {
+function UserLoginPage({ initialMode = 'login' }) {
+  const [mode, setMode] = useState(() => {
+    if (initialMode) return initialMode
+    const urlMode = new URLSearchParams(window.location.search).get('mode')
+    if (urlMode === 'signup' || urlMode === 'register') return 'signup'
+    return 'login'
+  })
   const [loginMethod, setLoginMethod] = useState('phone') // 'phone' | 'email'
-  const [loginType, setLoginType] = useState('password') // 'password' | 'otp'
+  const [loginType, setLoginType] = useState('otp') // 'otp' | 'password'
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
-  const [signupModalOpen, setSignupModalOpen] = useState(false)
   const [otpChallenge, setOtpChallenge] = useState(null)
   const [otp, setOtp] = useState('')
 
@@ -59,7 +69,7 @@ function UserLoginPage() {
     return () => { active = false }
   }, [])
 
-  const handleLoginSubmit = async (event) => {
+  const handleAuthSubmit = async (event) => {
     event.preventDefault()
     setLoading(true)
     setErrorMessage('')
@@ -67,47 +77,61 @@ function UserLoginPage() {
     const rememberMe = form.get('rememberMe') === 'on'
 
     try {
-      if (loginType === 'password') {
-        const payload = loginMethod === 'email'
-          ? {
-            email: form.get('email')?.toString().trim(),
-            password: form.get('password')?.toString(),
-            rememberMe,
-          }
-          : {
-            countryCode: form.get('countryCode')?.toString().trim(),
-            mobileNumber: form.get('mobileNumber')?.toString().trim(),
-            password: form.get('password')?.toString(),
-            rememberMe,
-          }
-
-        const res = await loginUser(payload)
-        if (!res.isOtp) {
-          navigateTo(getReturnUrl())
-          return
-        }
-        setOtpChallenge({ ...res, rememberMe })
-        setOtp('')
-      } else {
-        const challenge = await loginUser({
+      if (mode === 'signup') {
+        const challenge = await registerUser({
+          fullName: form.get('fullName')?.toString().trim(),
           countryCode: form.get('countryCode')?.toString().trim(),
           mobileNumber: form.get('mobileNumber')?.toString().trim(),
-          rememberMe,
+          email: form.get('email')?.toString().trim() || undefined,
+          acceptedTerms: form.get('acceptedTerms') === 'on',
+          deviceId: getDeviceId(),
         })
-        setOtpChallenge({ ...challenge, rememberMe })
+
+        setOtpChallenge({ ...challenge, rememberMe: true, isSignup: true })
         setOtp('')
+      } else {
+        if (loginType === 'password') {
+          const payload = loginMethod === 'email'
+            ? {
+              email: form.get('email')?.toString().trim(),
+              password: form.get('password')?.toString(),
+              rememberMe,
+            }
+            : {
+              countryCode: form.get('countryCode')?.toString().trim(),
+              mobileNumber: form.get('mobileNumber')?.toString().trim(),
+              password: form.get('password')?.toString(),
+              rememberMe,
+            }
+
+          const res = await loginUser(payload)
+          if (!res.isOtp) {
+            navigateTo(getReturnUrl())
+            return
+          }
+          setOtpChallenge({ ...res, rememberMe, isSignup: false })
+          setOtp('')
+        } else {
+          const challenge = await loginUser({
+            countryCode: form.get('countryCode')?.toString().trim(),
+            mobileNumber: form.get('mobileNumber')?.toString().trim(),
+            rememberMe,
+          })
+          setOtpChallenge({ ...challenge, rememberMe, isSignup: false })
+          setOtp('')
+        }
       }
     } catch (error) {
       if (error instanceof ApiError) {
         if (error.status === 401) {
           setErrorMessage('The login credentials or password are incorrect.')
         } else if (error.status === 404) {
-          setErrorMessage('No account found with these details. Please sign up first.')
+          setErrorMessage('No account found with this mobile number. Please sign up first.')
         } else {
           setErrorMessage(error.message)
         }
       } else {
-        setErrorMessage('Login failed. Please check that the server is running.')
+        setErrorMessage(error?.message ?? 'Authentication failed. Please check your connection.')
       }
     } finally {
       setLoading(false)
@@ -116,14 +140,23 @@ function UserLoginPage() {
 
   const handleOtpVerify = async (event) => {
     event.preventDefault()
+    if (loading) return
     setLoading(true)
     setErrorMessage('')
 
     try {
+      const cleanOtp = String(otp ?? '').replace(/\D/g, '').slice(0, 6)
+      if (cleanOtp.length !== 6) {
+        setErrorMessage('Please enter the complete 6-digit verification code.')
+        setLoading(false)
+        return
+      }
+
       await verifyUserOtp({
         challengeId: otpChallenge.challengeId,
-        otp,
-        rememberMe: otpChallenge.rememberMe,
+        otp: cleanOtp,
+        rememberMe: Boolean(otpChallenge.rememberMe),
+        deviceId: getDeviceId(),
       })
       navigateTo(getReturnUrl())
     } catch (error) {
@@ -139,7 +172,7 @@ function UserLoginPage() {
 
     try {
       const challenge = await resendUserOtp(otpChallenge.challengeId)
-      setOtpChallenge({ ...challenge, rememberMe: otpChallenge.rememberMe })
+      setOtpChallenge((prev) => ({ ...challenge, rememberMe: prev?.rememberMe, isSignup: prev?.isSignup }))
       setOtp('')
     } catch (error) {
       setErrorMessage(error?.message ?? 'Unable to send a new OTP. Please try again.')
@@ -179,11 +212,17 @@ function UserLoginPage() {
         <div className={styles.formContainer}>
           <span className={styles.formIcon}><UserCheck size={26} /></span>
           <p className={styles.eyebrow}>CUSTOMER ACCOUNT</p>
-          <h2>Welcome back</h2>
+          <h2>
+            {otpChallenge
+              ? (otpChallenge.isSignup ? 'Complete Registration' : 'Verify Mobile Number')
+              : mode === 'signup' ? 'Create your account' : 'Welcome back'}
+          </h2>
           <p className={styles.intro}>
             {otpChallenge
               ? `Enter the 6-digit verification code sent to ${otpChallenge.destination}.`
-              : 'Log in to track orders, manage deliveries, and access your profile.'}
+              : mode === 'signup'
+                ? 'Sign up with your mobile number to get started with Delivez.'
+                : 'Log in with your mobile number to manage deliveries and orders.'}
           </p>
 
           {errorMessage && <div className={styles.error} role="alert">{errorMessage}</div>}
@@ -202,7 +241,13 @@ function UserLoginPage() {
                 {(otpChallenge.developmentOtp || otpChallenge.otp) && (
                   <div className={styles.devOtpBox}>
                     <span>Verification OTP: <b>{otpChallenge.developmentOtp || otpChallenge.otp}</b></span>
-                    <button type="button" onClick={() => setOtp(otpChallenge.developmentOtp || otpChallenge.otp)}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const code = String(otpChallenge.developmentOtp || otpChallenge.otp || '').trim()
+                        setOtp(code)
+                      }}
+                    >
                       Use this OTP
                     </button>
                   </div>
@@ -222,13 +267,16 @@ function UserLoginPage() {
                     autoComplete="one-time-code"
                     required
                     pattern="\d{6}"
+                    maxLength={6}
                     autoFocus
                   />
                 </div>
               </label>
 
-              <button className={styles.submitButton} type="submit" disabled={loading || otp.length !== 6}>
-                {loading ? <><LoaderCircle className={styles.spinner} size={19} /> Verifying...</> : <>Verify OTP & Continue <ArrowRight size={18} /></>}
+              <button className={styles.submitButton} type="submit" disabled={loading || String(otp).length !== 6}>
+                {loading
+                  ? <><LoaderCircle className={styles.spinner} size={19} /> Verifying...</>
+                  : otpChallenge.isSignup ? <>Complete Registration <ArrowRight size={18} /></> : <>Verify OTP & Continue <ArrowRight size={18} /></>}
               </button>
 
               <div className={styles.otpRow}>
@@ -253,7 +301,28 @@ function UserLoginPage() {
             </form>
           ) : (
             <>
-              {loginType === 'password' && (
+              <div className={styles.modeTabs} role="tablist">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={mode === 'login'}
+                  className={`${styles.modeTab} ${mode === 'login' ? styles.modeTabActive : ''}`}
+                  onClick={() => { setMode('login'); setErrorMessage(''); }}
+                >
+                  Sign In
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={mode === 'signup'}
+                  className={`${styles.modeTab} ${mode === 'signup' ? styles.modeTabActive : ''}`}
+                  onClick={() => { setMode('signup'); setErrorMessage(''); }}
+                >
+                  Create Account
+                </button>
+              </div>
+
+              {mode === 'login' && loginType === 'password' && (
                 <div className={styles.methodTabs} role="tablist">
                   <button
                     type="button"
@@ -276,8 +345,27 @@ function UserLoginPage() {
                 </div>
               )}
 
-              <form onSubmit={handleLoginSubmit}>
-                {(loginType === 'otp' || loginMethod === 'phone') ? (
+              <form onSubmit={handleAuthSubmit}>
+                {mode === 'signup' && (
+                  <label>
+                    Full name
+                    <div className={styles.phoneField}>
+                      <UserRound size={18} />
+                      <input
+                        name="fullName"
+                        type="text"
+                        placeholder="Enter your full name"
+                        aria-label="Full name"
+                        autoComplete="name"
+                        required
+                        minLength="2"
+                        maxLength="100"
+                      />
+                    </div>
+                  </label>
+                )}
+
+                {(mode === 'signup' || (mode === 'login' && (loginType === 'otp' || loginMethod === 'phone'))) && (
                   <label>
                     Mobile number
                     <div className={styles.phoneField}>
@@ -300,7 +388,25 @@ function UserLoginPage() {
                       />
                     </div>
                   </label>
-                ) : (
+                )}
+
+                {mode === 'signup' && (
+                  <label>
+                    Email address <small style={{ color: '#64748b', fontWeight: 'normal' }}>(Optional)</small>
+                    <div className={styles.phoneField}>
+                      <Mail size={18} />
+                      <input
+                        name="email"
+                        type="email"
+                        placeholder="Enter your email"
+                        aria-label="Email address"
+                        autoComplete="email"
+                      />
+                    </div>
+                  </label>
+                )}
+
+                {mode === 'login' && loginType === 'password' && loginMethod === 'email' && (
                   <label>
                     Email address
                     <div className={styles.phoneField}>
@@ -317,7 +423,7 @@ function UserLoginPage() {
                   </label>
                 )}
 
-                {loginType === 'password' && (
+                {mode === 'login' && loginType === 'password' && (
                   <label>
                     Password
                     <div className={styles.passwordField}>
@@ -340,28 +446,39 @@ function UserLoginPage() {
                   </label>
                 )}
 
-                <div className={styles.formOptions}>
-                  <label className={styles.remember}>
-                    <input name="rememberMe" type="checkbox" defaultChecked />
-                    Remember me on this device
+                {mode === 'signup' && (
+                  <label className={styles.termsLabel}>
+                    <input name="acceptedTerms" type="checkbox" defaultChecked required />
+                    <span>I agree to the <b>Terms & Conditions</b> and <b>Privacy Policy</b>.</span>
                   </label>
+                )}
 
-                  <button
-                    type="button"
-                    className={styles.typeToggle}
-                    onClick={() => {
-                      setLoginType((t) => (t === 'password' ? 'otp' : 'password'))
-                      setErrorMessage('')
-                    }}
-                  >
-                    <KeyRound size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} />
-                    {loginType === 'password' ? 'Sign in with OTP instead' : 'Sign in with Password'}
-                  </button>
-                </div>
+                {mode === 'login' && (
+                  <div className={styles.formOptions}>
+                    <label className={styles.remember}>
+                      <input name="rememberMe" type="checkbox" defaultChecked />
+                      Remember me on this device
+                    </label>
+
+                    <button
+                      type="button"
+                      className={styles.typeToggle}
+                      onClick={() => {
+                        setLoginType((t) => (t === 'password' ? 'otp' : 'password'))
+                        setErrorMessage('')
+                      }}
+                    >
+                      <KeyRound size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} />
+                      {loginType === 'password' ? 'Sign in with OTP instead' : 'Sign in with Password'}
+                    </button>
+                  </div>
+                )}
 
                 <button className={styles.submitButton} type="submit" disabled={loading}>
                   {loading ? (
                     <><LoaderCircle className={styles.spinner} size={19} /> Please wait...</>
+                  ) : mode === 'signup' ? (
+                    <>Create Account & Send OTP <ArrowRight size={18} /></>
                   ) : loginType === 'otp' ? (
                     <>Send verification code <ArrowRight size={18} /></>
                   ) : (
@@ -371,9 +488,15 @@ function UserLoginPage() {
               </form>
 
               <div className={styles.switchPanel}>
-                <span>Don't have an account yet?</span>
-                <button type="button" onClick={() => setSignupModalOpen(true)}>
-                  Create account
+                <span>{mode === 'login' ? "Don't have an account yet?" : 'Already have an account?'}</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode((current) => (current === 'login' ? 'signup' : 'login'))
+                    setErrorMessage('')
+                  }}
+                >
+                  {mode === 'login' ? 'Create account' : 'Sign in'}
                 </button>
               </div>
 
@@ -384,14 +507,6 @@ function UserLoginPage() {
           )}
         </div>
       </section>
-
-      {signupModalOpen && (
-        <AuthModal
-          open={signupModalOpen}
-          onClose={() => setSignupModalOpen(false)}
-          onSuccess={() => navigateTo(getReturnUrl())}
-        />
-      )}
     </main>
   )
 }

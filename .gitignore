@@ -3,5 +3,5 @@ dist
 .env.local
 *.log
 
-
+.env
 recording.mp4

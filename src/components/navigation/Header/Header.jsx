@@ -30,7 +30,7 @@ const services = [
   { label: 'Luggage Delivery', href: '/book/luggage-delivery', icon: Luggage },
   { label: 'Forgot Something?', href: '/book/forgot-something', icon: ShoppingBag },
   { label: 'Return Pickup', href: '/book/return-pickup', icon: RotateCcw },
-  { label: 'Gift Delivery', href: '/book/gift-delivery', icon: Gift },
+  { label: 'Know More', href: '#services', icon: CircleHelp },
 ]
 
 const supportLinks = [
@@ -69,7 +69,17 @@ function Header() {
   const [openDropdown, setOpenDropdown] = useState(null)
   const [authOpen, setAuthOpen] = useState(() => new URLSearchParams(window.location.search).get('auth') === 'login')
   const headerRef = useRef(null)
-  const currentUser = getStoredUser()
+  const [currentUser, setCurrentUser] = useState(() => getStoredUser())
+
+  useEffect(() => {
+    const handleAuthChange = () => setCurrentUser(getStoredUser())
+    window.addEventListener('auth:change', handleAuthChange)
+    window.addEventListener('storage', handleAuthChange)
+    return () => {
+      window.removeEventListener('auth:change', handleAuthChange)
+      window.removeEventListener('storage', handleAuthChange)
+    }
+  }, [])
 
   useEffect(() => {
     const closeMenus = (event) => {

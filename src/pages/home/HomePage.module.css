@@ -114,3 +114,190 @@
   .trackForm > div:first-of-type { flex-wrap: wrap; padding: 12px; }
   .trackForm button { justify-content: center; width: 100%; min-height: 44px; }
 }
+
+/* Know More Modal */
+.knowMoreOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 18px;
+}
+
+.knowMoreModal {
+  background: #ffffff;
+  border-radius: 24px;
+  max-width: 640px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  border: 1px solid #e2e8f0;
+  padding: 32px 28px;
+  position: relative;
+}
+
+.knowMoreClose {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.knowMoreClose:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.knowMoreKicker {
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: #7c3aed;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.knowMoreTitle {
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: #0f172a;
+  margin: 0 0 8px 0;
+  line-height: 1.25;
+}
+
+.knowMoreSubtitle {
+  font-size: 0.92rem;
+  color: #64748b;
+  margin: 0 0 24px 0;
+  line-height: 1.5;
+}
+
+.knowMoreServicesList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.knowMoreServiceItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 16px;
+  background: #f8fafc;
+  border-radius: 16px;
+  border: 1px solid #f1f5f9;
+}
+
+.knowMoreServiceIcon {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.knowMoreServiceInfo strong {
+  display: block;
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 2px;
+}
+
+.knowMoreServiceInfo p {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.knowMoreEnterpriseBox {
+  background: #fffdf5;
+  border: 1.5px solid #fef08a;
+  border-radius: 16px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+}
+
+.knowMoreEnterpriseBox strong {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #ca8a04;
+  margin-bottom: 4px;
+}
+
+.knowMoreEnterpriseBox p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #475569;
+  line-height: 1.4;
+}
+
+.knowMoreFooterActions {
+  display: flex;
+  gap: 12px;
+}
+
+.knowMorePrimaryBtn {
+  flex: 1.2;
+  padding: 13px 20px;
+  background: #dc2626;
+  color: #ffffff;
+  border: none;
+  border-radius: 14px;
+  font-size: 0.92rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.knowMorePrimaryBtn:hover {
+  background: #b91c1c;
+}
+
+.knowMoreSecondaryBtn {
+  flex: 1;
+  padding: 13px 20px;
+  background: #f1f5f9;
+  color: #1e293b;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.knowMoreSecondaryBtn:hover {
+  background: #e2e8f0;
+}

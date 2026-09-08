@@ -1,4 +1,4 @@
-﻿export const SERVICE_CATALOG = [
+export const SERVICE_CATALOG = [
   {
     name: 'Courier Delivery',
     slug: 'courier-delivery',
@@ -30,10 +30,10 @@
     shortDescription: 'Easy pickup and returns for personal and retail orders.',
   },
   {
-    name: 'Gift Delivery',
-    slug: 'gift-delivery',
-    tagline: 'Beautifully wrapped',
-    shortDescription: 'Beautifully wrapped delivery for gifts and special occasions.',
+    name: 'Know More',
+    slug: 'know-more',
+    tagline: 'Custom & Enterprise',
+    shortDescription: 'Explore our full range of tailored logistics, enterprise solutions, and 24/7 support.',
   },
 ]
 
@@ -42,7 +42,8 @@ const SLUG_ALIASES = {
   'airport-luggage': 'luggage-delivery',
   'confidential-courier': 'confidential-delivery',
   'personal-return-pickup': 'return-pickup',
-  'gift-and-surprise': 'gift-delivery',
+  'gift-delivery': 'know-more',
+  'gift-and-surprise': 'know-more',
 }
 
 export function getServiceBySlug(rawSlug) {

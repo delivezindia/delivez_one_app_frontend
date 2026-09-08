@@ -46,18 +46,56 @@ export function getStoredUser() {
   return null
 }
 
-export function clearUserSession() {
-  for (const storage of [sessionStorage(), persistentStorage()]) {
-    storage.removeItem(ACCESS_TOKEN_KEY)
-    storage.removeItem(PROFILE_KEY)
+const DEVICE_ID_KEY = 'delivez-device-id'
+
+export function getDeviceId() {
+  if (typeof window === 'undefined') return null
+  try {
+    let id = window.localStorage.getItem(DEVICE_ID_KEY)
+    if (!id) {
+      id = `web-${Math.random().toString(36).slice(2, 10)}-${Date.now().toString(36)}`
+      window.localStorage.setItem(DEVICE_ID_KEY, id)
+    }
+    return id
+  } catch {
+    return null
   }
 }
 
-export function storeUserSession(accessToken, user, rememberMe) {
+export function clearUserSession() {
+  try {
+    sessionStorage()?.removeItem(ACCESS_TOKEN_KEY)
+    sessionStorage()?.removeItem(PROFILE_KEY)
+  } catch {}
+  try {
+    persistentStorage()?.removeItem(ACCESS_TOKEN_KEY)
+    persistentStorage()?.removeItem(PROFILE_KEY)
+  } catch {}
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('auth:change', { detail: { user: null, accessToken: null } }))
+  }
+}
+
+export function logoutUser() {
   clearUserSession()
-  const storage = rememberMe ? persistentStorage() : sessionStorage()
-  storage.setItem(ACCESS_TOKEN_KEY, accessToken)
-  storage.setItem(PROFILE_KEY, JSON.stringify(user))
+}
+
+export function storeUserSession(accessToken, user, rememberMe = true) {
+  clearUserSession()
+  // Save in both persistent storage and session storage to guarantee availability across all routes and tabs
+  try {
+    persistentStorage()?.setItem(ACCESS_TOKEN_KEY, accessToken)
+    persistentStorage()?.setItem(PROFILE_KEY, JSON.stringify(user))
+  } catch {}
+  try {
+    sessionStorage()?.setItem(ACCESS_TOKEN_KEY, accessToken)
+    sessionStorage()?.setItem(PROFILE_KEY, JSON.stringify(user))
+  } catch {}
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('auth:change', { detail: { user, accessToken } }))
+  }
 }
 
 function readAuthResponse(response) {
@@ -79,18 +117,40 @@ function readOtpChallenge(response) {
   return challenge
 }
 
-export async function registerUser(details) {
+export async function registerUser({ fullName, countryCode = '+91', mobileNumber, email, acceptedTerms = true, deviceId }) {
+  const payload = {
+    fullName: String(fullName ?? '').trim(),
+    countryCode: String(countryCode ?? '+91').trim(),
+    mobileNumber: String(mobileNumber ?? '').replace(/\D/g, '').trim(),
+    acceptedTerms: Boolean(acceptedTerms),
+  }
+  if (email && String(email).trim()) {
+    payload.email = String(email).trim().toLowerCase()
+  }
+  const resolvedDeviceId = deviceId || getDeviceId()
+  if (resolvedDeviceId) {
+    payload.deviceId = resolvedDeviceId
+  }
+
   const response = await apiRequest('/auth/register', {
     method: 'POST',
-    body: JSON.stringify(details),
+    body: JSON.stringify(payload),
   })
   return readOtpChallenge(response)
 }
 
 export async function loginUser(credentials) {
+  const payload = { ...credentials }
+  if (payload.mobileNumber) {
+    payload.mobileNumber = String(payload.mobileNumber).replace(/\D/g, '').trim()
+  }
+  if (payload.countryCode) {
+    payload.countryCode = String(payload.countryCode).trim()
+  }
+
   const response = await apiRequest('/auth/login', {
     method: 'POST',
-    body: JSON.stringify(credentials),
+    body: JSON.stringify(payload),
   })
 
   // Direct password login response
@@ -112,10 +172,19 @@ export async function resendUserOtp(challengeId) {
   return readOtpChallenge(response)
 }
 
-export async function verifyUserOtp({ challengeId, otp, rememberMe = false }) {
+export async function verifyUserOtp({ challengeId, otp, rememberMe = true, deviceId }) {
+  const payload = {
+    challengeId: String(challengeId ?? '').trim(),
+    otp: String(otp ?? '').replace(/\D/g, '').trim(),
+  }
+  const resolvedDeviceId = deviceId || getDeviceId()
+  if (resolvedDeviceId) {
+    payload.deviceId = resolvedDeviceId
+  }
+
   const response = await apiRequest('/auth/verify-otp', {
     method: 'POST',
-    body: JSON.stringify({ challengeId, otp }),
+    body: JSON.stringify(payload),
   })
   const auth = readAuthResponse(response)
   storeUserSession(auth.accessToken, auth.user, rememberMe)

@@ -27,7 +27,7 @@ function AuthModal({ open, isOpen, onClose, onAuthenticated, onSuccess }) {
   const modalOpen = Boolean(open ?? isOpen)
   const [mode, setMode] = useState('login')
   const [loginMethod, setLoginMethod] = useState('phone') // 'phone' | 'email'
-  const [loginType, setLoginType] = useState('password') // 'password' | 'otp'
+  const [loginType, setLoginType] = useState('otp') // 'otp' | 'password'
   const [loading, setLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -75,7 +75,8 @@ function AuthModal({ open, isOpen, onClose, onAuthenticated, onSuccess }) {
 
     if (!onAuthenticated && !onSuccess) {
       const returnTo = new URLSearchParams(window.location.search).get('returnTo')
-      navigateTo(returnTo || '/user/dashboard')
+      const target = (returnTo && !returnTo.startsWith('/login') && !returnTo.startsWith('/register')) ? returnTo : '/dashboard'
+      navigateTo(target)
     }
   }
 
@@ -108,7 +109,7 @@ function AuthModal({ open, isOpen, onClose, onAuthenticated, onSuccess }) {
             handleAuthSuccess(res.user)
             return
           }
-          setOtpChallenge({ ...res, rememberMe })
+          setOtpChallenge({ ...res, rememberMe, isSignup: false })
           setOtp('')
         } else {
           const challenge = await loginUser({
@@ -116,7 +117,7 @@ function AuthModal({ open, isOpen, onClose, onAuthenticated, onSuccess }) {
             mobileNumber: form.get('mobileNumber')?.toString().trim(),
             rememberMe,
           })
-          setOtpChallenge({ ...challenge, rememberMe })
+          setOtpChallenge({ ...challenge, rememberMe, isSignup: false })
           setOtp('')
         }
       } else {
@@ -125,12 +126,10 @@ function AuthModal({ open, isOpen, onClose, onAuthenticated, onSuccess }) {
           countryCode: form.get('countryCode')?.toString().trim(),
           mobileNumber: form.get('mobileNumber')?.toString().trim(),
           email: form.get('email')?.toString().trim() || undefined,
-          password: form.get('password')?.toString(),
-          confirmPassword: form.get('confirmPassword')?.toString(),
           acceptedTerms: form.get('acceptedTerms') === 'on',
         })
 
-        setOtpChallenge({ ...challenge, rememberMe })
+        setOtpChallenge({ ...challenge, rememberMe: true, isSignup: true })
         setOtp('')
       }
     } catch (error) {
@@ -142,14 +141,22 @@ function AuthModal({ open, isOpen, onClose, onAuthenticated, onSuccess }) {
 
   const handleOtpSubmit = async (event) => {
     event.preventDefault()
+    if (loading) return
     setLoading(true)
     setErrorMessage('')
 
     try {
+      const cleanOtp = String(otp ?? '').replace(/\D/g, '').slice(0, 6)
+      if (cleanOtp.length !== 6) {
+        setErrorMessage('Please enter the complete 6-digit verification code.')
+        setLoading(false)
+        return
+      }
+
       const user = await verifyUserOtp({
         challengeId: otpChallenge.challengeId,
-        otp,
-        rememberMe: otpChallenge.rememberMe,
+        otp: cleanOtp,
+        rememberMe: Boolean(otpChallenge.rememberMe),
       })
       handleAuthSuccess(user)
     } catch (error) {
@@ -186,13 +193,13 @@ function AuthModal({ open, isOpen, onClose, onAuthenticated, onSuccess }) {
   }
 
   const title = otpChallenge
-    ? 'Verify your mobile'
+    ? (otpChallenge.isSignup ? 'Complete Registration' : 'Verify Mobile Number')
     : mode === 'login' ? 'Welcome Back!' : 'Join Delevez'
   const description = otpChallenge
-    ? `Enter the six-digit OTP generated for ${otpChallenge.destination}.`
+    ? `Enter the 6-digit verification code sent to ${otpChallenge.destination}.`
     : mode === 'login'
-      ? 'Login to your account and continue your delivery journey.'
-      : 'Sign up and start your seamless delivery experience with Delevez.'
+      ? 'Login with your mobile number to manage deliveries and orders.'
+      : 'Sign up with your mobile number for seamless delivery bookings.'
 
   return (
     <div
@@ -238,7 +245,15 @@ function AuthModal({ open, isOpen, onClose, onAuthenticated, onSuccess }) {
               <div className={styles.developmentOtp} role="status">
                 <span>Verification OTP</span>
                 <strong>{otpChallenge.developmentOtp || otpChallenge.otp}</strong>
-                <button type="button" onClick={() => setOtp(otpChallenge.developmentOtp || otpChallenge.otp)}>Use this OTP</button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const code = String(otpChallenge.developmentOtp || otpChallenge.otp || '').trim()
+                    setOtp(code)
+                  }}
+                >
+                  Use this OTP
+                </button>
                 <small>One-time verification code for your mobile number.</small>
               </div>
             )}
@@ -255,16 +270,17 @@ function AuthModal({ open, isOpen, onClose, onAuthenticated, onSuccess }) {
                   autoComplete="one-time-code"
                   placeholder="Enter 6-digit OTP"
                   pattern="\d{6}"
+                  maxLength={6}
                   required
                   autoFocus
                 />
               </span>
             </label>
 
-            <button className={styles.submitButton} type="submit" disabled={loading || otp.length !== 6}>
+            <button className={styles.submitButton} type="submit" disabled={loading || String(otp).length !== 6}>
               {loading
                 ? <><LoaderCircle className={styles.spinner} size={20} /> Verifying...</>
-                : 'Verify OTP & Continue'}
+                : otpChallenge.isSignup ? 'Verify & Complete Registration' : 'Verify OTP & Continue'}
             </button>
 
             <div className={styles.otpActions}>
@@ -349,7 +365,7 @@ function AuthModal({ open, isOpen, onClose, onAuthenticated, onSuccess }) {
                 </label>
               )}
 
-              {(mode === 'signup' || (mode === 'login' && loginType === 'password')) && (
+              {mode === 'login' && loginType === 'password' && (
                 <label className={styles.fieldLabel}>
                   Password
                   <span className={`${styles.inputShell} ${styles.passwordField}`}>
@@ -357,11 +373,9 @@ function AuthModal({ open, isOpen, onClose, onAuthenticated, onSuccess }) {
                     <input
                       name="password"
                       type={showPassword ? 'text' : 'password'}
-                      placeholder={mode === 'login' ? 'Enter your password' : 'Create a password'}
+                      placeholder="Enter your password"
                       required
-                      minLength={mode === 'login' ? undefined : '8'}
-                      maxLength="72"
-                      autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                      autoComplete="current-password"
                     />
                     <button type="button" onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? 'Hide password' : 'Show password'}>
                       {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
@@ -371,23 +385,10 @@ function AuthModal({ open, isOpen, onClose, onAuthenticated, onSuccess }) {
               )}
 
               {mode === 'signup' && (
-                <>
-                  <label className={styles.fieldLabel}>
-                    Confirm Password
-                    <span className={`${styles.inputShell} ${styles.passwordField}`}>
-                      <LockKeyhole size={21} />
-                      <input name="confirmPassword" type={showConfirmPassword ? 'text' : 'password'} placeholder="Confirm your password" required minLength="8" maxLength="72" autoComplete="new-password" />
-                      <button type="button" onClick={() => setShowConfirmPassword((visible) => !visible)} aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}>
-                        {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                      </button>
-                    </span>
-                  </label>
-
-                  <label className={styles.checkboxLabel}>
-                    <input name="acceptedTerms" type="checkbox" required />
-                    <span>I agree to the <b>Terms & Conditions</b> and <b>Privacy Policy</b>.</span>
-                  </label>
-                </>
+                <label className={styles.checkboxLabel}>
+                  <input name="acceptedTerms" type="checkbox" defaultChecked required />
+                  <span>I agree to the <b>Terms & Conditions</b> and <b>Privacy Policy</b>.</span>
+                </label>
               )}
 
               {mode === 'login' && (
@@ -414,9 +415,9 @@ function AuthModal({ open, isOpen, onClose, onAuthenticated, onSuccess }) {
                 {loading ? (
                   <><LoaderCircle className={styles.spinner} size={20} /> Please wait...</>
                 ) : mode === 'signup' ? (
-                  'Sign Up'
+                  'Create Account & Send OTP'
                 ) : loginType === 'otp' ? (
-                  'Send OTP'
+                  'Send Verification OTP'
                 ) : (
                   'Sign In'
                 )}

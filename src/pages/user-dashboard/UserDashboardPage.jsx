@@ -76,8 +76,9 @@ const servicePresentation = {
   'forgot-something': { icon: ShoppingBag, color: '#16a34a', tint: '#dcfce7', tag: 'Delivez Fetch', isFetch: true },
   'return-pickup': { icon: Undo2, color: '#ea580c', tint: '#ffedd5', tag: 'Delivez Back', isReturn: true },
   'personal-return-pickup': { icon: Undo2, color: '#ea580c', tint: '#ffedd5', tag: 'Delivez Back', isReturn: true },
-  'gift-delivery': { icon: Gift, color: '#db2777', tint: '#fdf2f8', tag: 'Special Occasions' },
-  'gift-and-surprise': { icon: Gift, color: '#db2777', tint: '#fdf2f8', tag: 'Special Occasions' },
+  'know-more': { icon: Info, color: '#7c3aed', tint: '#f5f3ff', tag: 'Enterprise & Support' },
+  'gift-delivery': { icon: Info, color: '#7c3aed', tint: '#f5f3ff', tag: 'Enterprise & Support' },
+  'gift-and-surprise': { icon: Info, color: '#7c3aed', tint: '#f5f3ff', tag: 'Enterprise & Support' },
 }
 
 function formatDate(value, long = true) {
@@ -297,7 +298,7 @@ export default function UserDashboardPage() {
 
   const handleSignOut = () => {
     clearUserSession()
-    navigateTo('/#signin')
+    navigateTo('/login')
   }
 
   return (
@@ -561,12 +562,15 @@ export default function UserDashboardPage() {
                 const isFetch = service.slug === 'forgot-something'
                 const isReturn = service.slug === 'return-pickup' || service.slug === 'personal-return-pickup'
                 const isVault = service.slug === 'confidential-delivery' || service.slug === 'confidential-courier'
+                const isKnowMore = service.slug === 'know-more' || service.name === 'Know More'
                 const meta = isReturn
                   ? servicePresentation['return-pickup']
                   : isFetch
                   ? servicePresentation['forgot-something']
                   : isVault
                   ? servicePresentation['confidential-delivery']
+                  : isKnowMore
+                  ? servicePresentation['know-more']
                   : servicePresentation[service.slug] || servicePresentation['courier-delivery']
                 const ServiceIcon = meta.icon || Package
 
@@ -576,6 +580,8 @@ export default function UserDashboardPage() {
                   ? '/book/forgot-something'
                   : isVault
                   ? '/book/confidential-delivery'
+                  : isKnowMore
+                  ? '/#services'
                   : `/book/${service.slug}`
 
                 return (
@@ -592,14 +598,14 @@ export default function UserDashboardPage() {
                         <ServiceIcon size={24} />
                       </div>
                       <div className={styles.available}>
-                        <i /> Available Now
+                        <i /> {isKnowMore ? 'Explore' : 'Available Now'}
                       </div>
                       <h3>{service.name}</h3>
                       <p>{service.shortDescription}</p>
                     </div>
 
                     <button type="button" onClick={() => navigateTo(bookUrl)}>
-                      <span>Book Service</span>
+                      <span>{isKnowMore ? 'Know More' : 'Book Service'}</span>
                       <ArrowRight size={16} />
                     </button>
                   </div>
