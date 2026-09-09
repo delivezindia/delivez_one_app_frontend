@@ -631,12 +631,21 @@ export async function updateServicePricing(serviceKey, payload) {
 // ---------------------------------------------------------------------------
 // ENTERPRISE AUDIT TRAIL & LOGS
 // ---------------------------------------------------------------------------
-export async function fetchAuditLogs(category = 'ALL', search = '', { signal } = {}) {
+export async function fetchAuditLogs(filterParams = {}, { signal } = {}) {
   const accessToken = requireAdminToken()
   try {
     const params = new URLSearchParams()
-    if (category && category !== 'ALL') params.set('category', category)
-    if (search) params.set('search', search)
+    if (typeof filterParams === 'string') {
+      if (filterParams && filterParams !== 'ALL') params.set('category', filterParams)
+      if (typeof arguments[1] === 'string' && arguments[1]) params.set('search', arguments[1])
+    } else if (filterParams && typeof filterParams === 'object') {
+      if (filterParams.category && filterParams.category !== 'ALL') params.set('category', filterParams.category)
+      if (filterParams.severity && filterParams.severity !== 'ALL') params.set('severity', filterParams.severity)
+      if (filterParams.timeframe && filterParams.timeframe !== 'ALL') params.set('timeframe', filterParams.timeframe)
+      if (filterParams.search) params.set('search', filterParams.search)
+      if (filterParams.page) params.set('page', String(filterParams.page))
+      if (filterParams.limit) params.set('limit', String(filterParams.limit))
+    }
 
     const res = await apiRequest(`/admin/audit-logs?${params.toString()}`, {
       headers: { Authorization: `Bearer ${accessToken}` },

@@ -102,16 +102,112 @@ export default function AdminForgotSomethingView() {
 
       {selected && (
         <div className={styles.modalOverlay} onClick={() => setSelected(null)}>
-          <div className={styles.drawer} onClick={e => e.stopPropagation()}>
+          <div className={styles.drawer} onClick={e => e.stopPropagation()} style={{ maxWidth: '540px' }}>
             <div className={styles.drawerHead}>
-              <h3>Retrieval #{selected.bookingNumber}</h3>
+              <div>
+                <h3>Retrieval #{selected.bookingNumber}</h3>
+                <span className={styles.badgePurple}>{selected.itemCategory}</span>
+              </div>
               <button type="button" onClick={() => setSelected(null)}><X size={18} /></button>
             </div>
-            <div className={styles.drawerBody}>
-              <p><strong>Item:</strong> {selected.itemCategory} - {selected.itemDescription}</p>
-              <p><strong>Pickup Address:</strong> {selected.pickupFlatBuilding}, {selected.pickupStreet}, {selected.pickupCity}</p>
-              <p><strong>Dropoff Address:</strong> {selected.dropoffAddressLine1}, {selected.dropoffCity}</p>
-              <p><strong>Fare:</strong> ₹{selected.totalAmount}</p>
+            <div className={styles.drawerBody} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div style={{ background: '#F8FAFC', padding: '12px 16px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+                <strong style={{ fontSize: '13px', color: '#64748B', display: 'block', marginBottom: '4px' }}>ITEM SPECIFICATION</strong>
+                <div style={{ fontSize: '15px', fontWeight: 800, color: '#0F172A' }}>{selected.itemName || selected.itemDescription || selected.itemCategory}</div>
+                {selected.itemDescription && <div style={{ fontSize: '13px', color: '#475569', marginTop: '2px' }}>{selected.itemDescription}</div>}
+                <div style={{ fontSize: '12px', color: '#64748B', marginTop: '6px', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                  <span>Qty: <strong>{selected.itemQuantity || 1}</strong></span>
+                  <span>Declared Value: <strong>₹{selected.declaredValue || 0}</strong></span>
+                  {selected.itemBrandColor && <span>Brand/Color: <strong>{selected.itemBrandColor}</strong></span>}
+                  <span>Speed: <strong>{selected.speed}</strong></span>
+                </div>
+                {selected.itemTags && selected.itemTags.length > 0 && (
+                  <div style={{ display: 'flex', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
+                    {selected.itemTags.map((tag) => (
+                      <span key={tag} style={{ background: '#FEF3C7', color: '#92400E', padding: '2px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 700 }}>
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* OTPs Display for Admin Support */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div style={{ background: '#FEF2F2', padding: '10px 14px', borderRadius: '10px', border: '1px solid #FECACA' }}>
+                  <small style={{ color: '#991B1B', fontWeight: 800, fontSize: '11px' }}>PICKUP OTP</small>
+                  <div style={{ fontSize: '18px', fontWeight: 900, color: '#DC2626', letterSpacing: '2px' }}>
+                    {selected.pickupOtp || '—'}
+                  </div>
+                </div>
+                <div style={{ background: '#ECFDF5', padding: '10px 14px', borderRadius: '10px', border: '1px solid #A7F3D0' }}>
+                  <small style={{ color: '#065F46', fontWeight: 800, fontSize: '11px' }}>DELIVERY OTP</small>
+                  <div style={{ fontSize: '18px', fontWeight: 900, color: '#059669', letterSpacing: '2px' }}>
+                    {selected.deliveryOtp || '—'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Pickup & Dropoff Blocks */}
+              <div style={{ background: '#FFFFFF', padding: '12px 14px', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
+                <div style={{ fontWeight: 800, color: '#DC2626', fontSize: '12px', marginBottom: '4px' }}>📍 PICKUP POINT ({selected.locationType})</div>
+                <div style={{ fontSize: '13px', color: '#0F172A', fontWeight: 700 }}>{selected.pickupContactName} • {selected.pickupPhoneNumber}</div>
+                <div style={{ fontSize: '12px', color: '#64748B' }}>
+                  {selected.pickupFlatBuilding}, {selected.pickupStreet}, {selected.pickupCity} - {selected.pickupPostalCode}
+                </div>
+                {selected.handoverCustomName && (
+                  <div style={{ fontSize: '11px', color: '#475569', marginTop: '3px' }}>
+                    Handover contact: {selected.handoverCustomName} ({selected.handoverCustomPhone})
+                  </div>
+                )}
+              </div>
+
+              <div style={{ background: '#FFFFFF', padding: '12px 14px', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
+                <div style={{ fontWeight: 800, color: '#16A34A', fontSize: '12px', marginBottom: '4px' }}>🎯 DROPOFF POINT ({selected.dropoffAddressType || 'Home'})</div>
+                <div style={{ fontSize: '13px', color: '#0F172A', fontWeight: 700 }}>{selected.dropoffRecipientName} • {selected.dropoffPhoneNumber}</div>
+                <div style={{ fontSize: '12px', color: '#64748B' }}>
+                  {selected.dropoffAddressLine1}, {selected.dropoffCity} - {selected.dropoffPostalCode}
+                </div>
+              </div>
+
+              {/* Assigned Partner */}
+              <div style={{ background: '#F8FAFC', padding: '12px 14px', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
+                <div style={{ fontWeight: 800, color: '#2563EB', fontSize: '12px', marginBottom: '4px' }}>⚡ ASSIGNED RIDER</div>
+                <div style={{ fontSize: '13px', fontWeight: 700, color: '#0F172A' }}>
+                  {selected.partnerName || 'Express Retrieval Rider'} ({selected.partnerPhone || '+91 98765 43210'})
+                </div>
+                <div style={{ fontSize: '12px', color: '#64748B' }}>{selected.partnerVehicle || 'TVS Apache - KA 01 AB 1234'} • Rating: {selected.partnerRating || 4.9} ★</div>
+              </div>
+
+              {/* Payment & Action */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #E2E8F0' }}>
+                <div>
+                  <small style={{ color: '#64748B', display: 'block' }}>Total Amount</small>
+                  <strong style={{ fontSize: '18px', color: '#0F172A' }}>₹{Number(selected.totalAmount || 0).toFixed(2)}</strong>
+                  <span style={{ fontSize: '11px', color: '#64748B', marginLeft: '6px' }}>({selected.paymentMethod})</span>
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <a
+                    href={`/track/forgot-something/${selected.bookingNumber}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      padding: '8px 14px',
+                      borderRadius: '8px',
+                      background: '#7C3AED',
+                      color: '#FFFFFF',
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      textDecoration: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    Open Live Track ↗
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
         </div>

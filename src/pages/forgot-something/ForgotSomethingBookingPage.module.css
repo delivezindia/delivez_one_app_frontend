@@ -1,4 +1,9 @@
-/* ForgotSomethingBookingPage.module.css */
+/* ==========================================================================
+   ForgotSomethingBookingPage.module.css
+   Desktop-Optimized & Mobile-Responsive Design for Delivez Fetch
+   Strictly Preserving All Fields and Options from Mobile Screens (C:\Users\Rax\Desktop\forgot-something)
+   ========================================================================== */
+
 .pageWrapper {
   min-height: 100vh;
   background-color: #f8fafc;
@@ -9,23 +14,32 @@
 }
 
 .desktopContainer {
-  max-width: 1200px;
+  max-width: 1180px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-/* Top Nav Header */
-.topNav {
+@media (max-width: 768px) {
+  .pageWrapper {
+    padding: 10px 8px 60px;
+    background-color: #f1f5f9;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Top App Header Card
+   -------------------------------------------------------------------------- */
+.topNavCard {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 22px;
   padding: 16px 24px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  justify-content: space-between;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
 }
 
 .navLeft {
@@ -34,17 +48,23 @@
   gap: 16px;
 }
 
-.backIconBtn {
+.headerBtn {
   width: 40px;
   height: 40px;
-  border-radius: 10px;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
   background: #f8fafc;
-  border: 1px solid #cbd5e1;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #0f172a;
   cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.headerBtn:hover {
+  background: #ffffff;
+  border-color: #cbd5e1;
 }
 
 .brandGroup {
@@ -52,35 +72,32 @@
   flex-direction: column;
 }
 
-.brandTitleRow {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-}
-
 .brandTitle {
-  font-size: 1.35rem;
+  font-size: 1.25rem;
   font-weight: 900;
+  letter-spacing: -0.02em;
   color: #0f172a;
+  line-height: 1.1;
 }
 
-.brandAccent {
-  color: #d97706;
+.brandYellowZ {
+  color: #f59e0b;
 }
 
-.brandSub {
-  font-size: 0.65rem;
+.brandSubtitle {
+  font-size: 0.8rem;
   font-weight: 800;
-  background: #fef3c7;
-  color: #b45309;
-  padding: 2px 6px;
-  border-radius: 4px;
-  letter-spacing: 0.5px;
+  color: #dc2626;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-.brandDesc {
-  font-size: 0.78rem;
-  color: #64748b;
+.brandSubBlack {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   margin-top: 2px;
 }
 
@@ -90,164 +107,215 @@
   gap: 12px;
 }
 
-.sampleAutoFillBtn {
-  display: inline-flex;
+.stepBadge {
+  background: #fefce8;
+  border: 1px solid #fef08a;
+  color: #854d0e;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 750;
+  display: flex;
   align-items: center;
   gap: 6px;
-  background: #fef3c7;
-  color: #b45309;
-  border: 1px solid #fde68a;
-  padding: 8px 14px;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  cursor: pointer;
 }
 
-.stepIndicatorBadge {
-  background: #f1f5f9;
-  color: #334155;
-  font-size: 0.82rem;
-  font-weight: 700;
-  padding: 8px 14px;
-  border-radius: 8px;
+@media (max-width: 640px) {
+  .stepBadge {
+    display: none;
+  }
 }
 
-/* Stepper Rail */
-.stepperRail {
+/* --------------------------------------------------------------------------
+   Horizontal Stepper (Steps 1 to 5)
+   -------------------------------------------------------------------------- */
+.stepperCard {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 14px 24px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 16px 28px;
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+  position: relative;
 }
 
-.stepItemWrapper {
+.stepperItem {
   display: flex;
   align-items: center;
-  flex: 1;
-}
-
-.stepItemWrapper:last-child {
-  flex: none;
-}
-
-.stepRailItem {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  gap: 10px;
+  position: relative;
+  z-index: 2;
   cursor: pointer;
 }
 
-.stepRailNumber {
-  width: 28px;
-  height: 28px;
+.stepCircle {
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background: #f1f5f9;
   border: 2px solid #cbd5e1;
+  background: #ffffff;
   color: #64748b;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 800;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
-.stepRailActive .stepRailNumber {
-  background: #d97706;
-  border-color: #d97706;
-  color: #ffffff;
+.stepCircleActive {
+  background: #f59e0b;
+  border-color: #f59e0b;
+  color: #000000;
+  box-shadow: 0 2px 10px rgba(245, 158, 11, 0.35);
 }
 
-.stepRailDone .stepRailNumber {
-  background: #16a34a;
-  border-color: #16a34a;
-  color: #ffffff;
+.stepCircleCompleted {
+  background: #f59e0b;
+  border-color: #f59e0b;
+  color: #000000;
 }
 
-.stepRailLabel {
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: #64748b;
+.stepTitleDesktop {
+  font-size: 0.86rem;
+  font-weight: 750;
+  color: #0f172a;
   white-space: nowrap;
 }
 
-.stepRailActive .stepRailLabel {
-  color: #0f172a;
+@media (max-width: 860px) {
+  .stepTitleDesktop {
+    display: none;
+  }
 }
 
-.stepRailDivider {
+.stepLine {
   flex: 1;
-  height: 2px;
+  height: 3px;
   background: #e2e8f0;
-  margin: 0 12px;
-  min-width: 16px;
+  margin: 0 10px;
+  transition: background 0.2s ease;
 }
 
-.stepRailDividerActive {
-  background: #16a34a;
+.stepLineCompleted {
+  background: #f59e0b;
 }
 
-/* 2-Column Split Layout */
-.splitLayout {
+/* --------------------------------------------------------------------------
+   Desktop 2-Column Grid Layout
+   -------------------------------------------------------------------------- */
+.splitGrid {
   display: grid;
-  grid-template-columns: 1fr 380px;
-  gap: 20px;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 24px;
   align-items: start;
 }
 
-.formPanel {
+@media (max-width: 960px) {
+  .splitGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Main Form Panel Card
+   -------------------------------------------------------------------------- */
+.formPanelCard {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 20px;
-  padding: 28px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  border: 1.5px solid #e2e8f0;
+  border-radius: 24px;
+  padding: 28px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
 }
 
-.panelHeader {
-  margin-bottom: 24px;
+@media (max-width: 640px) {
+  .formPanelCard {
+    padding: 20px 16px;
+    border-radius: 20px;
+  }
 }
 
-.panelHeader h2 {
-  font-size: 1.4rem;
-  font-weight: 900;
+.screenTitleBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.screenTitle {
+  font-size: 1.7rem;
+  font-weight: 850;
   color: #0f172a;
-  margin: 0 0 6px;
-}
-
-.highlightText {
-  color: #d97706;
-}
-
-.panelHeader p {
-  font-size: 0.88rem;
-  color: #64748b;
+  letter-spacing: -0.03em;
   margin: 0;
+  line-height: 1.2;
 }
 
-/* Category Grid */
-.categoryGrid {
+.titleUnderlineYellow {
+  width: 48px;
+  height: 4px;
+  background: #f59e0b;
+  border-radius: 2px;
+  margin-top: 6px;
+}
+
+.titleUnderlineRed {
+  width: 48px;
+  height: 4px;
+  background: #dc2626;
+  border-radius: 2px;
+  margin-top: 6px;
+}
+
+.screenSubtitle {
+  font-size: 0.95rem;
+  color: #64748b;
+  margin: 6px 0 0;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.screenSubtitleYellow {
+  font-size: 1.05rem;
+  font-weight: 750;
+  color: #d97706;
+  margin: 4px 0 0;
+}
+
+/* --------------------------------------------------------------------------
+   Step 1: Item Categories Grid (Screens 1 & 2)
+   -------------------------------------------------------------------------- */
+.itemCategoryGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  margin-bottom: 24px;
+  gap: 14px;
+}
+
+@media (max-width: 860px) {
+  .itemCategoryGrid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
 }
 
 .categoryCard {
+  background: #ffffff;
   border: 1.5px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 16px 10px;
+  border-radius: 20px;
+  padding: 20px 10px 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 12px;
   cursor: pointer;
-  background: #ffffff;
-  transition: all 0.15s ease;
+  transition: all 0.18s ease;
+  text-align: center;
 }
 
 .categoryCard:hover {
@@ -255,508 +323,1259 @@
   transform: translateY(-2px);
 }
 
-.categorySelected {
-  border-color: #d97706;
+.categoryCardSelected {
+  border-color: #f59e0b;
   background: #fffbeb;
-  box-shadow: 0 0 0 1px #d97706;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.2);
 }
 
-.categoryIconWrap {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: #f8fafc;
+.categoryIconPill {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #fefce8;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #0f172a;
 }
 
-.categorySelected .categoryIconWrap {
-  background: #fef3c7;
-  color: #b45309;
-}
-
-.categoryCard strong {
-  font-size: 0.8rem;
-  font-weight: 700;
+.categoryLabel {
+  font-size: 0.88rem;
+  font-weight: 750;
   color: #0f172a;
-  text-align: center;
+  line-height: 1.2;
 }
 
-/* Form Fields */
-.formFieldsBlock {
+/* Yellow Trust Card */
+.yellowTrustCard {
+  background: #fefce8;
+  border: 1px solid #fef08a;
+  border-radius: 18px;
+  padding: 16px 20px;
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 16px;
 }
 
-.inputGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.inputGroup label {
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: #334155;
-}
-
-.inputGroup input,
-.inputGroup textarea {
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
-  padding: 10px 14px;
-  font-size: 0.88rem;
-  font-family: inherit;
-  outline: none;
-  background: #ffffff;
-}
-
-.inputGroup input:focus,
-.inputGroup textarea:focus {
-  border-color: #d97706;
-  box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.15);
-}
-
-.formTwoCol {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-
-/* Location & Handover Grids */
-.sectionSubTitle {
-  font-size: 0.88rem;
-  font-weight: 800;
-  color: #0f172a;
-  margin-bottom: 10px;
-}
-
-.locationGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-}
-
-.locationCard {
-  border: 1.5px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 14px 12px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  background: #ffffff;
-}
-
-.locationSelected {
-  border-color: #d97706;
-  background: #fffbeb;
-  color: #b45309;
-}
-
-.handoverGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-}
-
-.handoverCard {
-  border: 1.5px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  font-size: 0.82rem;
-  font-weight: 700;
-}
-
-.handoverSelected {
-  border-color: #d97706;
-  background: #fffbeb;
-  color: #b45309;
-}
-
-/* Address Block */
-.addressFormBlock {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.addressBlockTitle {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.95rem;
-  color: #0f172a;
-}
-
-/* Speed Grid */
-.speedGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
-  margin-bottom: 24px;
-}
-
-.speedCard {
-  border: 1.5px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 18px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  cursor: pointer;
-  background: #ffffff;
-  position: relative;
-}
-
-.speedSelected {
-  border-color: #d97706;
-  background: #fffbeb;
-  box-shadow: 0 0 0 1px #d97706;
-}
-
-.speedBadge {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  font-size: 0.65rem;
-  font-weight: 800;
-  background: #fef3c7;
-  color: #b45309;
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-
-.speedTime {
-  font-size: 1.15rem;
-  font-weight: 900;
-  color: #d97706;
-}
-
-.speedCard p {
-  font-size: 0.78rem;
-  color: #64748b;
+.yellowTrustCard h4 {
   margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.yellowTrustCard p {
+  margin: 4px 0 0;
+  font-size: 0.82rem;
+  color: #475569;
   line-height: 1.35;
 }
 
-/* Security Toggles */
-.securityTogglesBox {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
+/* --------------------------------------------------------------------------
+   Step 2: Location Types Grid (Screens 3 & 4)
+   -------------------------------------------------------------------------- */
+.locationGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 14px;
 }
 
-.toggleRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+@media (max-width: 860px) {
+  .locationGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
 }
 
-.toggleText {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.toggleText strong {
-  display: block;
-  font-size: 0.9rem;
-  color: #0f172a;
-}
-
-.toggleText small {
-  font-size: 0.78rem;
-  color: #64748b;
-}
-
-/* Review Cards */
-.reviewCardsGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.reviewCard {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.reviewCard small {
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: #64748b;
-  text-transform: uppercase;
-}
-
-.reviewCard strong {
-  font-size: 0.92rem;
-  color: #0f172a;
-}
-
-.reviewCard span {
-  font-size: 0.78rem;
-  color: #64748b;
-}
-
-/* Coupon Row */
-.couponRow {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.couponRow input {
-  flex: 1;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-size: 0.88rem;
-}
-
-.couponRow button {
-  background: #fef3c7;
-  color: #b45309;
-  border: 1px solid #fde68a;
-  border-radius: 8px;
-  padding: 0 16px;
-  font-size: 0.82rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-/* Payment Methods */
-.paymentMethodsGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.paymentMethodCard {
+.locationCard {
+  background: #ffffff;
   border: 1.5px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 14px;
-  cursor: pointer;
-  background: #ffffff;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.paymentMethodSelected {
-  border-color: #d97706;
-  background: #fffbeb;
-}
-
-.paymentMethodCard strong {
-  font-size: 0.88rem;
-  color: #0f172a;
-}
-
-.paymentMethodCard small {
-  font-size: 0.75rem;
-  color: #64748b;
-}
-
-/* Bottom Actions */
-.bottomActions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-top: 1px solid #f1f5f9;
-  padding-top: 20px;
-  margin-top: 24px;
-  gap: 12px;
-}
-
-.prevBtn {
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  padding: 12px 20px;
-  border-radius: 10px;
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: #334155;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.nextBtn,
-.confirmBtn {
-  background: #d97706;
-  color: #ffffff;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 10px;
-  font-size: 0.92rem;
-  font-weight: 800;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin-left: auto;
-}
-
-/* Right Sticky Sidebar */
-.summarySidebar {
-  position: sticky;
-  top: 24px;
-}
-
-.liveSummaryCard {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
   border-radius: 20px;
-  padding: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  padding: 18px 16px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  align-items: flex-start;
+  gap: 8px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.18s ease;
 }
 
-.summaryTop {
-  display: flex;
+.locationCard:hover {
+  border-color: #cbd5e1;
+  transform: translateY(-2px);
+}
+
+.locationCardSelected {
+  border-color: #f59e0b;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.2);
+}
+
+.locationCardFull {
+  grid-column: 1 / -1;
+  flex-direction: row;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #f1f5f9;
+  padding: 16px 20px;
 }
 
-.summaryBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: #dcfce7;
-  color: #166534;
-  font-size: 0.72rem;
-  font-weight: 800;
-  padding: 2px 8px;
-  border-radius: 4px;
-}
-
-.summarySpeedName {
-  font-size: 0.85rem;
-  color: #0f172a;
-}
-
-.itemPreviewBlock {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: #f8fafc;
-  padding: 12px;
-  border-radius: 12px;
-}
-
-.itemIconCircle {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  background: #fef3c7;
-  color: #b45309;
+.selectedBadgeCheck {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #f59e0b;
+  color: #000000;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.itemPreviewBlock strong {
-  display: block;
-  font-size: 0.88rem;
+.locationIconPill {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #fefce8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: #0f172a;
 }
 
-.itemPreviewBlock small {
-  font-size: 0.75rem;
+.locationTitle {
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-top: 4px;
+}
+
+.locationDesc {
+  font-size: 0.82rem;
+  color: #64748b;
+  line-height: 1.35;
+}
+
+.locationChevron {
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   Step 3: Handover Options Grid (Screens 5 & 6)
+   -------------------------------------------------------------------------- */
+.handoverGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+@media (max-width: 768px) {
+  .handoverGrid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
+
+.handoverCard {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.handoverCard:hover {
+  border-color: #cbd5e1;
+}
+
+.handoverCardSelected {
+  border-color: #f59e0b;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.18);
+}
+
+.handoverLeft {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+}
+
+.handoverText h4 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.handoverText p {
+  margin: 3px 0 0;
+  font-size: 0.8rem;
+  color: #64748b;
+  line-height: 1.35;
+}
+
+.radioOuter {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.radioOuterActive {
+  border-color: #f59e0b;
+}
+
+.radioInnerDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #f59e0b;
+}
+
+/* --------------------------------------------------------------------------
+   Step 4: Pickup Location Form (Screens 7 & 8)
+   -------------------------------------------------------------------------- */
+.useLocationBtn {
+  background: #ffffff;
+  border: 1.5px solid #f59e0b;
+  border-radius: 18px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  gap: 14px;
+  transition: background 0.15s;
+}
+
+.useLocationBtn:hover {
+  background: #fefce8;
+}
+
+.useLocationLeft {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.targetIconRed {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #dc2626;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.useLocationLeft strong {
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: #0f172a;
+  display: block;
+}
+
+.useLocationLeft span {
+  font-size: 0.82rem;
   color: #64748b;
 }
 
-.routeFlow {
+/* Location Preview Snippet */
+.locationPreviewCard {
+  background: #ffffff;
+  border: 1.5px solid #f59e0b;
+  border-radius: 18px;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 18px;
+  align-items: center;
+}
+
+@media (max-width: 640px) {
+  .locationPreviewCard {
+    grid-template-columns: 130px 1fr;
+  }
+}
+
+.miniMapPreview {
+  height: 90px;
+  background: #e2f0d9;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.miniMapRoad {
+  position: absolute;
+  width: 140%;
+  height: 10px;
+  background: #ffffff;
+  transform: rotate(-25deg);
+}
+
+.miniMapCrossRoad {
+  position: absolute;
+  width: 120%;
+  height: 10px;
+  background: #ffffff;
+  transform: rotate(45deg);
+}
+
+.previewText strong {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #0f172a;
+  display: block;
+}
+
+.previewText span {
+  font-size: 0.84rem;
+  color: #475569;
+  line-height: 1.4;
+  display: block;
+  margin-top: 4px;
+}
+
+/* 2-Column Responsive Input Grid */
+.inputGrid2Col {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+@media (max-width: 640px) {
+  .inputGrid2Col {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
+
+.fieldPillRow {
+  background: #ffffff;
+  border: 1.5px solid #fde047;
+  border-radius: 16px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.fieldPillRow:focus-within {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+}
+
+.fieldPillRow input {
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 0.92rem;
+  color: #0f172a;
+  width: 100%;
+  font-family: inherit;
+  font-weight: 600;
+}
+
+.fieldPillRow input::placeholder {
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* --------------------------------------------------------------------------
+   Step 5: Deliver To Form (Screen 9)
+   -------------------------------------------------------------------------- */
+.deliverToHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.addressTypeRow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+@media (max-width: 540px) {
+  .addressTypeRow {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.addressTypeBtn {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 14px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.15s ease;
+}
+
+.addressTypeBtn:hover {
+  border-color: #cbd5e1;
+}
+
+.addressTypeBtnSelected {
+  border-color: #dc2626;
+  box-shadow: 0 2px 10px rgba(220, 38, 38, 0.15);
+}
+
+.addressTypeCheckRed {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #dc2626;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.addressTypeLabel {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #0f172a;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.addressDetailCard {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 18px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.detailFieldBlock {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 14px;
+}
+
+.detailFieldBlock:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.fieldContent {
+  flex: 1;
+}
+
+.fieldLabelSmall {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 650;
+  display: block;
+}
+
+.fieldContent input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 0.98rem;
+  font-weight: 750;
+  color: #0f172a;
+  margin-top: 3px;
+  font-family: inherit;
+}
+
+.redSecurityBanner {
+  background: #dc2626;
+  color: #ffffff;
+  border-radius: 16px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+/* --------------------------------------------------------------------------
+   Step 6: Schedule & Service (Screens 10 & 11)
+   -------------------------------------------------------------------------- */
+.speedGridRow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 768px) {
+  .speedGridRow {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.speedCard {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 18px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.18s ease;
+}
+
+.speedCard:hover {
+  border-color: #cbd5e1;
+  transform: translateY(-2px);
+}
+
+.speedCardSelected {
+  border-color: #dc2626;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.18);
+}
+
+.speedTitle {
+  font-size: 0.9rem;
+  font-weight: 850;
+  color: #0f172a;
+  line-height: 1.25;
+}
+
+.speedEtaYellow {
+  font-size: 0.8rem;
+  font-weight: 750;
+  color: #f59e0b;
+}
+
+.speedPrice {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.scheduleBoxCard {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.scheduleBoxCard h4 {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.datePillsRow {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+}
+
+.datePill {
+  min-width: 64px;
+  padding: 10px 8px;
+  border-radius: 16px;
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.datePillSelected {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: #ffffff;
+}
+
+.dateDayName {
+  font-size: 0.74rem;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+.dateDayNum {
+  font-size: 1.1rem;
+  font-weight: 850;
+}
+
+.timeSlotsRow {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  flex-wrap: wrap;
+}
+
+.timeSlotPill {
+  padding: 12px 18px;
+  border-radius: 16px;
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.timeSlotPillSelected {
+  border-color: #dc2626;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.12);
+}
+
+.timeSlotTitle {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.timeSlotDesc {
+  font-size: 0.74rem;
+  color: #64748b;
+}
+
+.redCommitmentCard {
+  background: #dc2626;
+  color: #ffffff;
+  border-radius: 18px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.shieldYellowCircle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #fef08a;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.redCommitmentCard h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 850;
+}
+
+.redCommitmentCard p {
+  margin: 4px 0 0;
+  font-size: 0.84rem;
+  opacity: 0.9;
+  line-height: 1.35;
+}
+
+/* --------------------------------------------------------------------------
+   Step 7: Item Details (Screen 12)
+   -------------------------------------------------------------------------- */
+.itemDetailsCard {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.itemDetailTopGrid {
+  display: grid;
+  grid-template-columns: 1fr 180px;
+  gap: 20px;
+}
+
+@media (max-width: 640px) {
+  .itemDetailTopGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.itemInputsCol {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.detailInputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.detailInputGroup label {
+  font-size: 0.85rem;
+  font-weight: 750;
+  color: #0f172a;
+}
+
+.detailInputGroup input,
+.detailInputGroup select {
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 11px 14px;
+  font-size: 0.92rem;
+  color: #0f172a;
+  outline: none;
+  font-family: inherit;
+  font-weight: 600;
+}
+
+.detailInputGroup input:focus,
+.detailInputGroup select:focus {
+  border-color: #f59e0b;
+}
+
+.itemPreviewCol {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.previewBoxSquare {
+  width: 100%;
+  height: 110px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.previewUploadedImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.uploadPhotoBox {
+  width: 100%;
+  height: 110px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1.5px dashed #cbd5e1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;
+  padding: 8px;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+
+.uploadPhotoBox:hover {
+  border-color: #dc2626;
+  background: #fef2f2;
+}
+
+.uploadPhotoBox strong {
+  font-size: 0.84rem;
+  color: #0f172a;
+}
+
+.uploadPhotoBox span {
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+.tagsRow {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tagPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #0f172a;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.tagPillSelected {
+  background: #fffbeb;
+  border-color: #f59e0b;
+  color: #b45309;
+}
+
+.tipCard {
+  background: #fefce8;
+  border: 1px solid #fef08a;
+  border-radius: 16px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.88rem;
+  color: #475569;
+}
+
+.tipCard strong {
+  color: #0f172a;
+}
+
+/* --------------------------------------------------------------------------
+   Step 8: Secure Handling Toggles (Screen 13)
+   -------------------------------------------------------------------------- */
+.toggleStack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.toggleRowCard {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.toggleLeft {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+}
+
+.toggleLeft h4 {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.toggleLeft p {
+  margin: 3px 0 0;
+  font-size: 0.82rem;
+  color: #64748b;
+}
+
+.switchToggle {
+  width: 50px;
+  height: 28px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  padding: 2px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.switchToggleActive {
+  background: #dc2626;
+}
+
+.switchKnob {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transform: translateX(0);
+  transition: transform 0.2s;
+}
+
+.switchKnobActive {
+  transform: translateX(22px);
+}
+
+/* --------------------------------------------------------------------------
+   Step 9: Review & Pay (Screens 14 & 15)
+   -------------------------------------------------------------------------- */
+.reviewSummaryCard {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.reviewItemRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 14px;
+}
+
+.reviewItemRow:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.reviewItemContent strong {
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: #0f172a;
+  display: block;
+}
+
+.reviewItemContent span {
+  font-size: 0.82rem;
+  color: #64748b;
+  display: block;
+  margin-top: 2px;
+}
+
+.priceBreakdownCard {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.priceHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.priceHeaderRow h4 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 850;
+  color: #0f172a;
+}
+
+.viewDetailsLink {
+  font-size: 0.86rem;
+  font-weight: 750;
+  color: #f59e0b;
+}
+
+.priceLineRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: #475569;
+  font-weight: 600;
+}
+
+.priceLineRow strong {
+  color: #0f172a;
+  font-weight: 800;
+}
+
+.priceDashedDivider {
+  border-top: 1px dashed #cbd5e1;
+  margin: 6px 0;
+}
+
+.priceTotalRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.paymentMethodsCard {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.paymentMethodsCard h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 850;
+  color: #0f172a;
+}
+
+.paymentGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+@media (max-width: 640px) {
+  .paymentGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.paymentBtn {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 14px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  position: relative;
+  text-align: center;
+  transition: all 0.15s ease;
+}
+
+.paymentBtn:hover {
+  border-color: #cbd5e1;
+}
+
+.paymentBtnSelected {
+  border-color: #dc2626;
+  box-shadow: 0 2px 10px rgba(220, 38, 38, 0.15);
+}
+
+.paymentLabel {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.paymentSubtext {
+  font-size: 0.7rem;
+  color: #16a34a;
+  font-weight: 750;
+}
+
+.termsRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.88rem;
+  color: #334155;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.termsRow input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  accent-color: #dc2626;
+  cursor: pointer;
+}
+
+.confirmBookBtn {
+  width: 100%;
+  background: #dc2626;
+  color: #ffffff;
+  border: none;
+  border-radius: 999px;
+  padding: 16px 28px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(220, 38, 38, 0.35);
+  transition: all 0.15s ease;
+}
+
+.confirmBookBtn:hover {
+  background: #b91c1c;
+  transform: translateY(-1px);
+}
+
+.confirmBookArrowCircle {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #dc2626;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* --------------------------------------------------------------------------
+   Desktop Live Sidebar Summary Card
+   -------------------------------------------------------------------------- */
+.sidebarCard {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 24px;
+  padding: 24px;
+  position: sticky;
+  top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+.sidebarHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1.5px solid #f1f5f9;
+  padding-bottom: 12px;
+}
+
+.sidebarHead h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 850;
+  color: #0f172a;
+}
+
+.sidebarLiveBadge {
+  background: #dcfce7;
+  color: #15803d;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.sidebarItemBox {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.sidebarItemIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #fefce8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f59e0b;
+  flex-shrink: 0;
+}
+
+.sidebarItemText strong {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #0f172a;
+  display: block;
+}
+
+.sidebarItemText span {
+  font-size: 0.78rem;
+  color: #64748b;
+  display: block;
+  margin-top: 2px;
+}
+
+.sidebarLocationMini {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  background: #f8fafc;
-  padding: 14px;
-  border-radius: 12px;
+  font-size: 0.82rem;
 }
 
-.routeStep {
+.sidebarLocPoint {
   display: flex;
   align-items: flex-start;
   gap: 10px;
 }
 
-.routeDotRed {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #dc2626;
-  margin-top: 4px;
-}
-
-.routeDotGreen {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #16a34a;
-  margin-top: 4px;
-}
-
-.routeStep small {
-  display: block;
-  font-size: 0.68rem;
-  font-weight: 700;
-  color: #64748b;
-}
-
-.routeStep p {
-  font-size: 0.8rem;
-  font-weight: 600;
+.sidebarLocPoint strong {
   color: #0f172a;
-  margin: 1px 0 0;
+  font-weight: 750;
+  display: block;
 }
 
-.fareBreakdownBox {
+.sidebarLocPoint span {
+  color: #64748b;
+  font-size: 0.78rem;
+  display: block;
+}
+
+.sidebarFareTable {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  border-top: 1px solid #f1f5f9;
-  padding-top: 14px;
-}
-
-.fareRow {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   color: #475569;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 12px;
 }
 
-.fareTotalRow {
+.sidebarFareRow {
   display: flex;
   justify-content: space-between;
-  font-size: 1.15rem;
+  align-items: center;
+}
+
+.sidebarFareTotal {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.1rem;
   font-weight: 900;
   color: #0f172a;
   border-top: 1px dashed #cbd5e1;
@@ -764,169 +1583,380 @@
   margin-top: 4px;
 }
 
-.trustFooter {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.74rem;
-  color: #166534;
-  font-weight: 600;
-  justify-content: center;
-}
-
-/* Confirmation Container */
-.confirmationContainer {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 20px;
-  padding: 40px 32px;
-  text-align: center;
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.confirmBadge {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: #16a34a;
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 16px;
-}
-
-.confirmHeader h1 {
-  font-size: 1.6rem;
-  font-weight: 900;
-  color: #0f172a;
-  margin: 0 0 6px;
-}
-
-.confirmHeader p {
-  font-size: 0.95rem;
-  color: #64748b;
-  margin: 0 0 24px;
-}
-
-.confirmInfoGrid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
-  margin-bottom: 28px;
-}
-
-.confirmCard {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+.sidebarTrustBanner {
+  background: #fefce8;
+  border: 1px solid #fef08a;
   border-radius: 12px;
-  padding: 14px;
+  padding: 10px 12px;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
   align-items: center;
-}
-
-.confirmCard small {
-  font-size: 0.7rem;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: #854d0e;
   font-weight: 700;
-  color: #64748b;
 }
 
-.confirmCard strong {
-  font-size: 1.05rem;
-  color: #0f172a;
-}
-
-.confirmCard button {
-  background: none;
-  border: none;
-  color: #d97706;
-  cursor: pointer;
+/* --------------------------------------------------------------------------
+   Desktop Form Bottom Action Bar (Inline inside Form Card)
+   -------------------------------------------------------------------------- */
+.desktopActionRow {
   display: flex;
-}
-
-.confirmActionsRow {
-  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 14px;
-  justify-content: center;
+  border-top: 1.5px solid #f1f5f9;
+  padding-top: 20px;
+  margin-top: 10px;
 }
 
-.secondaryHomeBtn {
+.btnBackWhite {
   background: #ffffff;
-  border: 1px solid #cbd5e1;
-  padding: 12px 24px;
-  border-radius: 10px;
-  font-size: 0.92rem;
-  font-weight: 700;
-  color: #334155;
-  cursor: pointer;
-}
-
-.primaryTrackBtn {
-  background: #d97706;
-  color: #ffffff;
-  border: none;
-  padding: 12px 28px;
-  border-radius: 10px;
-  font-size: 0.92rem;
-  font-weight: 800;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 999px;
+  padding: 13px 26px;
+  font-size: 0.95rem;
+  font-weight: 750;
+  color: #0f172a;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  transition: all 0.15s ease;
 }
 
-.errorAlert {
-  background: #fee2e2;
-  color: #991b1b;
-  padding: 12px 18px;
-  border-radius: 10px;
+.btnBackWhite:hover {
+  background: #f1f5f9;
+}
+
+.btnContinueRed {
+  background: #dc2626;
+  border: none;
+  border-radius: 999px;
+  padding: 14px 34px;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #ffffff;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35);
+  transition: all 0.15s;
+  margin-left: auto;
+}
+
+.btnContinueRed:hover {
+  background: #b91c1c;
+}
+
+.btnContinueYellow {
+  background: #f59e0b;
+  border: none;
+  border-radius: 999px;
+  padding: 14px 34px;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #ffffff;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+  transition: all 0.15s;
+  margin-left: auto;
+}
+
+.btnContinueYellow:hover {
+  background: #d97706;
+}
+
+/* --------------------------------------------------------------------------
+   Step 10: Booking Confirmed (Screen 16) - Desktop Expansive Card
+   -------------------------------------------------------------------------- */
+.confirmedContainerDesktop {
+  max-width: 820px;
+  width: 100%;
+  margin: 0 auto;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 28px;
+  padding: 36px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+}
+
+@media (max-width: 640px) {
+  .confirmedContainerDesktop {
+    padding: 24px 16px;
+    border-radius: 20px;
+  }
+}
+
+.confirmedTopHead {
   display: flex;
   align-items: center;
+  gap: 18px;
+}
+
+.greenCheckCircle {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #10b981;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.confirmedTitleBlock {
+  display: flex;
+  flex-direction: column;
+}
+
+.confirmedTitle {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #0f172a;
+  letter-spacing: -0.03em;
+  margin: 0;
+  line-height: 1.1;
+}
+
+.confirmedTitleYellow {
+  color: #f59e0b;
+}
+
+.confirmedSubtitle {
+  font-size: 1rem;
+  color: #64748b;
+  margin: 6px 0 0;
+}
+
+.confirmedInfoGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+@media (max-width: 640px) {
+  .confirmedInfoGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.infoCardBox {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+}
+
+.infoCardBox small {
+  font-size: 0.76rem;
+  color: #64748b;
+  font-weight: 650;
+}
+
+.infoCardBox strong {
+  font-size: 0.95rem;
+  font-weight: 850;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+/* Progress Tracker Card */
+.progressCard {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 22px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.progressCard h4 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 850;
+  color: #0f172a;
+}
+
+.milestonesRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  position: relative;
+}
+
+.milestonesLineBg {
+  position: absolute;
+  top: 16px;
+  left: 30px;
+  right: 30px;
+  height: 3px;
+  background: #e2e8f0;
+  z-index: 1;
+}
+
+.milestonesLineFill {
+  position: absolute;
+  top: 16px;
+  left: 30px;
+  height: 3px;
+  background: #dc2626;
+  z-index: 1;
+}
+
+.milestoneCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+  width: 90px;
+}
+
+.milestoneNode {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid #cbd5e1;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.milestoneNodeCompleted {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: #ffffff;
+}
+
+.milestoneNodeActive {
+  background: #ffffff;
+  border-color: #dc2626;
+}
+
+.milestoneNodeActiveInner {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #dc2626;
+}
+
+.milestoneIconWrap {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #fefce8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.milestoneLabel {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-top: 6px;
+  line-height: 1.2;
+}
+
+.milestoneTime {
+  font-size: 0.72rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+/* What's Next Notification Card */
+.whatsNextCard {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 18px 22px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.bellYellowCircle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #fef08a;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.whatsNextCard h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 850;
+  color: #0f172a;
+}
+
+.whatsNextCard p {
+  margin: 3px 0 0;
+  font-size: 0.85rem;
+  color: #475569;
+  line-height: 1.4;
+}
+
+.btnTrackYellow {
+  background: #f59e0b;
+  border: none;
+  border-radius: 999px;
+  padding: 16px 28px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   gap: 8px;
-  font-size: 0.88rem;
-  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+  transition: all 0.15s;
 }
 
-.spinner {
-  animation: spin 1s linear infinite;
+.btnTrackYellow:hover {
+  background: #d97706;
 }
 
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+.btnHomeWhite {
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 999px;
+  padding: 15px 28px;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #0f172a;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.15s;
 }
 
-@media (max-width: 1024px) {
-  .splitLayout {
-    grid-template-columns: 1fr;
-  }
-  .summarySidebar {
-    position: static;
-  }
-  .categoryGrid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-  .confirmInfoGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 768px) {
-  .topNav,
-  .formTwoCol,
-  .locationGrid,
-  .handoverGrid,
-  .speedGrid,
-  .reviewCardsGrid,
-  .paymentMethodsGrid {
-    grid-template-columns: 1fr;
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .categoryGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+.btnHomeWhite:hover {
+  background: #f1f5f9;
 }

@@ -1,69 +1,66 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
-  Archive,
   ArrowLeft,
   ArrowRight,
-  Bell,
   Bike,
-  BookOpen,
   Building,
   Building2,
+  Calendar,
   Camera,
   Car,
   Check,
   CheckCircle2,
   ChevronRight,
   Clock,
-  Copy,
   CreditCard,
   Crosshair,
-  ExternalLink,
+  Diamond,
   FileText,
+  Flag,
   Glasses,
   Headphones,
   HelpCircle,
   Home,
   Hotel,
   Key,
+  Landmark,
   Laptop,
   Lightbulb,
-  Loader2,
   Lock,
   MapPin,
-  MapPinned,
   Package,
   PackageCheck,
-  PenTool,
   Phone,
-  PhoneCall,
   Plug,
+  Plus,
   QrCode,
+  Receipt,
   Rocket,
   Shield,
+  ShieldAlert,
   ShieldCheck,
   Shirt,
   ShoppingBag,
   Smartphone,
-  Sparkles,
   Truck,
-  UploadCloud,
+  Upload,
   User,
   UserPlus,
   Users,
   Utensils,
   Wallet,
+  Wine,
   X,
-  Zap
+  Zap,
 } from 'lucide-react'
 import { navigateTo } from '@/app/router/navigation.js'
-import { getStoredUser, getUserAccessToken } from '@/features/auth/services/userAuthService.js'
+import { getUserAccessToken } from '@/features/auth/services/userAuthService.js'
 import {
   createForgotSomethingBooking,
   fetchForgotSomethingOptions,
   fetchForgotSomethingQuote,
-  DEFAULT_FORGOT_SOMETHING_OPTIONS
+  DEFAULT_FORGOT_SOMETHING_OPTIONS,
 } from '@/features/forgot-something/services/forgotSomethingService.js'
-import { fetchSavedAddresses } from '@/features/personal-courier/services/personalCourierService.js'
 import AuthModal from '@/features/auth/components/AuthModal.jsx'
 import styles from './ForgotSomethingBookingPage.module.css'
 
@@ -78,7 +75,7 @@ const CATEGORY_ICONS = {
   GLASSES: Glasses,
   CLOTHING: Shirt,
   HEADPHONES: Headphones,
-  BOOK_DIARY: BookOpen,
+  BOOK_DIARY: FileText,
   OTHER: Package,
 }
 
@@ -96,958 +93,1508 @@ const HANDOVER_ICONS = {
   RECEPTION: Building,
   SECURITY_GUARD: ShieldCheck,
   COLLEAGUE_STAFF: User,
-  LOST_AND_FOUND: Archive,
+  LOST_AND_FOUND: Package,
   SOMEONE_ELSE: Users,
   CUSTOM_CONTACT: UserPlus,
 }
 
-const STEP_TITLES = [
-  'Item Details',
-  'Location & Handover',
-  'Pickup & Delivery',
-  'Speed & Protection',
-  'Review & Pay'
-]
-
 export default function ForgotSomethingBookingPage() {
   const [currentStep, setCurrentStep] = useState(1)
   const [options, setOptions] = useState(DEFAULT_FORGOT_SOMETHING_OPTIONS)
-  const [savedAddresses, setSavedAddresses] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [authModalOpen, setAuthModalOpen] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
-  const [authModalOpen, setAuthModalOpen] = useState(false)
   const [confirmedBooking, setConfirmedBooking] = useState(null)
-  const [copiedId, setCopiedId] = useState(false)
 
-  // Booking Form State
+  // Booking Form State strictly matching mobile screens
   const [formData, setFormData] = useState({
-    itemCategory: 'KEYS',
-    itemName: 'Office & Flat Keys with Keychain',
-    description: 'Set of 3 keys with red tag',
-    approxValue: '500',
+    // Step 1: Item Category
+    itemCategory: 'BAG',
 
+    // Step 2: Location Category
     locationType: 'OFFICE',
-    placeName: 'WeWork Galaxy',
+
+    // Step 3: Handover
     handoverType: 'RECEPTION',
-    contactPersonName: 'Front Desk Security',
-    contactPersonPhone: '+91 98765 43210',
-    roomOrDeskNumber: 'Desk 412, 4th Floor',
-    handoverNotes: 'Item is in reception drawer under name Ravi.',
+    handoverCustomName: '',
+    handoverCustomPhone: '',
 
-    pickupFlatBuilding: 'WeWork Galaxy, 43 Residency Road',
-    pickupStreet: 'Shanthala Nagar, Ashok Nagar',
-    pickupArea: 'Residency Road',
-    pickupCity: 'Bengaluru',
-    pickupState: 'Karnataka',
-    pickupPostalCode: '560025',
-    pickupContactName: 'Front Desk Reception',
-    pickupPhoneNumber: '+91 98765 43210',
+    // Step 4: Pickup Location
+    pickupFlatBuilding: 'Flat 402, Lotus Tower',
+    pickupStreet: 'Golf Course Road',
+    pickupArea: 'Sector 42',
+    pickupCity: 'Gurugram',
+    pickupState: 'Haryana',
+    pickupPostalCode: '122002',
+    pickupContactName: 'Reception Desk',
+    pickupPhoneNumber: '9876543210',
+    pickupLandmark: 'Opposite Metro Station',
 
+    // Step 5: Deliver To
     dropoffAddressType: 'Home',
-    dropoffAddressLine1: '123, 4th Cross, Indiranagar 1st Stage',
-    dropoffArea: 'Indiranagar',
-    dropoffCity: 'Bengaluru',
-    dropoffState: 'Karnataka',
-    dropoffPostalCode: '560038',
-    dropoffRecipientName: 'Ravi Kishan',
-    dropoffPhoneNumber: '+91 63861 89353',
+    dropoffAddressLine1: '123, MG Road, Bangalore, Karnatak',
+    dropoffRecipientName: 'Rohan Sharma',
+    dropoffPhoneNumber: '9876543210',
+    dropoffLandmark: 'Near Trinity Metro',
 
+    // Step 6: Schedule & Service
     deliverySpeed: 'INSTANT', // 'INSTANT', 'EXPRESS', 'SAME_DAY', 'PRECISE_TIME'
-    scheduledDate: new Date().toISOString().split('T')[0],
-    scheduledTimeSlot: '15–30 Mins (Fastest)',
-    secureOtpHandover: true,
-    shipmentProtection: true,
-    photoProofRequired: true,
-    couponCode: '',
-    paymentMethod: 'PAY_ON_DELIVERY'
+    scheduledDate: '24',
+    scheduledTimeSlot: '10:00 AM - 11:00 AM',
+
+    // Step 7: Item Details
+    itemName: 'Black Laptop Bag',
+    itemDescription: 'Left behind in cab on the way',
+    itemBrandColor: 'Safari / Black',
+    itemQuantity: 1,
+    declaredValue: '2500',
+    itemTags: ['Urgent'],
+    itemPhotoUrl: null,
+    itemPhotoPreview: null,
+
+    // Step 8: Secure Handling & Verification (5 exact toggles from Screen 13)
+    pickupOtpRequired: true,
+    deliveryOtpRequired: true,
+    photoAtPickup: false,
+    photoAtDelivery: true,
+    tamperProofPackaging: true,
+
+    // Step 9: Payment
+    paymentMethod: 'WALLET', // 'WALLET', 'UPI', 'CARD', 'NET_BANKING'
+    termsAgreed: true,
   })
 
-  // Live Pricing Quote State with safe defaults
+  // Pricing State matching reference Screen 14/15
   const [quote, setQuote] = useState({
-    currency: 'INR',
-    retrievalFee: 149,
-    deliveryFee: 129,
-    secureHandlingFee: 39,
-    discountAmount: 0,
+    retrievalFee: 149.0,
+    deliveryFee: 129.0,
+    secureHandlingFee: 39.0,
     taxAmount: 23.02,
     totalAmount: 340.02,
-    speedName: 'Instant Flash (15–30 Mins)'
   })
 
-  // Load config & saved addresses
   useEffect(() => {
-    async function loadData() {
-      try {
-        const [optRes, addrRes] = await Promise.allSettled([
-          fetchForgotSomethingOptions(),
-          fetchSavedAddresses()
-        ])
-        if (optRes.status === 'fulfilled' && optRes.value) {
-          setOptions(optRes.value)
-        }
-        if (addrRes.status === 'fulfilled' && addrRes.value) {
-          setSavedAddresses(addrRes.value)
-        }
-      } catch (err) {
-        console.warn('Using default options fallback:', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-    loadData()
+    fetchForgotSomethingOptions()
+      .then((opts) => {
+        if (opts) setOptions(opts)
+      })
+      .catch(() => {})
   }, [])
 
-  // Auto calculate quote when speed/protection/coupon changes
   useEffect(() => {
-    async function updateQuote() {
-      try {
-        const res = await fetchForgotSomethingQuote({
-          speed: formData.deliverySpeed,
-          tamperProofPackaging: formData.shipmentProtection,
-          declaredValue: Number(formData.approxValue) || 0,
-        })
+    fetchForgotSomethingQuote({
+      speed: formData.deliverySpeed,
+      tamperProofPackaging: formData.tamperProofPackaging,
+      declaredValue: Number(formData.declaredValue) || 0,
+    })
+      .then((res) => {
         if (res) {
-          const rFee = Number(res.retrievalFee ?? 149)
-          const dFee = Number(res.deliveryFee ?? 129)
-          const sFee = Number(res.secureHandlingFee ?? (formData.shipmentProtection ? 39 : 0))
-          let disc = 0
-          if (formData.couponCode && formData.couponCode.trim().toUpperCase() === 'DELIVEZ10') {
-            disc = Math.round((rFee + dFee + sFee) * 0.1 * 100) / 100
-          }
-          const taxable = Math.max(0, rFee + dFee + sFee - disc)
-          const tax = Math.round(taxable * 0.0725 * 100) / 100
-          const tot = Math.round((taxable + tax) * 100) / 100
-
           setQuote({
-            currency: res.currency || 'INR',
-            retrievalFee: rFee,
-            deliveryFee: dFee,
-            secureHandlingFee: sFee,
-            discountAmount: disc,
-            taxAmount: tax,
-            totalAmount: tot,
-            speedName: res.breakdown?.speedName || (formData.deliverySpeed === 'INSTANT' ? 'Instant Flash (15–30 Mins)' : 'Express Retrieval')
+            retrievalFee: Number(res.retrievalFee) || 149.0,
+            deliveryFee: Number(res.deliveryFee) || 129.0,
+            secureHandlingFee: Number(res.secureHandlingFee) || (formData.tamperProofPackaging ? 39.0 : 0.0),
+            taxAmount: Number(res.taxAmount) || 23.02,
+            totalAmount: Number(res.totalAmount) || 340.02,
           })
         }
-      } catch (e) {
-        const rFee = formData.deliverySpeed === 'INSTANT' ? 149 : formData.deliverySpeed === 'EXPRESS' ? 119 : 89
-        const dFee = 129
-        const sFee = formData.shipmentProtection ? 39 : 0
-        const sub = rFee + dFee + sFee
-        const disc = formData.couponCode === 'DELIVEZ10' ? Math.round(sub * 0.1) : 0
-        const tax = Math.round((sub - disc) * 0.0725 * 100) / 100
-        setQuote({
-          currency: 'INR',
-          retrievalFee: rFee,
-          deliveryFee: dFee,
-          secureHandlingFee: sFee,
-          discountAmount: disc,
-          taxAmount: tax,
-          totalAmount: sub - disc + tax,
-          speedName: formData.deliverySpeed === 'INSTANT' ? 'Instant Flash (15–30 Mins)' : 'Express Retrieval'
-        })
-      }
-    }
-    updateQuote()
-  }, [formData.deliverySpeed, formData.shipmentProtection, formData.approxValue, formData.couponCode])
+      })
+      .catch(() => {})
+  }, [formData.deliverySpeed, formData.tamperProofPackaging, formData.declaredValue])
 
   const updateField = (key, val) => {
-    setFormData(prev => ({ ...prev, [key]: val }))
+    setFormData((prev) => ({ ...prev, [key]: val }))
   }
 
-  const handleNextStep = () => {
+  const toggleTag = (tag) => {
+    setFormData((prev) => {
+      const exists = prev.itemTags.includes(tag)
+      return {
+        ...prev,
+        itemTags: exists ? prev.itemTags.filter((t) => t !== tag) : [...prev.itemTags, tag],
+      }
+    })
+  }
+
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const preview = URL.createObjectURL(file)
+    setFormData((prev) => ({
+      ...prev,
+      itemPhotoPreview: preview,
+      itemPhotoUrl: preview,
+    }))
+  }
+
+  const handleDetectLocation = () => {
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          updateField('pickupArea', 'Sector 42')
+          updateField('pickupCity', 'Gurugram')
+          updateField('pickupPostalCode', '122002')
+        },
+        () => {
+          alert('Location access was denied. You can enter your pickup address manually.')
+        }
+      )
+    }
+  }
+
+  const handleNext = () => {
     setErrorMsg('')
-    if (currentStep === 1) {
-      if (!formData.itemCategory) {
-        setErrorMsg('Please select an item category.')
+    if (currentStep === 4) {
+      if (!formData.pickupFlatBuilding || !formData.pickupStreet || !formData.pickupCity || !formData.pickupPostalCode) {
+        setErrorMsg('Please fill in Flat/Building, Street, City, and Pincode.')
         return
       }
+      if (!formData.pickupContactName || !formData.pickupPhoneNumber) {
+        setErrorMsg('Please enter Contact Person Name and Phone Number.')
+        return
+      }
+    }
+    if (currentStep === 5) {
+      if (!formData.dropoffAddressLine1 || !formData.dropoffRecipientName || !formData.dropoffPhoneNumber) {
+        setErrorMsg('Please fill in Delivery Address, Recipient Name, and Phone Number.')
+        return
+      }
+    }
+    if (currentStep === 7) {
       if (!formData.itemName.trim()) {
-        setErrorMsg('Please enter the item name.')
+        setErrorMsg('Please enter the Item Name.')
         return
       }
     }
-    if (currentStep === 3) {
-      if (!formData.pickupFlatBuilding || !formData.dropoffAddressLine1) {
-        setErrorMsg('Please provide both pickup and delivery addresses.')
-        return
-      }
+    setCurrentStep((prev) => Math.min(10, prev + 1))
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleBack = () => {
+    setErrorMsg('')
+    setCurrentStep((prev) => Math.max(1, prev - 1))
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleConfirmAndBook = async () => {
+    if (!formData.termsAgreed) {
+      setErrorMsg('Please agree to the Terms & Conditions and Privacy Policy.')
+      return
     }
-    setCurrentStep(prev => Math.min(5, prev + 1))
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
-
-  const handlePrevStep = () => {
-    setErrorMsg('')
-    setCurrentStep(prev => Math.max(1, prev - 1))
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
-
-  const handleConfirmBooking = async () => {
-    setSubmitting(true)
-    setErrorMsg('')
 
     const token = getUserAccessToken()
     if (!token) {
       setAuthModalOpen(true)
-      setSubmitting(false)
       return
     }
 
+    setSubmitting(true)
+    setErrorMsg('')
+
     try {
-      const idempotencyKey = 'fetch-book-' + Date.now() + '-' + Math.random().toString(36).substring(2, 9)
+      const idempotencyKey = 'fetch-' + Date.now() + '-' + Math.random().toString(36).substring(2, 9)
       const payload = {
         itemCategory: formData.itemCategory,
         itemName: formData.itemName || 'Forgotten Item',
-        itemDescription: formData.description || 'Rapid item retrieval',
-        declaredValue: Number(formData.approxValue) || 0,
-        itemQuantity: 1,
+        itemDescription: formData.itemDescription || '',
+        itemBrandColor: formData.itemBrandColor || '',
+        itemQuantity: Number(formData.itemQuantity) || 1,
+        declaredValue: Number(formData.declaredValue) || 0,
+        itemTags: formData.itemTags,
+        itemPhotoUrl: formData.itemPhotoUrl,
 
         locationType: formData.locationType,
         handoverType: formData.handoverType,
-        handoverCustomName: formData.contactPersonName || 'Front Desk Staff',
-        handoverCustomPhone: formData.contactPersonPhone || '+91 98765 43210',
+        handoverCustomName: formData.handoverCustomName,
+        handoverCustomPhone: formData.handoverCustomPhone,
 
         pickup: {
           flatBuilding: formData.pickupFlatBuilding,
-          street: formData.pickupStreet || 'Main Road',
-          area: formData.pickupArea || 'Central',
-          city: formData.pickupCity || 'Bengaluru',
-          state: formData.pickupState || 'Karnataka',
-          postalCode: formData.pickupPostalCode || '560025',
-          contactName: formData.pickupContactName || 'Front Desk Reception',
-          phoneNumber: formData.pickupPhoneNumber || '+91 98765 43210'
+          street: formData.pickupStreet,
+          area: formData.pickupArea,
+          city: formData.pickupCity,
+          state: formData.pickupState,
+          postalCode: formData.pickupPostalCode,
+          contactName: formData.pickupContactName,
+          phoneNumber: formData.pickupPhoneNumber,
+          landmark: formData.pickupLandmark,
         },
 
         dropoff: {
-          addressType: formData.dropoffAddressType || 'Home',
+          addressType: formData.dropoffAddressType,
           addressLine1: formData.dropoffAddressLine1,
-          area: formData.dropoffArea || 'Indiranagar',
-          city: formData.dropoffCity || 'Bengaluru',
-          state: formData.dropoffState || 'Karnataka',
-          postalCode: formData.dropoffPostalCode || '560038',
-          recipientName: formData.dropoffRecipientName || 'Customer',
-          phoneNumber: formData.dropoffPhoneNumber || '+91 63861 89353'
+          city: 'Bangalore',
+          state: 'Karnataka',
+          postalCode: '560001',
+          recipientName: formData.dropoffRecipientName,
+          phoneNumber: formData.dropoffPhoneNumber,
+          landmark: formData.dropoffLandmark,
         },
 
         speed: formData.deliverySpeed,
         scheduledDate: formData.scheduledDate,
         scheduledTimeSlot: formData.scheduledTimeSlot,
-        pickupOtpRequired: formData.secureOtpHandover,
-        deliveryOtpRequired: true,
-        tamperProofPackaging: formData.shipmentProtection,
-        paymentMethod: formData.paymentMethod
+
+        pickupOtpRequired: formData.pickupOtpRequired,
+        deliveryOtpRequired: formData.deliveryOtpRequired,
+        photoAtPickup: formData.photoAtPickup,
+        photoAtDelivery: formData.photoAtDelivery,
+        tamperProofPackaging: formData.tamperProofPackaging,
+
+        paymentMethod: formData.paymentMethod,
       }
 
       const created = await createForgotSomethingBooking(payload, idempotencyKey)
       setConfirmedBooking(created)
-      setCurrentStep(6) // Confirmation
-      window.scrollTo({ top: 0, behavior: 'smooth' })
+      setCurrentStep(10) // Screen 16: Booking Confirmed
     } catch (err) {
-      console.error('Forgot Something booking failed:', err)
+      console.error(err)
       setErrorMsg(err.message || 'Failed to place booking. Please try again.')
     } finally {
       setSubmitting(false)
     }
   }
 
-  const handleCopyId = (id) => {
-    if (!id) return
-    navigator.clipboard.writeText(id)
-    setCopiedId(true)
-    setTimeout(() => setCopiedId(false), 2000)
-  }
-
-  // Pre-fill Sample
-  const handleAutoFillSample = () => {
-    setFormData(prev => ({
-      ...prev,
-      itemCategory: 'KEYS',
-      itemName: 'Office & Flat Keys with Red Keychain',
-      description: 'Bunch of 3 keys attached to red leather keychain with office access card',
-      approxValue: '500',
-      placeName: 'WeWork Galaxy Residency Road',
-      contactPersonName: 'Security Desk Officer',
-      contactPersonPhone: '+91 98765 43210',
-      roomOrDeskNumber: 'Desk 412 (North Wing)',
-      handoverNotes: 'Keys are placed in the reception drawer under "Ravi".',
-      deliverySpeed: 'INSTANT'
-    }))
-  }
-
-  const selectedCategoryMeta = (options?.itemCategories || DEFAULT_FORGOT_SOMETHING_OPTIONS.itemCategories).find(
-    c => c.id === formData.itemCategory
-  ) || { name: 'Keys', icon: 'Key' }
-
-  // Safe pricing numbers
-  const rFee = Number(quote?.retrievalFee ?? 149)
-  const dFee = Number(quote?.deliveryFee ?? 129)
-  const sFee = Number(quote?.secureHandlingFee ?? 39)
-  const discAmt = Number(quote?.discountAmount ?? 0)
-  const taxAmt = Number(quote?.taxAmount ?? 23.02)
-  const totalAmt = Number(quote?.totalAmount ?? (rFee + dFee + sFee - discAmt + taxAmt))
+  // Selected Category Icon
+  const SelectedCategoryIcon = CATEGORY_ICONS[formData.itemCategory] || Package
 
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.desktopContainer}>
-        {/* Top Header */}
-        <header className={styles.topNav}>
+        {/* ================================================================ */}
+        {/* Top App Header Card                                              */}
+        {/* ================================================================ */}
+        <header className={styles.topNavCard}>
           <div className={styles.navLeft}>
             <button
               type="button"
-              className={styles.backIconBtn}
-              onClick={() => currentStep > 1 && currentStep <= 5 ? handlePrevStep() : navigateTo('/user/dashboard')}
+              className={styles.headerBtn}
+              onClick={() => (currentStep > 1 && currentStep < 10 ? handleBack() : navigateTo('/'))}
+              title="Go Back"
             >
               <ArrowLeft size={18} />
             </button>
+
             <div className={styles.brandGroup}>
-              <div className={styles.brandTitleRow}>
-                <span className={styles.brandTitle}>DELIVEZ <span className={styles.brandAccent}>FETCH</span></span>
-                <span className={styles.brandSub}>RAPID RETRIEVAL</span>
-              </div>
-              <small className={styles.brandDesc}>
-                Retrieve forgotten keys, laptop, chargers, or bags in 15–30 mins flat.
-              </small>
+              <span className={styles.brandTitle}>
+                DELIVE<span className={styles.brandYellowZ}>Z</span>
+              </span>
+              {currentStep <= 3 ? (
+                <span className={styles.brandSubtitle}>FETCH</span>
+              ) : (
+                <span className={styles.brandSubBlack}>DELIVERING PROMISES</span>
+              )}
             </div>
           </div>
 
           <div className={styles.navRight}>
-            <button type="button" className={styles.sampleAutoFillBtn} onClick={handleAutoFillSample}>
-              <Sparkles size={14} />
-              <span>Auto-Fill Sample Item</span>
+            <div className={styles.stepBadge}>
+              <Clock size={14} />
+              <span>Step {currentStep} of 10</span>
+            </div>
+
+            <button
+              type="button"
+              className={styles.headerBtn}
+              onClick={() => alert('Delivez Fetch Help: We quickly retrieve forgotten items from anywhere and bring them to you.')}
+              title="Help & Information"
+            >
+              <HelpCircle size={18} />
             </button>
-            {currentStep <= 5 && (
-              <div className={styles.stepIndicatorBadge}>
-                Step {currentStep} of 5 • {STEP_TITLES[currentStep - 1]}
-              </div>
-            )}
           </div>
         </header>
 
-        {/* Desktop Stepper Bar */}
+        {/* ================================================================ */}
+        {/* 5-Step Horizontal Stepper (Screens 1 to 5)                       */}
+        {/* ================================================================ */}
         {currentStep <= 5 && (
-          <div className={styles.stepperRail}>
-            {STEP_TITLES.map((title, idx) => {
-              const stepNum = idx + 1
-              const isDone = currentStep > stepNum
+          <div className={styles.stepperCard}>
+            {[
+              { num: 1, title: 'Item Category' },
+              { num: 2, title: 'Location Type' },
+              { num: 3, title: 'Handover Mode' },
+              { num: 4, title: 'Pickup Details' },
+              { num: 5, title: 'Delivery Destination' },
+            ].map(({ num: stepNum, title: stepTitle }, idx) => {
+              const isCompleted = currentStep > stepNum
               const isActive = currentStep === stepNum
               return (
-                <div key={title} className={styles.stepItemWrapper}>
+                <React.Fragment key={stepNum}>
                   <div
-                    className={`${styles.stepRailItem} ${isActive ? styles.stepRailActive : ''} ${isDone ? styles.stepRailDone : ''}`}
-                    onClick={() => isDone && setCurrentStep(stepNum)}
+                    className={styles.stepperItem}
+                    onClick={() => {
+                      if (stepNum < currentStep) setCurrentStep(stepNum)
+                    }}
                   >
-                    <div className={styles.stepRailNumber}>
-                      {isDone ? <Check size={13} /> : stepNum}
+                    <div
+                      className={`${styles.stepCircle} ${isActive ? styles.stepCircleActive : ''} ${
+                        isCompleted ? styles.stepCircleCompleted : ''
+                      }`}
+                    >
+                      {isCompleted ? <Check size={14} strokeWidth={3} /> : stepNum}
                     </div>
-                    <span className={styles.stepRailLabel}>{title}</span>
+                    <span className={styles.stepTitleDesktop}>{stepTitle}</span>
                   </div>
-                  {idx < STEP_TITLES.length - 1 && (
-                    <div className={`${styles.stepRailDivider} ${isDone ? styles.stepRailDividerActive : ''}`} />
+                  {idx < 4 && (
+                    <div
+                      className={`${styles.stepLine} ${currentStep > stepNum ? styles.stepLineCompleted : ''}`}
+                    />
                   )}
-                </div>
+                </React.Fragment>
               )
             })}
           </div>
         )}
 
-        {/* Error Alert */}
+        {/* Global Error Banner */}
         {errorMsg && (
-          <div className={styles.errorAlert}>
-            <X size={18} />
-            <span>{errorMsg}</span>
+          <div style={{ padding: '12px 18px', background: '#fef2f2', border: '1.5px solid #fecaca', borderRadius: 16, color: '#dc2626', fontSize: '0.9rem', fontWeight: 600 }}>
+            {errorMsg}
           </div>
         )}
 
-        {/* STEP 6: Confirmation View */}
-        {currentStep === 6 && confirmedBooking ? (
-          <div className={styles.confirmationContainer}>
-            <div className={styles.confirmHeader}>
-              <div className={styles.confirmBadge}>
-                <Check size={36} />
-              </div>
-              <h1>Retrieval Booking Confirmed!</h1>
-              <p>We're dispatching a verified Delivez Fetch partner to collect your item right now.</p>
-            </div>
-
-            <div className={styles.confirmInfoGrid}>
-              <div className={styles.confirmCard}>
-                <small>BOOKING ID</small>
-                <strong>{confirmedBooking.bookingNumber || 'DZ-202608-001'}</strong>
-                <button type="button" onClick={() => handleCopyId(confirmedBooking.bookingNumber)}>
-                  {copiedId ? <Check size={12} /> : <Copy size={12} />}
-                </button>
-              </div>
-
-              <div className={styles.confirmCard}>
-                <small>ESTIMATED ARRIVAL</small>
-                <strong style={{ color: '#16a34a' }}>15–25 Mins</strong>
-              </div>
-
-              <div className={styles.confirmCard}>
-                <small>HANDOVER OTP</small>
-                <strong style={{ color: '#dc2626', letterSpacing: '2px' }}>
-                  {confirmedBooking.pickupOtp || '4928'}
-                </strong>
-              </div>
-
-              <div className={styles.confirmCard}>
-                <small>TOTAL FARE</small>
-                <strong>₹{totalAmt.toFixed(2)}</strong>
-              </div>
-            </div>
-
-            {/* Tracking Action Buttons */}
-            <div className={styles.confirmActionsRow}>
-              <button
-                type="button"
-                className={styles.secondaryHomeBtn}
-                onClick={() => navigateTo('/user/dashboard')}
-              >
-                Go to Dashboard
-              </button>
-              <button
-                type="button"
-                className={styles.primaryTrackBtn}
-                onClick={() => navigateTo(`/track/forgot-something/${confirmedBooking.bookingNumber || confirmedBooking.id}`)}
-              >
-                <span>Track Live Retrieval</span>
-                <ArrowRight size={16} />
-              </button>
-            </div>
-          </div>
-        ) : (
-          /* Steps 1 to 5: 2-Column Desktop Split Layout */
-          <div className={styles.splitLayout}>
-            {/* Left Form Panel */}
-            <div className={styles.formPanel}>
-              {/* STEP 1: Item Details */}
+        {/* ================================================================ */}
+        {/* Main Content Layout: Split Grid (Steps 1-9) or Confirmed (Step 10)*/}
+        {/* ================================================================ */}
+        {currentStep < 10 ? (
+          <div className={styles.splitGrid}>
+            <div className={styles.formPanelCard}>
+              {/* -------------------------------------------------------------- */}
+              {/* STEP 1: What did you forget? (Screens 1 & 2)                  */}
+              {/* -------------------------------------------------------------- */}
               {currentStep === 1 && (
-                <div className={styles.stepContent}>
-                  <div className={styles.panelHeader}>
-                    <h2>What item did you <span className={styles.highlightText}>forget</span>?</h2>
-                    <p>Select the category and provide a brief description to help the partner identify it.</p>
+                <>
+                  <div className={styles.screenTitleBlock}>
+                    <h1 className={styles.screenTitle}>What did you forget?</h1>
+                    <div className={styles.titleUnderlineYellow} />
+                    <p className={styles.screenSubtitle}>Select the item you want us to fetch.</p>
                   </div>
 
-                  <div className={styles.categoryGrid}>
-                    {(options?.itemCategories || DEFAULT_FORGOT_SOMETHING_OPTIONS.itemCategories).map(cat => {
-                      const IconComp = CATEGORY_ICONS[cat.id] || Package
-                      const isSelected = formData.itemCategory === cat.id
+              <div className={styles.itemCategoryGrid}>
+                {options.itemCategories.map((cat) => {
+                  const Icon = CATEGORY_ICONS[cat.id] || Package
+                  const isSelected = formData.itemCategory === cat.id
+                  return (
+                    <div
+                      key={cat.id}
+                      className={`${styles.categoryCard} ${isSelected ? styles.categoryCardSelected : ''}`}
+                      onClick={() => updateField('itemCategory', cat.id)}
+                    >
+                      <div className={styles.categoryIconPill}>
+                        <Icon size={24} />
+                      </div>
+                      <span className={styles.categoryLabel}>{cat.name}</span>
+                    </div>
+                  )
+                })}
+              </div>
+
+              <div className={styles.yellowTrustCard}>
+                <Shield size={28} color="#0f172a" style={{ flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <h4>We've got you covered!</h4>
+                  <p>Our verified partners will securely pick up your item and bring it safely to you.</p>
+                </div>
+                <div style={{ position: 'relative', flexShrink: 0 }}>
+                  <Package size={26} color="#0f172a" />
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: -4,
+                      right: -6,
+                      width: 14,
+                      height: 14,
+                      borderRadius: '50%',
+                      background: '#f59e0b',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#000000',
+                      fontSize: 10,
+                      fontWeight: 900,
+                    }}
+                  >
+                    ✓
+                  </span>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* -------------------------------------------------------------- */}
+          {/* STEP 2: Where is your item? (Screens 3 & 4)                   */}
+          {/* -------------------------------------------------------------- */}
+          {currentStep === 2 && (
+            <>
+              <div className={styles.screenTitleBlock}>
+                <h1 className={styles.screenTitle}>Where is your item?</h1>
+                <div className={styles.titleUnderlineYellow} />
+                <p className={styles.screenSubtitle}>Let us know the exact location where we should pick up your item.</p>
+              </div>
+
+              <div className={styles.locationGrid}>
+                {options.locationTypes.map((loc) => {
+                  const Icon = LOCATION_ICONS[loc.id] || Home
+                  const isSelected = formData.locationType === loc.id
+                  const isFull = loc.id === 'OTHER'
+                  return (
+                    <div
+                      key={loc.id}
+                      className={`${styles.locationCard} ${isFull ? styles.locationCardFull : ''} ${
+                        isSelected ? styles.locationCardSelected : ''
+                      }`}
+                      onClick={() => updateField('locationType', loc.id)}
+                    >
+                      {isSelected && (
+                        <div className={styles.selectedBadgeCheck}>
+                          <Check size={12} strokeWidth={3} />
+                        </div>
+                      )}
+                      <div className={styles.locationIconPill}>
+                        <Icon size={22} color={loc.id === 'OTHER' ? '#dc2626' : '#0f172a'} />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div className={styles.locationTitle}>{loc.name}</div>
+                        <div className={styles.locationDesc}>{loc.description}</div>
+                      </div>
+                      <ChevronRight size={18} className={styles.locationChevron} />
+                    </div>
+                  )
+                })}
+              </div>
+            </>
+          )}
+
+          {/* -------------------------------------------------------------- */}
+          {/* STEP 3: Who can hand it over? (Screens 5 & 6)                 */}
+          {/* -------------------------------------------------------------- */}
+          {currentStep === 3 && (
+            <>
+              <div className={styles.screenTitleBlock}>
+                <h1 className={styles.screenTitle}>Who can hand it over?</h1>
+                <div className={styles.titleUnderlineYellow} />
+                <p className={styles.screenSubtitle}>We'll coordinate with the person at the pickup location to collect your item.</p>
+              </div>
+
+              <div className={styles.handoverStack}>
+                {options.handoverOptions.map((h) => {
+                  const Icon = HANDOVER_ICONS[h.id] || User
+                  const isSelected = formData.handoverType === h.id
+                  return (
+                    <div
+                      key={h.id}
+                      className={`${styles.handoverCard} ${isSelected ? styles.handoverCardSelected : ''}`}
+                      onClick={() => updateField('handoverType', h.id)}
+                    >
+                      <div className={styles.handoverLeft}>
+                        <div className={styles.locationIconPill}>
+                          <Icon size={20} />
+                        </div>
+                        <div className={styles.handoverText}>
+                          <h4>{h.name}</h4>
+                          <p>{h.description}</p>
+                        </div>
+                      </div>
+
+                      {h.id === 'CUSTOM_CONTACT' ? (
+                        <ChevronRight size={18} color="#94a3b8" />
+                      ) : (
+                        <div className={`${styles.radioOuter} ${isSelected ? styles.radioOuterActive : ''}`}>
+                          {isSelected && <div className={styles.radioInnerDot} />}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+
+              <div className={styles.yellowTrustCard}>
+                <Shield size={26} color="#0f172a" />
+                <div style={{ flex: 1 }}>
+                  <h4>Your item is safe with us</h4>
+                  <p>Our handoff protocol ensures verified, secure retrieval every step of the way.</p>
+                </div>
+                <Smartphone size={24} color="#0f172a" />
+              </div>
+            </>
+          )}
+
+          {/* -------------------------------------------------------------- */}
+          {/* STEP 4: Pickup Location (Screens 7 & 8)                       */}
+          {/* -------------------------------------------------------------- */}
+          {currentStep === 4 && (
+            <>
+              <div className={styles.screenTitleBlock}>
+                <h1 className={styles.screenTitle}>
+                  Pickup <span style={{ color: '#dc2626' }}>Location</span>
+                </h1>
+                <div className={styles.titleUnderlineRed} />
+                <p className={styles.screenSubtitle}>Tell us where the forgotten item is.</p>
+              </div>
+
+              {/* Use current location button */}
+              <div className={styles.useLocationBtn} onClick={handleDetectLocation}>
+                <div className={styles.useLocationLeft}>
+                  <div className={styles.targetIconRed}>
+                    <Crosshair size={20} />
+                  </div>
+                  <div>
+                    <strong>Use current location</strong>
+                    <span>Detect my location automatically.</span>
+                  </div>
+                </div>
+                <ChevronRight size={18} color="#94a3b8" />
+              </div>
+
+              {/* Mini Location Preview Snippet */}
+              <div className={styles.locationPreviewCard}>
+                <div className={styles.miniMapPreview}>
+                  <div className={styles.miniMapRoad} />
+                  <div className={styles.miniMapCrossRoad} />
+                  <MapPin size={24} color="#dc2626" fill="#dc2626" style={{ position: 'relative', zIndex: 3 }} />
+                </div>
+                <div className={styles.previewText}>
+                  <strong>Location Preview</strong>
+                  <span>{formData.pickupArea || 'Sector 42'}, {formData.pickupCity || 'Gurugram'}, {formData.pickupState || 'Haryana'} {formData.pickupPostalCode || '122002'}</span>
+                </div>
+              </div>
+
+              {/* 8 Pickup Fields matching Screen 7 & 8 */}
+              <div className={styles.fieldPillRow}>
+                <Building2 size={18} color="#0f172a" />
+                <input
+                  type="text"
+                  placeholder="Flat / Building / House No."
+                  value={formData.pickupFlatBuilding}
+                  onChange={(e) => updateField('pickupFlatBuilding', e.target.value)}
+                />
+              </div>
+
+              <div className={styles.fieldPillRow}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <span style={{ fontSize: 10, fontWeight: 900, lineHeight: 1 }}>!|!</span>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Street / Road"
+                  value={formData.pickupStreet}
+                  onChange={(e) => updateField('pickupStreet', e.target.value)}
+                />
+              </div>
+
+              <div className={styles.fieldPillRow}>
+                <MapPin size={18} color="#0f172a" />
+                <input
+                  type="text"
+                  placeholder="Area / Locality"
+                  value={formData.pickupArea}
+                  onChange={(e) => updateField('pickupArea', e.target.value)}
+                />
+              </div>
+
+              <div className={styles.fieldPillRow}>
+                <Building size={18} color="#0f172a" />
+                <input
+                  type="text"
+                  placeholder="City"
+                  value={formData.pickupCity}
+                  onChange={(e) => updateField('pickupCity', e.target.value)}
+                />
+              </div>
+
+              <div className={styles.fieldPillRow}>
+                <MapPin size={18} color="#0f172a" />
+                <input
+                  type="text"
+                  placeholder="Pincode"
+                  value={formData.pickupPostalCode}
+                  onChange={(e) => updateField('pickupPostalCode', e.target.value)}
+                />
+              </div>
+
+              <div className={styles.fieldPillRow}>
+                <User size={18} color="#0f172a" />
+                <input
+                  type="text"
+                  placeholder="Contact Person Name"
+                  value={formData.pickupContactName}
+                  onChange={(e) => updateField('pickupContactName', e.target.value)}
+                />
+              </div>
+
+              <div className={styles.fieldPillRow}>
+                <Phone size={18} color="#0f172a" />
+                <input
+                  type="tel"
+                  placeholder="Phone Number"
+                  value={formData.pickupPhoneNumber}
+                  onChange={(e) => updateField('pickupPhoneNumber', e.target.value)}
+                />
+              </div>
+
+              <div className={styles.fieldPillRow}>
+                <Flag size={18} color="#0f172a" />
+                <input
+                  type="text"
+                  placeholder="Landmark (Optional)"
+                  value={formData.pickupLandmark}
+                  onChange={(e) => updateField('pickupLandmark', e.target.value)}
+                />
+              </div>
+            </>
+          )}
+
+          {/* -------------------------------------------------------------- */}
+          {/* STEP 5: Deliver To (Screen 9)                                 */}
+          {/* -------------------------------------------------------------- */}
+          {currentStep === 5 && (
+            <>
+              <div className={styles.deliverToHeaderRow}>
+                <div className={styles.screenTitleBlock}>
+                  <h1 className={styles.screenTitle}>Deliver To</h1>
+                  <div className={styles.titleUnderlineRed} />
+                  <p className={styles.screenSubtitleYellow}>Where should we bring your item?</p>
+                </div>
+                <div style={{ position: 'relative', width: 90, height: 75, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Home size={38} color="#f59e0b" />
+                  <MapPin size={34} color="#dc2626" fill="#dc2626" style={{ position: 'absolute', top: 0, left: 10 }} />
+                </div>
+              </div>
+
+              {/* 4 Address Type Pills */}
+              <div className={styles.addressTypeRow}>
+                {[
+                  { id: 'Home', label: 'Home', icon: Home },
+                  { id: 'Office', label: 'Office', icon: Building2 },
+                  { id: 'Friend / Family', label: 'Friend /\nFamily', icon: Users },
+                  { id: 'Custom Address', label: 'Custom\nAddress', icon: MapPin },
+                ].map((type) => {
+                  const Icon = type.icon
+                  const isSelected = formData.dropoffAddressType === type.id
+                  return (
+                    <div
+                      key={type.id}
+                      className={`${styles.addressTypeBtn} ${isSelected ? styles.addressTypeBtnSelected : ''}`}
+                      onClick={() => updateField('dropoffAddressType', type.id)}
+                    >
+                      {isSelected && (
+                        <div className={styles.addressTypeCheckRed}>
+                          <Check size={9} strokeWidth={3} />
+                        </div>
+                      )}
+                      <Icon size={20} color="#0f172a" />
+                      <span className={styles.addressTypeLabel}>{type.label}</span>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Address Details Card */}
+              <div className={styles.addressDetailCard}>
+                <div className={styles.detailFieldBlock}>
+                  <MapPin size={20} color="#0f172a" style={{ marginTop: 2 }} />
+                  <div className={styles.fieldContent}>
+                    <span className={styles.fieldLabelSmall}>Delivery Address</span>
+                    <input
+                      type="text"
+                      placeholder="123, MG Road, Bangalore, Karnatak"
+                      value={formData.dropoffAddressLine1}
+                      onChange={(e) => updateField('dropoffAddressLine1', e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className={styles.detailFieldBlock}>
+                  <User size={20} color="#0f172a" style={{ marginTop: 2 }} />
+                  <div className={styles.fieldContent}>
+                    <span className={styles.fieldLabelSmall}>Recipient Name</span>
+                    <input
+                      type="text"
+                      placeholder="Enter full name"
+                      value={formData.dropoffRecipientName}
+                      onChange={(e) => updateField('dropoffRecipientName', e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className={styles.detailFieldBlock}>
+                  <Phone size={20} color="#0f172a" style={{ marginTop: 2 }} />
+                  <div className={styles.fieldContent}>
+                    <span className={styles.fieldLabelSmall}>Phone Number</span>
+                    <input
+                      type="tel"
+                      placeholder="Enter 10-digit mobile number"
+                      value={formData.dropoffPhoneNumber}
+                      onChange={(e) => updateField('dropoffPhoneNumber', e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className={styles.detailFieldBlock}>
+                  <Building size={20} color="#0f172a" style={{ marginTop: 2 }} />
+                  <div className={styles.fieldContent}>
+                    <span className={styles.fieldLabelSmall}>Landmark (Optional)</span>
+                    <input
+                      type="text"
+                      placeholder="Nearby landmark for easy delivery"
+                      value={formData.dropoffLandmark}
+                      onChange={(e) => updateField('dropoffLandmark', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className={styles.redSecurityBanner}>
+                <Lock size={18} />
+                <span>Secure handoff and verified delivery</span>
+              </div>
+            </>
+          )}
+
+          {/* -------------------------------------------------------------- */}
+          {/* STEP 6: Schedule & Service (Screens 10 & 11)                   */}
+          {/* -------------------------------------------------------------- */}
+          {currentStep === 6 && (
+            <>
+              <div className={styles.screenTitleBlock}>
+                <h1 className={styles.screenTitle}>
+                  Schedule & <span style={{ color: '#f59e0b' }}>Service</span>
+                </h1>
+                <div className={styles.titleUnderlineRed} />
+                <p className={styles.screenSubtitle}>Choose how quickly you need it delivered.</p>
+              </div>
+
+              <strong style={{ fontSize: '0.92rem', fontWeight: 800 }}>Choose Pickup Speed</strong>
+
+              {/* Pickup Speed Cards */}
+              <div className={styles.speedScrollRow}>
+                {[
+                  { id: 'INSTANT', title: 'Instant\nPickup', eta: '15–30 mins', price: 'From ₹149', icon: Bike },
+                  { id: 'EXPRESS', title: 'Express', eta: '30–60 mins', price: 'From ₹119', icon: Rocket },
+                  { id: 'SAME_DAY', title: 'Same-Day', eta: '2–6 hrs', price: 'From ₹89', icon: Truck },
+                  { id: 'PRECISE_TIME', title: 'Precise\nTime Delivery', eta: 'Select Time', price: 'From ₹99', icon: Clock },
+                ].map((s) => {
+                  const Icon = s.icon
+                  const isSelected = formData.deliverySpeed === s.id
+                  return (
+                    <div
+                      key={s.id}
+                      className={`${styles.speedCard} ${isSelected ? styles.speedCardSelected : ''}`}
+                      onClick={() => updateField('deliverySpeed', s.id)}
+                    >
+                      {isSelected && (
+                        <div className={styles.selectedBadgeCheck} style={{ background: '#dc2626', color: '#ffffff' }}>
+                          <Check size={12} strokeWidth={3} />
+                        </div>
+                      )}
+                      <Icon size={24} color="#dc2626" />
+                      <div className={styles.speedTitle}>{s.title}</div>
+                      <div className={styles.speedEtaYellow}>{s.eta}</div>
+                      <div className={styles.speedPrice}>{s.price}</div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Schedule Box */}
+              <div className={styles.scheduleBoxCard}>
+                <h4>Select Pickup Date & Time</h4>
+
+                <div>
+                  <small style={{ color: '#64748b', fontWeight: 700, display: 'block', marginBottom: 6 }}>Pickup Date</small>
+                  <div className={styles.datePillsRow}>
+                    {[
+                      { day: 'Today', num: '24' },
+                      { day: 'Sat', num: '25' },
+                      { day: 'Sun', num: '26' },
+                      { day: 'Mon', num: '27' },
+                      { day: 'Tue', num: '28' },
+                    ].map((d) => {
+                      const isSelected = formData.scheduledDate === d.num
                       return (
                         <div
-                          key={cat.id}
-                          className={`${styles.categoryCard} ${isSelected ? styles.categorySelected : ''}`}
-                          onClick={() => updateField('itemCategory', cat.id)}
+                          key={d.num}
+                          className={`${styles.datePill} ${isSelected ? styles.datePillSelected : ''}`}
+                          onClick={() => updateField('scheduledDate', d.num)}
                         >
-                          <div className={styles.categoryIconWrap}>
-                            <IconComp size={24} />
-                          </div>
-                          <strong>{cat.name}</strong>
+                          <span className={styles.dateDayName}>{d.day}</span>
+                          <span className={styles.dateDayNum}>{d.num}</span>
                         </div>
                       )
                     })}
                   </div>
+                </div>
 
-                  <div className={styles.formFieldsBlock}>
-                    <div className={styles.inputGroup}>
-                      <label>Item Name / Tag</label>
+                <div>
+                  <small style={{ color: '#64748b', fontWeight: 700, display: 'block', marginBottom: 6 }}>Pickup Time</small>
+                  <div className={styles.timeSlotsRow}>
+                    {[
+                      { title: 'ASAP', desc: 'As soon as possible' },
+                      { title: '9:00 AM', desc: '– 10:00 AM' },
+                      { title: '10:00 AM', desc: '– 11:00 AM' },
+                      { title: '11:00 AM', desc: '– 12:00 PM' },
+                    ].map((t) => {
+                      const slotVal = `${t.title} ${t.desc}`
+                      const isSelected = formData.scheduledTimeSlot === slotVal || (t.title === '10:00 AM' && formData.scheduledTimeSlot.includes('10:00 AM'))
+                      return (
+                        <div
+                          key={t.title}
+                          className={`${styles.timeSlotPill} ${isSelected ? styles.timeSlotPillSelected : ''}`}
+                          onClick={() => updateField('scheduledTimeSlot', slotVal)}
+                        >
+                          {isSelected && (
+                            <div className={styles.selectedBadgeCheck} style={{ top: 4, right: 4, width: 14, height: 14, background: '#dc2626', color: '#ffffff' }}>
+                              <Check size={8} strokeWidth={3} />
+                            </div>
+                          )}
+                          <span className={styles.timeSlotTitle}>{t.title}</span>
+                          <span className={styles.timeSlotDesc}>{t.desc}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              <div className={styles.redCommitmentCard}>
+                <div className={styles.shieldYellowCircle}>
+                  <ShieldCheck size={24} color="#f59e0b" />
+                </div>
+                <div>
+                  <h4>Fast retrieval, on time.</h4>
+                  <p>We're committed to getting your items back to you—fast and reliably.</p>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* -------------------------------------------------------------- */}
+          {/* STEP 7: Item Details (Screen 12)                              */}
+          {/* -------------------------------------------------------------- */}
+          {currentStep === 7 && (
+            <>
+              <div className={styles.screenTitleBlock}>
+                <h1 className={styles.screenTitle}>Item Details</h1>
+                <div className={styles.titleUnderlineRed} />
+                <p className={styles.screenSubtitle}>Help us identify the forgotten item.</p>
+              </div>
+
+              <div className={styles.itemDetailsCard}>
+                <div className={styles.itemDetailTopGrid}>
+                  <div className={styles.itemInputsCol}>
+                    <div className={styles.detailInputGroup}>
+                      <label>Item Name *</label>
                       <input
                         type="text"
-                        placeholder="e.g. Set of 3 Office Keys with Red Tag"
+                        placeholder="e.g., Black Laptop Bag"
                         value={formData.itemName}
                         onChange={(e) => updateField('itemName', e.target.value)}
                       />
                     </div>
 
-                    <div className={styles.inputGroup}>
-                      <label>Item Description & Marks (Optional)</label>
-                      <textarea
-                        rows={3}
-                        placeholder="Describe color, pouch, brand, or specific identifiers..."
-                        value={formData.description}
-                        onChange={(e) => updateField('description', e.target.value)}
-                      />
-                    </div>
-
-                    <div className={styles.inputGroup}>
-                      <label>Approximate Value (₹)</label>
-                      <input
-                        type="number"
-                        placeholder="e.g. 500"
-                        value={formData.approxValue}
-                        onChange={(e) => updateField('approxValue', e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* STEP 2: Location & Handover */}
-              {currentStep === 2 && (
-                <div className={styles.stepContent}>
-                  <div className={styles.panelHeader}>
-                    <h2>Where is the item <span className={styles.highlightText}>located</span>?</h2>
-                    <p>Tell us where you left the item and who the partner should collect it from.</p>
-                  </div>
-
-                  <div className={styles.sectionSubTitle}>Location Type</div>
-                  <div className={styles.locationGrid}>
-                    {(options?.locationTypes || DEFAULT_FORGOT_SOMETHING_OPTIONS.locationTypes).map(loc => {
-                      const IconComp = LOCATION_ICONS[loc.id] || Building
-                      const isSelected = formData.locationType === loc.id
-                      return (
-                        <div
-                          key={loc.id}
-                          className={`${styles.locationCard} ${isSelected ? styles.locationSelected : ''}`}
-                          onClick={() => updateField('locationType', loc.id)}
-                        >
-                          <IconComp size={22} />
-                          <strong>{loc.name}</strong>
-                        </div>
-                      )
-                    })}
-                  </div>
-
-                  <div className={styles.sectionSubTitle} style={{ marginTop: '20px' }}>Who will hand over the item?</div>
-                  <div className={styles.handoverGrid}>
-                    {(options?.handoverTypes || DEFAULT_FORGOT_SOMETHING_OPTIONS.handoverTypes).map(hnd => {
-                      const IconComp = HANDOVER_ICONS[hnd.id] || User
-                      const isSelected = formData.handoverType === hnd.id
-                      return (
-                        <div
-                          key={hnd.id}
-                          className={`${styles.handoverCard} ${isSelected ? styles.handoverSelected : ''}`}
-                          onClick={() => updateField('handoverType', hnd.id)}
-                        >
-                          <IconComp size={20} />
-                          <span>{hnd.name}</span>
-                        </div>
-                      )
-                    })}
-                  </div>
-
-                  <div className={styles.formFieldsBlock} style={{ marginTop: '20px' }}>
-                    <div className={styles.formTwoCol}>
-                      <div className={styles.inputGroup}>
-                        <label>Place / Building Name</label>
-                        <input
-                          type="text"
-                          placeholder="e.g. WeWork Galaxy Residency Road"
-                          value={formData.placeName}
-                          onChange={(e) => updateField('placeName', e.target.value)}
-                        />
-                      </div>
-                      <div className={styles.inputGroup}>
-                        <label>Room / Desk / Floor</label>
-                        <input
-                          type="text"
-                          placeholder="e.g. Desk 412, 4th Floor"
-                          value={formData.roomOrDeskNumber}
-                          onChange={(e) => updateField('roomOrDeskNumber', e.target.value)}
-                        />
-                      </div>
-                    </div>
-
-                    <div className={styles.formTwoCol}>
-                      <div className={styles.inputGroup}>
-                        <label>Contact Person Name</label>
-                        <input
-                          type="text"
-                          placeholder="e.g. Security Desk / Receptionist"
-                          value={formData.contactPersonName}
-                          onChange={(e) => updateField('contactPersonName', e.target.value)}
-                        />
-                      </div>
-                      <div className={styles.inputGroup}>
-                        <label>Contact Person Phone</label>
-                        <input
-                          type="text"
-                          placeholder="e.g. +91 98765 43210"
-                          value={formData.contactPersonPhone}
-                          onChange={(e) => updateField('contactPersonPhone', e.target.value)}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* STEP 3: Pickup & Delivery Addresses */}
-              {currentStep === 3 && (
-                <div className={styles.stepContent}>
-                  <div className={styles.panelHeader}>
-                    <h2>Pickup & <span className={styles.highlightText}>Delivery Route</span></h2>
-                    <p>Enter the complete pickup location and your destination address.</p>
-                  </div>
-
-                  {/* Pickup Address Box */}
-                  <div className={styles.addressFormBlock}>
-                    <div className={styles.addressBlockTitle}>
-                      <MapPin size={18} color="#dc2626" />
-                      <strong>1. Pickup Address (Where item is currently located)</strong>
-                    </div>
-                    <div className={styles.inputGroup}>
-                      <label>Building / Flat / Premise</label>
+                    <div className={styles.detailInputGroup}>
+                      <label>Short Description</label>
                       <input
                         type="text"
-                        placeholder="e.g. WeWork Galaxy, 43 Residency Road"
-                        value={formData.pickupFlatBuilding}
-                        onChange={(e) => updateField('pickupFlatBuilding', e.target.value)}
+                        placeholder="e.g., Left behind in cab on the way"
+                        value={formData.itemDescription}
+                        onChange={(e) => updateField('itemDescription', e.target.value)}
                       />
                     </div>
-                    <div className={styles.formTwoCol}>
-                      <div className={styles.inputGroup}>
-                        <label>Street / Area</label>
-                        <input
-                          type="text"
-                          placeholder="e.g. Shanthala Nagar, Ashok Nagar"
-                          value={formData.pickupStreet}
-                          onChange={(e) => updateField('pickupStreet', e.target.value)}
-                        />
-                      </div>
-                      <div className={styles.inputGroup}>
-                        <label>City & Pin Code</label>
-                        <input
-                          type="text"
-                          placeholder="e.g. Bengaluru - 560025"
-                          value={`${formData.pickupCity} - ${formData.pickupPostalCode}`}
-                          onChange={(e) => updateField('pickupCity', e.target.value.split('-')[0].trim())}
-                        />
-                      </div>
-                    </div>
-                    <div className={styles.formTwoCol}>
-                      <div className={styles.inputGroup}>
-                        <label>Contact Person at Pickup</label>
-                        <input
-                          type="text"
-                          value={formData.pickupContactName}
-                          onChange={(e) => updateField('pickupContactName', e.target.value)}
-                        />
-                      </div>
-                      <div className={styles.inputGroup}>
-                        <label>Phone Number</label>
-                        <input
-                          type="text"
-                          value={formData.pickupPhoneNumber}
-                          onChange={(e) => updateField('pickupPhoneNumber', e.target.value)}
-                        />
-                      </div>
-                    </div>
-                  </div>
 
-                  {/* Delivery Address Box */}
-                  <div className={styles.addressFormBlock} style={{ marginTop: '20px' }}>
-                    <div className={styles.addressBlockTitle}>
-                      <MapPinned size={18} color="#16a34a" />
-                      <strong>2. Dropoff Address (Deliver to you)</strong>
-                    </div>
-                    <div className={styles.inputGroup}>
-                      <label>Complete Delivery Address Line 1</label>
+                    <div className={styles.detailInputGroup}>
+                      <label>Brand / Color (Optional)</label>
                       <input
                         type="text"
-                        placeholder="House / Flat No, apartment name, street"
-                        value={formData.dropoffAddressLine1}
-                        onChange={(e) => updateField('dropoffAddressLine1', e.target.value)}
+                        placeholder="e.g., Safari / Black"
+                        value={formData.itemBrandColor}
+                        onChange={(e) => updateField('itemBrandColor', e.target.value)}
                       />
                     </div>
-                    <div className={styles.formTwoCol}>
-                      <div className={styles.inputGroup}>
-                        <label>Receiver Name</label>
-                        <input
-                          type="text"
-                          value={formData.dropoffRecipientName}
-                          onChange={(e) => updateField('dropoffRecipientName', e.target.value)}
-                        />
-                      </div>
-                      <div className={styles.inputGroup}>
-                        <label>Receiver Phone Number</label>
-                        <input
-                          type="text"
-                          value={formData.dropoffPhoneNumber}
-                          onChange={(e) => updateField('dropoffPhoneNumber', e.target.value)}
-                        />
-                      </div>
+                  </div>
+
+                  <div className={styles.itemPreviewCol}>
+                    <small style={{ fontSize: '0.78rem', fontWeight: 800, color: '#0f172a' }}>Item Preview</small>
+                    <div className={styles.previewBoxSquare}>
+                      {formData.itemPhotoPreview ? (
+                        <img src={formData.itemPhotoPreview} alt="Item" className={styles.previewUploadedImg} />
+                      ) : (
+                        <SelectedCategoryIcon size={40} color="#f59e0b" strokeWidth={1.8} />
+                      )}
                     </div>
+
+                    <small style={{ fontSize: '0.78rem', fontWeight: 800, color: '#0f172a', marginTop: 4 }}>Upload Photo</small>
+                    <label className={styles.uploadPhotoBox}>
+                      <input type="file" accept="image/*" onChange={handlePhotoUpload} style={{ display: 'none' }} />
+                      <Upload size={20} color="#dc2626" />
+                      <strong>Tap to upload</strong>
+                      <span>JPG, PNG up to 5MB</span>
+                    </label>
                   </div>
                 </div>
-              )}
 
-              {/* STEP 4: Speed & Protection */}
-              {currentStep === 4 && (
-                <div className={styles.stepContent}>
-                  <div className={styles.panelHeader}>
-                    <h2>Select <span className={styles.highlightText}>Speed & Security</span></h2>
-                    <p>Choose how fast you need your item delivered and customize security protocols.</p>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div className={styles.detailInputGroup}>
+                    <label>Quantity</label>
+                    <select
+                      value={formData.itemQuantity}
+                      onChange={(e) => updateField('itemQuantity', Number(e.target.value))}
+                    >
+                      {[1, 2, 3, 4, 5, 10].map((q) => (
+                        <option key={q} value={q}>
+                          {q}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
-                  <div className={styles.speedGrid}>
-                    {[
-                      {
-                        id: 'INSTANT',
-                        title: '⚡ Instant Flash',
-                        time: '15–30 Mins',
-                        desc: 'Nearest verified partner dispatched instantly with direct routing.',
-                        badge: 'FASTEST'
-                      },
-                      {
-                        id: 'EXPRESS',
-                        title: '🚀 Express Retrieval',
-                        time: '30–45 Mins',
-                        desc: 'Priority retrieval for everyday transit.'
-                      },
-                      {
-                        id: 'SAME_DAY',
-                        title: '📅 Scheduled Slot',
-                        time: 'Same Day',
-                        desc: 'Schedule pickup for later today.'
-                      }
-                    ].map(sp => {
-                      const isSelected = formData.deliverySpeed === sp.id
-                      return (
-                        <div
-                          key={sp.id}
-                          className={`${styles.speedCard} ${isSelected ? styles.speedSelected : ''}`}
-                          onClick={() => updateField('deliverySpeed', sp.id)}
-                        >
-                          {sp.badge && <span className={styles.speedBadge}>{sp.badge}</span>}
-                          <strong>{sp.title}</strong>
-                          <span className={styles.speedTime}>{sp.time}</span>
-                          <p>{sp.desc}</p>
-                        </div>
-                      )
-                    })}
-                  </div>
-
-                  {/* Security Toggles */}
-                  <div className={styles.securityTogglesBox}>
-                    <div className={styles.toggleRow}>
-                      <div className={styles.toggleText}>
-                        <ShieldCheck size={20} color="#16a34a" />
-                        <div>
-                          <strong>Secure OTP Handover</strong>
-                          <small>Partner can only deliver upon entering 4-digit secret OTP.</small>
-                        </div>
-                      </div>
-                      <input
-                        type="checkbox"
-                        checked={formData.secureOtpHandover}
-                        onChange={(e) => updateField('secureOtpHandover', e.target.checked)}
-                      />
-                    </div>
-
-                    <div className={styles.toggleRow}>
-                      <div className={styles.toggleText}>
-                        <Shield size={20} color="#0284c7" />
-                        <div>
-                          <strong>Shipment Protection Cover (+₹39)</strong>
-                          <small>100% loss/damage guarantee covered up to ₹10,000.</small>
-                        </div>
-                      </div>
-                      <input
-                        type="checkbox"
-                        checked={formData.shipmentProtection}
-                        onChange={(e) => updateField('shipmentProtection', e.target.checked)}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* STEP 5: Review & Pay */}
-              {currentStep === 5 && (
-                <div className={styles.stepContent}>
-                  <div className={styles.panelHeader}>
-                    <h2>Review & <span className={styles.highlightText}>Confirm Retrieval</span></h2>
-                    <p>Review your booking details, apply coupons, and choose payment mode.</p>
-                  </div>
-
-                  {/* Review Cards */}
-                  <div className={styles.reviewCardsGrid}>
-                    <div className={styles.reviewCard}>
-                      <small>ITEM</small>
-                      <strong>{formData.itemName || selectedCategoryMeta.name}</strong>
-                      <span>Cat: {selectedCategoryMeta.name}</span>
-                    </div>
-
-                    <div className={styles.reviewCard}>
-                      <small>SPEED</small>
-                      <strong>{formData.deliverySpeed === 'INSTANT' ? 'Instant Flash (15–30 Mins)' : 'Express'}</strong>
-                      <span>Direct route dispatch</span>
-                    </div>
-
-                    <div className={styles.reviewCard}>
-                      <small>SECURITY</small>
-                      <strong style={{ color: '#16a34a' }}>OTP Handover Active</strong>
-                      <span>Protected ✓</span>
-                    </div>
-                  </div>
-
-                  {/* Coupon Field */}
-                  <div className={styles.couponRow}>
+                  <div className={styles.detailInputGroup}>
+                    <label>Approx. Value (₹)</label>
                     <input
-                      type="text"
-                      placeholder="Enter promo code (e.g. DELIVEZ10)"
-                      value={formData.couponCode}
-                      onChange={(e) => updateField('couponCode', e.target.value.toUpperCase())}
+                      type="number"
+                      placeholder="e.g., 2500"
+                      value={formData.declaredValue}
+                      onChange={(e) => updateField('declaredValue', e.target.value)}
                     />
-                    <button type="button" onClick={() => updateField('couponCode', 'DELIVEZ10')}>
-                      Apply DELIVEZ10
-                    </button>
                   </div>
+                </div>
 
-                  {/* Payment Options */}
-                  <div className={styles.paymentMethodsGrid}>
+                <div>
+                  <label style={{ fontSize: '0.82rem', fontWeight: 750, color: '#0f172a', display: 'block', marginBottom: 8 }}>
+                    Item Tags (Optional)
+                  </label>
+                  <div className={styles.tagsRow}>
                     {[
-                      { id: 'PAY_ON_DELIVERY', label: '💵 Pay on Delivery', sub: 'Cash / UPI at doorstep' },
-                      { id: 'UPI', label: '📱 Instant UPI', sub: 'GPay, PhonePe, Paytm' },
-                      { id: 'WALLET', label: '💳 Delivez Wallet', sub: 'Instant one-click checkout' },
-                      { id: 'CARD', label: '💳 Credit / Debit Card', sub: 'Visa, MasterCard, RuPay' }
-                    ].map(pm => {
-                      const isSelected = formData.paymentMethod === pm.id
+                      { label: 'Fragile', icon: Wine },
+                      { label: 'High Value', icon: Diamond },
+                      { label: 'Urgent', icon: Zap },
+                      { label: 'Small Item', icon: Package },
+                    ].map((tag) => {
+                      const Icon = tag.icon
+                      const isSelected = formData.itemTags.includes(tag.label)
                       return (
                         <div
-                          key={pm.id}
-                          className={`${styles.paymentMethodCard} ${isSelected ? styles.paymentMethodSelected : ''}`}
-                          onClick={() => updateField('paymentMethod', pm.id)}
+                          key={tag.label}
+                          className={`${styles.tagPill} ${isSelected ? styles.tagPillSelected : ''}`}
+                          onClick={() => toggleTag(tag.label)}
                         >
-                          <strong>{pm.label}</strong>
-                          <small>{pm.sub}</small>
+                          <Icon size={14} color={isSelected ? '#b45309' : '#0f172a'} />
+                          <span>{tag.label}</span>
                         </div>
                       )
                     })}
                   </div>
                 </div>
-              )}
 
-              {/* Bottom Action Navigation */}
-              <div className={styles.bottomActions}>
+                <div className={styles.tipCard}>
+                  <Lightbulb size={20} color="#dc2626" style={{ flexShrink: 0 }} />
+                  <span>
+                    <strong>Tip:</strong> Clear details help us retrieve your item faster.
+                  </span>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* -------------------------------------------------------------- */}
+          {/* STEP 8: Secure Handling & Verification (Screen 13)            */}
+          {/* -------------------------------------------------------------- */}
+          {currentStep === 8 && (
+            <>
+              <div className={styles.screenTitleBlock}>
+                <h1 className={styles.screenTitle}>
+                  Secure Handling <span style={{ color: '#f59e0b' }}>& Verification</span>
+                </h1>
+                <div className={styles.titleUnderlineRed} />
+                <p className={styles.screenSubtitle}>Choose safety options for retrieval and delivery.</p>
+              </div>
+
+              <div className={styles.redSecurityBanner}>
+                <Lock size={18} />
+                <span>Your items are handled securely from pickup to handoff.</span>
+              </div>
+
+              {/* 5 Exact Toggles from Screen 13 */}
+              {[
+                {
+                  key: 'pickupOtpRequired',
+                  title: 'Pickup OTP Verification',
+                  desc: 'Verify identity during pickup.',
+                  icon: Smartphone,
+                  color: '#2563eb',
+                },
+                {
+                  key: 'deliveryOtpRequired',
+                  title: 'Delivery OTP Verification',
+                  desc: 'Verify identity during delivery.',
+                  icon: Smartphone,
+                  color: '#f59e0b',
+                },
+                {
+                  key: 'photoAtPickup',
+                  title: 'Photo at Pickup',
+                  desc: 'Capture photo at the time of pickup.',
+                  icon: Camera,
+                  color: '#dc2626',
+                },
+                {
+                  key: 'photoAtDelivery',
+                  title: 'Photo at Delivery',
+                  desc: 'Capture photo at the time of delivery.',
+                  icon: Camera,
+                  color: '#f59e0b',
+                },
+                {
+                  key: 'tamperProofPackaging',
+                  title: 'Tamper-proof Packaging',
+                  desc: 'Secure tamper-evident packaging.',
+                  icon: PackageCheck,
+                  color: '#dc2626',
+                },
+              ].map((t) => {
+                const Icon = t.icon
+                const isActive = Boolean(formData[t.key])
+                return (
+                  <div key={t.key} className={styles.toggleRowCard}>
+                    <div className={styles.toggleLeft}>
+                      <div className={styles.locationIconPill}>
+                        <Icon size={20} color={t.color} />
+                      </div>
+                      <div>
+                        <h4>{t.title}</h4>
+                        <p>{t.desc}</p>
+                      </div>
+                    </div>
+                    <div
+                      className={`${styles.switchToggle} ${isActive ? styles.switchToggleActive : ''}`}
+                      onClick={() => updateField(t.key, !isActive)}
+                    >
+                      <div className={`${styles.switchKnob} ${isActive ? styles.switchKnobActive : ''}`} />
+                    </div>
+                  </div>
+                )
+              })}
+            </>
+          )}
+
+          {/* -------------------------------------------------------------- */}
+          {/* STEP 9: Review & Pay (Screens 14 & 15)                         */}
+          {/* -------------------------------------------------------------- */}
+          {currentStep === 9 && (
+            <>
+              <div className={styles.screenTitleBlock}>
+                <h1 className={styles.screenTitle}>
+                  Review <span style={{ color: '#f59e0b' }}>& Pay</span>
+                </h1>
+                <div className={styles.titleUnderlineRed} />
+                <p className={styles.screenSubtitle}>Check your retrieval order before booking.</p>
+              </div>
+
+              {/* Order Summary Card */}
+              <div className={styles.reviewSummaryCard}>
+                <div className={styles.reviewItemRow}>
+                  <ShoppingBag size={20} color="#dc2626" />
+                  <div className={styles.reviewItemContent}>
+                    <small style={{ color: '#64748b', fontWeight: 700 }}>Item</small>
+                    <strong>{formData.itemName || 'Yellow Backpack'}</strong>
+                    <span>{formData.itemQuantity} Item</span>
+                  </div>
+                </div>
+
+                <div className={styles.reviewItemRow}>
+                  <MapPin size={20} color="#0f172a" />
+                  <div className={styles.reviewItemContent}>
+                    <small style={{ color: '#64748b', fontWeight: 700 }}>Pickup Address</small>
+                    <strong>{formData.pickupArea || 'Home'}</strong>
+                    <span>{formData.pickupFlatBuilding}, {formData.pickupStreet}, {formData.pickupCity}</span>
+                  </div>
+                </div>
+
+                <div className={styles.reviewItemRow}>
+                  <MapPin size={20} color="#f59e0b" fill="#f59e0b" />
+                  <div className={styles.reviewItemContent}>
+                    <small style={{ color: '#64748b', fontWeight: 700 }}>Delivery Address</small>
+                    <strong>{formData.dropoffAddressType}</strong>
+                    <span>{formData.dropoffAddressLine1}</span>
+                  </div>
+                </div>
+
+                <div className={styles.reviewItemRow}>
+                  <Bike size={20} color="#dc2626" />
+                  <div className={styles.reviewItemContent}>
+                    <small style={{ color: '#64748b', fontWeight: 700 }}>Service</small>
+                    <strong>{formData.deliverySpeed === 'INSTANT' ? 'Instant Retrieval' : 'Express Retrieval'}</strong>
+                    <span>Fast pickup & delivery</span>
+                  </div>
+                </div>
+
+                <div className={styles.reviewItemRow}>
+                  <Calendar size={20} color="#0f172a" />
+                  <div className={styles.reviewItemContent}>
+                    <small style={{ color: '#64748b', fontWeight: 700 }}>Schedule</small>
+                    <strong>{formData.scheduledTimeSlot.includes('ASAP') ? 'ASAP' : formData.scheduledTimeSlot}</strong>
+                    <span>Within 60 minutes</span>
+                  </div>
+                </div>
+
+                <div className={styles.reviewItemRow}>
+                  <ShieldCheck size={20} color="#f59e0b" />
+                  <div className={styles.reviewItemContent}>
+                    <small style={{ color: '#64748b', fontWeight: 700 }}>Security Options</small>
+                    <strong>Secure Handling</strong>
+                    <span>Careful handling for your items</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Price Breakdown Card */}
+              <div className={styles.priceBreakdownCard}>
+                <div className={styles.priceHeaderRow}>
+                  <h4>Price Breakdown</h4>
+                  <span className={styles.viewDetailsLink}>View details &gt;</span>
+                </div>
+                <div className={styles.priceLineRow}>
+                  <span>Retrieval Fee</span>
+                  <strong>₹ {quote.retrievalFee.toFixed(2)}</strong>
+                </div>
+                <div className={styles.priceLineRow}>
+                  <span>Delivery Fee</span>
+                  <strong>₹ {quote.deliveryFee.toFixed(2)}</strong>
+                </div>
+                <div className={styles.priceLineRow}>
+                  <span>Secure Handling Fee</span>
+                  <strong>₹ {quote.secureHandlingFee.toFixed(2)}</strong>
+                </div>
+                <div className={styles.priceLineRow}>
+                  <span>Taxes & Charges</span>
+                  <strong>₹ {quote.taxAmount.toFixed(2)}</strong>
+                </div>
+                <div className={styles.priceDashedDivider} />
+                <div className={styles.priceTotalRow}>
+                  <span>Total Amount</span>
+                  <span>₹{quote.totalAmount.toFixed(2)}</span>
+                </div>
+              </div>
+
+              {/* Choose Payment Method */}
+              <div className={styles.paymentMethodsCard}>
+                <h4>Choose Payment Method</h4>
+                <div className={styles.paymentGrid}>
+                  {[
+                    { id: 'WALLET', label: 'Delivez Mo...', sub: 'Balance:\n₹512.00', icon: Wallet },
+                    { id: 'UPI', label: 'UPI', sub: '', icon: QrCode },
+                    { id: 'CARD', label: 'Debit / Cred...', sub: '', icon: CreditCard },
+                    { id: 'NET_BANKING', label: 'Net Banking', sub: '', icon: Landmark },
+                  ].map((p) => {
+                    const Icon = p.icon
+                    const isSelected = formData.paymentMethod === p.id
+                    return (
+                      <div
+                        key={p.id}
+                        className={`${styles.paymentBtn} ${isSelected ? styles.paymentBtnSelected : ''}`}
+                        onClick={() => updateField('paymentMethod', p.id)}
+                      >
+                        {isSelected && (
+                          <div className={styles.addressTypeCheckRed} style={{ top: 4, right: 4, width: 14, height: 14 }}>
+                            <Check size={8} strokeWidth={3} />
+                          </div>
+                        )}
+                        <Icon size={20} color="#0f172a" />
+                        <span className={styles.paymentLabel}>{p.label}</span>
+                        {p.sub && <span className={styles.paymentSubtext}>{p.sub}</span>}
+                      </div>
+                    )
+                  })}
+                </div>
+
+                <label className={styles.termsRow}>
+                  <input
+                    type="checkbox"
+                    checked={formData.termsAgreed}
+                    onChange={(e) => updateField('termsAgreed', e.target.checked)}
+                  />
+                  <span>
+                    I agree to the <strong style={{ textDecoration: 'underline' }}>Terms & Conditions</strong> and{' '}
+                    <strong style={{ textDecoration: 'underline' }}>Privacy Policy</strong>.
+                  </span>
+                </label>
+
+                <button
+                  type="button"
+                  className={styles.confirmBookBtn}
+                  onClick={handleConfirmAndBook}
+                  disabled={submitting}
+                >
+                  <span>{submitting ? 'Confirming Retrieval…' : 'Confirm & Book'}</span>
+                  <div className={styles.confirmBookArrowCircle}>
+                    <ChevronRight size={16} />
+                  </div>
+                </button>
+              </div>
+            </>
+          )}
+
+              {/* Desktop / Form Action Row (Back & Continue Buttons) */}
+              <div className={styles.desktopActionRow}>
                 {currentStep > 1 && (
-                  <button type="button" className={styles.prevBtn} onClick={handlePrevStep}>
-                    <ArrowLeft size={16} />
-                    <span>Back</span>
+                  <button type="button" className={styles.btnBackWhite} onClick={handleBack}>
+                    &larr; Back
                   </button>
                 )}
 
-                {currentStep < 5 ? (
-                  <button type="button" className={styles.nextBtn} onClick={handleNextStep}>
-                    <span>Continue to Step {currentStep + 1}</span>
-                    <ArrowRight size={16} />
+                {currentStep === 5 || currentStep === 6 || currentStep === 8 ? (
+                  <button type="button" className={styles.btnContinueYellow} onClick={handleNext}>
+                    <span>Continue &gt;</span>
                   </button>
-                ) : (
-                  <button
-                    type="button"
-                    className={styles.confirmBtn}
-                    onClick={handleConfirmBooking}
-                    disabled={submitting}
-                  >
-                    {submitting ? (
-                      <>
-                        <Loader2 className={styles.spinner} size={16} />
-                        <span>Placing Retrieval...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>Confirm & Dispatch Retrieval • ₹{totalAmt.toFixed(2)}</span>
-                        <ArrowRight size={16} />
-                      </>
-                    )}
+                ) : currentStep < 9 ? (
+                  <button type="button" className={styles.btnContinueRed} onClick={handleNext}>
+                    <span>Continue &rarr;</span>
                   </button>
-                )}
+                ) : null}
               </div>
             </div>
 
-            {/* Right Column: Sticky Live Summary Sidebar */}
-            <aside className={styles.summarySidebar}>
-              <div className={styles.liveSummaryCard}>
-                <div className={styles.summaryTop}>
-                  <div className={styles.summaryBadge}>
-                    <Zap size={13} /> LIVE QUOTE
-                  </div>
-                  <strong className={styles.summarySpeedName}>{quote.speedName || 'Instant Flash'}</strong>
-                </div>
+            {/* Desktop Live Sidebar Summary */}
+            <aside className={styles.sidebarCard}>
+              <div className={styles.sidebarHead}>
+                <h3>Order Summary</h3>
+                <span className={styles.sidebarLiveBadge}>LIVE QUOTE</span>
+              </div>
 
-                {/* Selected Item Preview */}
-                <div className={styles.itemPreviewBlock}>
-                  <div className={styles.itemIconCircle}>
-                    <Package size={20} />
-                  </div>
+              {/* Selected Item Box */}
+              <div className={styles.sidebarItemBox}>
+                <div className={styles.sidebarItemIcon}>
+                  <SelectedCategoryIcon size={22} />
+                </div>
+                <div className={styles.sidebarItemText}>
+                  <strong>
+                    {options.itemCategories.find((c) => c.id === formData.itemCategory)?.name || 'Selected Item'}
+                  </strong>
+                  <span>
+                    {formData.itemName || 'Item to retrieve'} &bull; {formData.itemBrandColor || 'Standard'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Route Points */}
+              <div className={styles.sidebarLocationMini}>
+                <div className={styles.sidebarLocPoint}>
+                  <MapPin size={16} color="#dc2626" style={{ marginTop: 2, flexShrink: 0 }} />
                   <div>
-                    <strong>{formData.itemName || selectedCategoryMeta.name}</strong>
-                    <small>Category: {selectedCategoryMeta.name}</small>
+                    <strong>Pickup Point</strong>
+                    <span>
+                      {formData.pickupFlatBuilding
+                        ? `${formData.pickupFlatBuilding}, ${formData.pickupStreet}, ${formData.pickupCity}`
+                        : 'Pickup address not specified yet'}
+                    </span>
                   </div>
                 </div>
+                <div className={styles.sidebarLocPoint}>
+                  <Home size={16} color="#16a34a" style={{ marginTop: 2, flexShrink: 0 }} />
+                  <div>
+                    <strong>Delivery Destination</strong>
+                    <span>{formData.dropoffAddressLine1 || 'Delivery destination not specified yet'}</span>
+                  </div>
+                </div>
+              </div>
 
-                {/* Route Flow */}
-                <div className={styles.routeFlow}>
-                  <div className={styles.routeStep}>
-                    <div className={styles.routeDotRed} />
-                    <div>
-                      <small>COLLECT AT</small>
-                      <p>{formData.pickupFlatBuilding || 'Workplace / Pickup'}</p>
-                    </div>
-                  </div>
-                  <div className={styles.routeStep}>
-                    <div className={styles.routeDotGreen} />
-                    <div>
-                      <small>DELIVER TO</small>
-                      <p>{formData.dropoffAddressLine1 || 'Home / Destination'}</p>
-                    </div>
-                  </div>
+              {/* Speed & Schedule */}
+              <div style={{ display: 'flex', gap: 10, fontSize: '0.8rem', color: '#475569', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#f8fafc', padding: '6px 10px', borderRadius: 8, border: '1px solid #e2e8f0' }}>
+                  <Zap size={14} color="#f59e0b" />
+                  <span style={{ fontWeight: 700 }}>{formData.deliverySpeed || 'INSTANT'} SPEED</span>
                 </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#f8fafc', padding: '6px 10px', borderRadius: 8, border: '1px solid #e2e8f0' }}>
+                  <Clock size={14} color="#64748b" />
+                  <span style={{ fontWeight: 700 }}>
+                    {formData.scheduledDate ? `${formData.scheduledDate} Sep • ${formData.scheduledTimeSlot}` : 'ASAP'}
+                  </span>
+                </div>
+              </div>
 
-                {/* Price Breakdown */}
-                <div className={styles.fareBreakdownBox}>
-                  <div className={styles.fareRow}>
-                    <span>Base Retrieval Charge</span>
-                    <strong>₹{rFee.toFixed(2)}</strong>
-                  </div>
-                  <div className={styles.fareRow}>
-                    <span>Delivery Base Fee</span>
-                    <strong>₹{dFee.toFixed(2)}</strong>
-                  </div>
-                  {sFee > 0 && (
-                    <div className={styles.fareRow}>
-                      <span>Secure Handling & Protection</span>
-                      <strong>₹{sFee.toFixed(2)}</strong>
-                    </div>
-                  )}
-                  {discAmt > 0 && (
-                    <div className={styles.fareRow} style={{ color: '#16a34a' }}>
-                      <span>Promo Discount (DELIVEZ10)</span>
-                      <strong>-₹{discAmt.toFixed(2)}</strong>
-                    </div>
-                  )}
-                  <div className={styles.fareRow}>
-                    <span>GST (~7.25%)</span>
-                    <strong>₹{taxAmt.toFixed(2)}</strong>
-                  </div>
-                  <div className={styles.fareTotalRow}>
-                    <span>Total Amount</span>
-                    <span>₹{totalAmt.toFixed(2)}</span>
-                  </div>
+              {/* Fare Breakdown */}
+              <div className={styles.sidebarFareTable}>
+                <div className={styles.sidebarFareRow}>
+                  <span>Retrieval fee</span>
+                  <strong>₹{quote.retrievalFee?.toFixed(2) || '149.00'}</strong>
                 </div>
+                <div className={styles.sidebarFareRow}>
+                  <span>Delivery fee</span>
+                  <strong>₹{quote.deliveryFee?.toFixed(2) || '129.00'}</strong>
+                </div>
+                <div className={styles.sidebarFareRow}>
+                  <span>Secure handling</span>
+                  <strong>₹{quote.secureHandlingFee?.toFixed(2) || '39.00'}</strong>
+                </div>
+                <div className={styles.sidebarFareRow}>
+                  <span>Taxes & charges</span>
+                  <strong>₹{quote.taxAmount?.toFixed(2) || '23.02'}</strong>
+                </div>
+                <div className={styles.sidebarFareTotal}>
+                  <span>Total Payable</span>
+                  <span style={{ color: '#dc2626' }}>₹{quote.totalAmount?.toFixed(2) || '340.02'}</span>
+                </div>
+              </div>
 
-                {/* Trust Footer */}
-                <div className={styles.trustFooter}>
-                  <ShieldCheck size={16} color="#16a34a" />
-                  <span>100% Verified Partners • Contactless Handover</span>
-                </div>
+              {/* Trust Banner */}
+              <div className={styles.sidebarTrustBanner}>
+                <ShieldCheck size={16} color="#f59e0b" />
+                <span>Verified Partner &bull; Secure OTP Handover</span>
               </div>
             </aside>
           </div>
-        )}
+        ) : (
+          /* ================================================================ */
+          /* STEP 10: Booking Confirmed (Screen 16) - Desktop Expansive Card  */
+          /* ================================================================ */
+          confirmedBooking && (
+            <div className={styles.confirmedContainerDesktop}>
+              <div className={styles.confirmedTopHead}>
+                <div className={styles.greenCheckCircle}>
+                  <Check size={24} strokeWidth={3} />
+                </div>
+                <div className={styles.confirmedTitleBlock}>
+                  <h1 className={styles.confirmedTitle}>
+                    Booking <span className={styles.confirmedTitleYellow}>Confirmed</span>
+                  </h1>
+                  <div className={styles.titleUnderlineRed} />
+                  <p className={styles.confirmedSubtitle}>We're arranging your retrieval now.</p>
+                </div>
+              </div>
 
-        {/* Seamless Auth Modal */}
-        <AuthModal
-          isOpen={authModalOpen}
-          onClose={() => setAuthModalOpen(false)}
-          onAuthenticated={() => {
-            setAuthModalOpen(false)
-            handleConfirmBooking()
-          }}
-        />
+              {/* 4 Info Cards */}
+              <div className={styles.confirmedInfoGrid}>
+                <div className={styles.infoCardBox}>
+                  <Receipt size={20} color="#dc2626" />
+                  <small>Booking ID</small>
+                  <strong>{confirmedBooking.bookingNumber || 'DZ12345678'}</strong>
+                </div>
+
+                <div className={styles.infoCardBox}>
+                  <Clock size={20} color="#0f172a" />
+                  <small>Pickup ETA</small>
+                  <strong>15–20 min</strong>
+                </div>
+
+                <div className={styles.infoCardBox}>
+                  <Bike size={20} color="#dc2626" />
+                  <small>Service</small>
+                  <strong>Instant Retrieval</strong>
+                </div>
+
+                <div className={styles.infoCardBox}>
+                  <Shield size={20} color="#f59e0b" />
+                  <small>Secure & Safe</small>
+                  <strong>Handled with care</strong>
+                </div>
+              </div>
+
+              {/* Retrieval Progress Card */}
+              <div className={styles.progressCard}>
+                <h4>Retrieval Progress</h4>
+
+                <div className={styles.milestonesRow}>
+                  <div className={styles.milestonesLineBg} />
+                  <div className={styles.milestonesLineFill} style={{ width: '25%' }} />
+
+                  {/* Step 1: Order Confirmed */}
+                  <div className={styles.milestoneCol}>
+                    <div className={`${styles.milestoneNode} ${styles.milestoneNodeCompleted}`}>
+                      <Check size={14} strokeWidth={3} />
+                    </div>
+                    <div className={styles.milestoneIconWrap}>
+                      <FileText size={16} color="#dc2626" />
+                    </div>
+                    <span className={styles.milestoneLabel}>Order Confirmed</span>
+                    <span className={styles.milestoneTime}>09:41 AM</span>
+                  </div>
+
+                  {/* Step 2: Partner Assigned */}
+                  <div className={styles.milestoneCol}>
+                    <div className={`${styles.milestoneNode} ${styles.milestoneNodeActive}`}>
+                      <div className={styles.milestoneNodeActiveInner} />
+                    </div>
+                    <div className={styles.milestoneIconWrap}>
+                      <User size={16} color="#dc2626" />
+                    </div>
+                    <span className={styles.milestoneLabel}>Partner Assigned</span>
+                    <span className={styles.milestoneTime}>09:42 AM</span>
+                  </div>
+
+                  {/* Step 3: Pickup in Progress */}
+                  <div className={styles.milestoneCol}>
+                    <div className={styles.milestoneNode} />
+                    <div className={styles.milestoneIconWrap} style={{ background: '#f1f5f9' }}>
+                      <Package size={16} color="#94a3b8" />
+                    </div>
+                    <span className={styles.milestoneLabel} style={{ color: '#94a3b8' }}>
+                      Pickup in Progress
+                    </span>
+                  </div>
+
+                  {/* Step 4: On the Way */}
+                  <div className={styles.milestoneCol}>
+                    <div className={styles.milestoneNode} />
+                    <div className={styles.milestoneIconWrap} style={{ background: '#f1f5f9' }}>
+                      <Bike size={16} color="#94a3b8" />
+                    </div>
+                    <span className={styles.milestoneLabel} style={{ color: '#94a3b8' }}>
+                      On the Way
+                    </span>
+                  </div>
+
+                  {/* Step 5: Delivered */}
+                  <div className={styles.milestoneCol}>
+                    <div className={styles.milestoneNode} />
+                    <div className={styles.milestoneIconWrap} style={{ background: '#f1f5f9' }}>
+                      <Home size={16} color="#94a3b8" />
+                    </div>
+                    <span className={styles.milestoneLabel} style={{ color: '#94a3b8' }}>
+                      Delivered
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* What's Next Card */}
+              <div className={styles.whatsNextCard}>
+                <div className={styles.bellYellowCircle}>
+                  <ShieldAlert size={22} color="#0f172a" />
+                </div>
+                <div>
+                  <h4>What's Next?</h4>
+                  <p>Our delivery partner is on the way to pick up your item.</p>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 6 }}>
+                <button
+                  type="button"
+                  className={styles.btnTrackYellow}
+                  onClick={() =>
+                    navigateTo(
+                      `/track/forgot-something/${confirmedBooking.bookingNumber || confirmedBooking.id}`
+                    )
+                  }
+                >
+                  <MapPin size={18} />
+                  <span>Track Retrieval &gt;</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={styles.btnHomeWhite}
+                  onClick={() => navigateTo('/')}
+                >
+                  <Home size={18} />
+                  <span>Back to Home</span>
+                </button>
+              </div>
+            </div>
+          )
+        )}
       </div>
+
+      {authModalOpen && <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />}
     </div>
   )
 }

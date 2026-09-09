@@ -55,8 +55,6 @@ export const DEFAULT_FORGOT_SOMETHING_OPTIONS = {
     { id: 'photoAtPickup', name: 'Photo at Pickup', description: 'Capture photo at the time of pickup.', icon: 'Camera', defaultChecked: false, fee: 0 },
     { id: 'photoAtDelivery', name: 'Photo at Delivery', description: 'Capture photo at the time of delivery.', icon: 'Camera', defaultChecked: true, fee: 0 },
     { id: 'tamperProofPackaging', name: 'Tamper-proof Packaging', description: 'Secure tamper-evident packaging.', icon: 'PackageCheck', defaultChecked: true, fee: 39 },
-    { id: 'receiverSignature', name: 'Receiver Signature', description: 'Collect signature upon delivery.', icon: 'PenTool', defaultChecked: false, fee: 0 },
-    { id: 'callBeforeArrival', name: 'Call Before Arrival', description: 'Call the receiver before arriving.', icon: 'PhoneCall', defaultChecked: false, fee: 0 },
   ],
   itemTags: ['Fragile', 'High Value', 'Urgent', 'Small Item'],
   defaultPartner: {

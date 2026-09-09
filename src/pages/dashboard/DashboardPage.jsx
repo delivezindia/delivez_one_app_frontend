@@ -36,6 +36,7 @@ import {
   ShieldCheck,
   ShoppingBag,
   Sliders,
+  Sparkles,
   Tag,
   Trash2,
   Truck,
@@ -61,6 +62,7 @@ import {
 import { fetchAdminUsers } from '@/features/admin-users/services/adminUsersService.js'
 
 // Import all sub-module views
+import AdminLuggageDeliveryView from './components/AdminLuggageDeliveryView.jsx'
 import AdminGiftDeliveryView from './components/AdminGiftDeliveryView.jsx'
 import AdminUnifiedOrdersView from './components/AdminUnifiedOrdersView.jsx'
 import AdminPartnersView from './components/AdminPartnersView.jsx'
@@ -76,6 +78,10 @@ import AdminRadarView from './components/AdminRadarView.jsx'
 import AdminPromosView from './components/AdminPromosView.jsx'
 import AdminPricingView from './components/AdminPricingView.jsx'
 import AdminAuditView from './components/AdminAuditView.jsx'
+import AdminPromptExamplesView from './components/AdminPromptExamplesView.jsx'
+import AdminHomeContentView from './components/AdminHomeContentView.jsx'
+
+
 
 import {
   fetchUnifiedStats,
@@ -91,9 +97,9 @@ const navItems = [
   { id: 'radar', label: 'Operations Radar', icon: Radio, group: 'CORE' },
   { id: 'orders', label: 'Unified Orders', icon: PackageCheck, group: 'CORE' },
   
-  { id: 'gift-delivery', label: 'Gift & Surprise', icon: Gift, group: 'SERVICES' },
-  { id: 'courier', label: 'Personal Courier', icon: Truck, group: 'SERVICES' },
-  { id: 'confidential', label: 'Confidential / Luggage', icon: ShieldCheck, group: 'SERVICES' },
+  { id: 'courier', label: 'Courier Delivery', icon: Truck, group: 'SERVICES' },
+  { id: 'luggage', label: 'Luggage Delivery', icon: Luggage, group: 'SERVICES' },
+  { id: 'confidential', label: 'Confidential Delivery', icon: ShieldCheck, group: 'SERVICES' },
   { id: 'forgot', label: 'Forgot Something', icon: ShoppingBag, group: 'SERVICES' },
   { id: 'returns', label: 'Return Pickup', icon: RotateCcw, group: 'SERVICES' },
 
@@ -105,10 +111,14 @@ const navItems = [
   { id: 'analytics', label: 'Analytics & Reports', icon: ChartNoAxesCombined, group: 'MANAGEMENT' },
 
   { id: 'services', label: 'Services Catalogue', icon: Package, group: 'SYSTEM' },
+  { id: 'home-content', label: 'Home Studio (Banner & Cards)', icon: LayoutDashboard, group: 'SYSTEM' },
+  { id: 'prompt-examples', label: 'AI Prompt Cards', icon: Sparkles, group: 'SYSTEM' },
   { id: 'support', label: 'Helpdesk & Support', icon: Headphones, group: 'SYSTEM' },
+
   { id: 'settings', label: 'Operational Controls', icon: Sliders, group: 'SYSTEM' },
   { id: 'audit', label: 'Audit Trail & Logs', icon: FileClock, group: 'SYSTEM' },
 ]
+
 
 const servicePresentation = {
   'courier-delivery': { icon: Truck, color: '#087fc1', tint: '#e9f6ff' },
@@ -478,9 +488,9 @@ export default function DashboardPage() {
                 <h3 style={{ fontSize: 16, fontWeight: 800, marginBottom: 14 }}>Explore Service Modules</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
                   {[
-                    { id: 'gift-delivery', label: 'Gift & Surprise', count: liveStats?.breakdown?.giftDelivery ?? 0, icon: Gift, color: '#E11D48' },
-                    { id: 'courier', label: 'Personal Courier', count: liveStats?.breakdown?.personalCourier ?? 0, icon: Truck, color: '#2563EB' },
-                    { id: 'confidential', label: 'Confidential Cargo', count: liveStats?.breakdown?.confidentialCourier ?? 0, icon: ShieldCheck, color: '#D97706' },
+                    { id: 'courier', label: 'Courier Delivery', count: liveStats?.breakdown?.personalCourier ?? 0, icon: Truck, color: '#2563EB' },
+                    { id: 'luggage', label: 'Luggage Delivery', count: liveStats?.breakdown?.luggageDelivery ?? liveStats?.breakdown?.personalCourier ?? 0, icon: Luggage, color: '#D97706' },
+                    { id: 'confidential', label: 'Confidential Delivery', count: liveStats?.breakdown?.confidentialCourier ?? 0, icon: ShieldCheck, color: '#DC2626' },
                     { id: 'forgot', label: 'Forgot Something', count: liveStats?.breakdown?.forgotSomething ?? 0, icon: ShoppingBag, color: '#7C3AED' },
                     { id: 'returns', label: 'Return Pickup', count: liveStats?.breakdown?.returnPickup ?? 0, icon: RotateCcw, color: '#059669' },
                   ].map(s => {
@@ -558,28 +568,12 @@ export default function DashboardPage() {
           {activeNav === 'orders' && <AdminUnifiedOrdersView />}
 
           {/* ================================================================= */}
-          {/* VIEW 3: GIFT DELIVERY DASHBOARD                                   */}
-          {/* ================================================================= */}
-          {activeNav === 'gift-delivery' && <AdminGiftDeliveryView />}
-
-          {/* ================================================================= */}
-          {/* VIEW 4: PERSONAL COURIER DASHBOARD                                */}
+          {/* 5 CORE SERVICES DASHBOARDS                                        */}
           {/* ================================================================= */}
           {activeNav === 'courier' && <AdminPersonalCourierView />}
-
-          {/* ================================================================= */}
-          {/* VIEW 5: CONFIDENTIAL COURIER DASHBOARD                            */}
-          {/* ================================================================= */}
+          {activeNav === 'luggage' && <AdminLuggageDeliveryView />}
           {activeNav === 'confidential' && <AdminConfidentialCourierView />}
-
-          {/* ================================================================= */}
-          {/* VIEW 6: FORGOT SOMETHING DASHBOARD                                */}
-          {/* ================================================================= */}
           {activeNav === 'forgot' && <AdminForgotSomethingView />}
-
-          {/* ================================================================= */}
-          {/* VIEW 7: RETURN PICKUP DASHBOARD                                   */}
-          {/* ================================================================= */}
           {activeNav === 'returns' && <AdminReturnPickupView />}
 
           {/* ================================================================= */}
@@ -753,9 +747,21 @@ export default function DashboardPage() {
           )}
 
           {/* ================================================================= */}
+          {/* VIEW: HOME CONTENT STUDIO (QUICK ACTIONS, BANNER, CHIPS, HERO)   */}
+          {/* ================================================================= */}
+          {activeNav === 'home-content' && <AdminHomeContentView />}
+
+          {/* ================================================================= */}
+          {/* VIEW: PROMPT EXAMPLES (TRY THESE EXAMPLES MODAL)                  */}
+          {/* ================================================================= */}
+          {activeNav === 'prompt-examples' && <AdminPromptExamplesView />}
+
+
+          {/* ================================================================= */}
           {/* VIEW 13: HELPDESK & SUPPORT                                       */}
           {/* ================================================================= */}
           {activeNav === 'support' && <AdminSupportView />}
+
 
           {/* ================================================================= */}
           {/* VIEW 14: OPERATIONAL CONTROLS & PLATFORM SETTINGS                 */}
