@@ -3,6 +3,7 @@ import {
   ArrowRight,
   Bell,
   Bike,
+  BookOpen,
   CalendarDays,
   ChartNoAxesCombined,
   CheckCircle2,
@@ -78,6 +79,8 @@ import AdminRadarView from './components/AdminRadarView.jsx'
 import AdminPromosView from './components/AdminPromosView.jsx'
 import AdminPricingView from './components/AdminPricingView.jsx'
 import AdminAuditView from './components/AdminAuditView.jsx'
+import AdminServiceSlidersView from './components/AdminServiceSlidersView.jsx'
+import AdminKnowMoreCardsView from './components/AdminKnowMoreCardsView.jsx'
 import AdminPromptExamplesView from './components/AdminPromptExamplesView.jsx'
 import AdminHomeContentView from './components/AdminHomeContentView.jsx'
 
@@ -102,6 +105,8 @@ const navItems = [
   { id: 'confidential', label: 'Confidential Delivery', icon: ShieldCheck, group: 'SERVICES' },
   { id: 'forgot', label: 'Forgot Something', icon: ShoppingBag, group: 'SERVICES' },
   { id: 'returns', label: 'Return Pickup', icon: RotateCcw, group: 'SERVICES' },
+  { id: 'service-sliders', label: 'Service Image Sliders', icon: Sliders, group: 'SERVICES' },
+  { id: 'know-more', label: 'Know More Cards', icon: BookOpen, group: 'SERVICES' },
 
   { id: 'partners', label: 'Delivery Fleet', icon: UserCog, group: 'MANAGEMENT' },
   { id: 'customers', label: 'Customers', icon: Users, group: 'MANAGEMENT' },
@@ -755,6 +760,8 @@ export default function DashboardPage() {
           {/* VIEW: PROMPT EXAMPLES (TRY THESE EXAMPLES MODAL)                  */}
           {/* ================================================================= */}
           {activeNav === 'prompt-examples' && <AdminPromptExamplesView />}
+          {activeNav === 'service-sliders' && <AdminServiceSlidersView />}
+          {activeNav === 'know-more' && <AdminKnowMoreCardsView />}
 
 
           {/* ================================================================= */}
