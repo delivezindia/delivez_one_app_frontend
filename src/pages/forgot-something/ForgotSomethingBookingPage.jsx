@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import {
   ArrowLeft,
+  RotateCcw,
+  RefreshCw,
+  Wrench,
   ArrowRight,
   Bike,
   Building,
@@ -60,6 +63,8 @@ import {
   fetchForgotSomethingOptions,
   fetchForgotSomethingQuote,
   DEFAULT_FORGOT_SOMETHING_OPTIONS,
+  fetchForgotSomethingReturnTypes,
+  DEFAULT_RETURN_TYPES,
 } from '@/features/forgot-something/services/forgotSomethingService.js'
 import AuthModal from '@/features/auth/components/AuthModal.jsx'
 import styles from './ForgotSomethingBookingPage.module.css'
@@ -89,6 +94,17 @@ const LOCATION_ICONS = {
   OTHER: MapPin,
 }
 
+
+const RETURN_TYPE_ICONS = {
+  RETURN_ITEM: RotateCcw,
+  EXCHANGE_ITEM: RefreshCw,
+  REPAIR_SERVICE: Wrench,
+  WARRANTY_RETURN: ShieldCheck,
+  RENTAL_RETURN: Clock,
+  SEND_BACK_TO_SOMEONE: Users,
+  OTHER_RETURN: HelpCircle,
+}
+
 const HANDOVER_ICONS = {
   RECEPTION: Building,
   SECURITY_GUARD: ShieldCheck,
@@ -110,6 +126,9 @@ export default function ForgotSomethingBookingPage() {
   const [formData, setFormData] = useState({
     // Step 1: Item Category
     itemCategory: 'BAG',
+
+    // Step 2: Return Type
+    returnType: 'RETURN_ITEM',
 
     // Step 2: Location Category
     locationType: 'OFFICE',
@@ -179,6 +198,14 @@ export default function ForgotSomethingBookingPage() {
         if (opts) setOptions(opts)
       })
       .catch(() => {})
+
+    fetchForgotSomethingReturnTypes()
+      .then((rt) => {
+        if (Array.isArray(rt) && rt.length > 0) {
+          setOptions((prev) => ({ ...prev, returnTypes: rt }))
+        }
+      })
+      .catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -243,7 +270,13 @@ export default function ForgotSomethingBookingPage() {
 
   const handleNext = () => {
     setErrorMsg('')
-    if (currentStep === 4) {
+    if (currentStep === 2) {
+      if (!formData.returnType) {
+        setErrorMsg('Please select a return type to continue.')
+        return
+      }
+    }
+    if (currentStep === 5) {
       if (!formData.pickupFlatBuilding || !formData.pickupStreet || !formData.pickupCity || !formData.pickupPostalCode) {
         setErrorMsg('Please fill in Flat/Building, Street, City, and Pincode.')
         return
@@ -253,19 +286,19 @@ export default function ForgotSomethingBookingPage() {
         return
       }
     }
-    if (currentStep === 5) {
+    if (currentStep === 6) {
       if (!formData.dropoffAddressLine1 || !formData.dropoffRecipientName || !formData.dropoffPhoneNumber) {
         setErrorMsg('Please fill in Delivery Address, Recipient Name, and Phone Number.')
         return
       }
     }
-    if (currentStep === 7) {
+    if (currentStep === 8) {
       if (!formData.itemName.trim()) {
         setErrorMsg('Please enter the Item Name.')
         return
       }
     }
-    setCurrentStep((prev) => Math.min(10, prev + 1))
+    setCurrentStep((prev) => Math.min(11, prev + 1))
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
@@ -293,6 +326,7 @@ export default function ForgotSomethingBookingPage() {
     try {
       const idempotencyKey = 'fetch-' + Date.now() + '-' + Math.random().toString(36).substring(2, 9)
       const payload = {
+        returnType: formData.returnType || 'RETURN_ITEM',
         itemCategory: formData.itemCategory,
         itemName: formData.itemName || 'Forgotten Item',
         itemDescription: formData.itemDescription || '',
@@ -345,7 +379,7 @@ export default function ForgotSomethingBookingPage() {
 
       const created = await createForgotSomethingBooking(payload, idempotencyKey)
       setConfirmedBooking(created)
-      setCurrentStep(10) // Screen 16: Booking Confirmed
+      setCurrentStep(11) // Screen 16: Booking Confirmed
     } catch (err) {
       console.error(err)
       setErrorMsg(err.message || 'Failed to place booking. Please try again.')
@@ -368,7 +402,7 @@ export default function ForgotSomethingBookingPage() {
             <button
               type="button"
               className={styles.headerBtn}
-              onClick={() => (currentStep > 1 && currentStep < 10 ? handleBack() : navigateTo('/'))}
+              onClick={() => (currentStep > 1 && currentStep < 11 ? handleBack() : navigateTo('/'))}
               title="Go Back"
             >
               <ArrowLeft size={18} />
@@ -389,7 +423,7 @@ export default function ForgotSomethingBookingPage() {
           <div className={styles.navRight}>
             <div className={styles.stepBadge}>
               <Clock size={14} />
-              <span>Step {currentStep} of 10</span>
+              <span>Step {currentStep} of 11</span>
             </div>
 
             <button
@@ -406,14 +440,15 @@ export default function ForgotSomethingBookingPage() {
         {/* ================================================================ */}
         {/* 5-Step Horizontal Stepper (Screens 1 to 5)                       */}
         {/* ================================================================ */}
-        {currentStep <= 5 && (
+        {currentStep <= 6 && (
           <div className={styles.stepperCard}>
             {[
               { num: 1, title: 'Item Category' },
-              { num: 2, title: 'Location Type' },
-              { num: 3, title: 'Handover Mode' },
-              { num: 4, title: 'Pickup Details' },
-              { num: 5, title: 'Delivery Destination' },
+              { num: 2, title: 'Return Type' },
+              { num: 3, title: 'Location Type' },
+              { num: 4, title: 'Handover Mode' },
+              { num: 5, title: 'Pickup Details' },
+              { num: 6, title: 'Delivery Destination' },
             ].map(({ num: stepNum, title: stepTitle }, idx) => {
               const isCompleted = currentStep > stepNum
               const isActive = currentStep === stepNum
@@ -434,7 +469,7 @@ export default function ForgotSomethingBookingPage() {
                     </div>
                     <span className={styles.stepTitleDesktop}>{stepTitle}</span>
                   </div>
-                  {idx < 4 && (
+                  {idx < 5 && (
                     <div
                       className={`${styles.stepLine} ${currentStep > stepNum ? styles.stepLineCompleted : ''}`}
                     />
@@ -455,7 +490,7 @@ export default function ForgotSomethingBookingPage() {
         {/* ================================================================ */}
         {/* Main Content Layout: Split Grid (Steps 1-9) or Confirmed (Step 10)*/}
         {/* ================================================================ */}
-        {currentStep < 10 ? (
+        {currentStep < 11 ? (
           <div className={styles.splitGrid}>
             <div className={styles.formPanelCard}>
               {/* -------------------------------------------------------------- */}
@@ -520,10 +555,60 @@ export default function ForgotSomethingBookingPage() {
             </>
           )}
 
+          
           {/* -------------------------------------------------------------- */}
-          {/* STEP 2: Where is your item? (Screens 3 & 4)                   */}
+          {/* STEP 2: Return Type Options                                    */}
           {/* -------------------------------------------------------------- */}
           {currentStep === 2 && (
+            <>
+              <div className={styles.screenTitleBlock}>
+                <h1 className={styles.screenTitle}>Select Return Type</h1>
+                <div className={styles.titleUnderlineYellow} />
+                <p className={styles.screenSubtitle}>Choose the reason for sending or returning this forgotten item.</p>
+              </div>
+
+              <div className={styles.returnTypeStack}>
+                {(options.returnTypes || DEFAULT_RETURN_TYPES).map((rt) => {
+                  const Icon = RETURN_TYPE_ICONS[rt.code] || RotateCcw
+                  const isSelected = formData.returnType === rt.code
+                  return (
+                    <div
+                      key={rt.code}
+                      className={`${styles.returnTypeCard} ${isSelected ? styles.returnTypeCardSelected : ''}`}
+                      onClick={() => updateField('returnType', rt.code)}
+                    >
+                      <div className={styles.returnTypeLeft}>
+                        <div className={styles.returnTypeIconPill}>
+                          <Icon size={20} />
+                        </div>
+                        <div className={styles.returnTypeText}>
+                          <h4>{rt.title}</h4>
+                          <p>{rt.description}</p>
+                        </div>
+                      </div>
+
+                      <div className={styles.returnTypeRadio}>
+                        {isSelected && <Check size={13} strokeWidth={3} />}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              <div className={styles.yellowTrustCard}>
+                <Shield size={28} color="#0f172a" style={{ flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <h4>Safe & Verified Returns</h4>
+                  <p>Our verified partners securely collect your item and hand it over with live tracking and proof.</p>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* -------------------------------------------------------------- */}
+          {/* STEP 3: Where is your item? (Screens 3 & 4)                   */}
+          {/* -------------------------------------------------------------- */}
+          {currentStep === 3 && (
             <>
               <div className={styles.screenTitleBlock}>
                 <h1 className={styles.screenTitle}>Where is your item?</h1>
@@ -565,9 +650,9 @@ export default function ForgotSomethingBookingPage() {
           )}
 
           {/* -------------------------------------------------------------- */}
-          {/* STEP 3: Who can hand it over? (Screens 5 & 6)                 */}
+          {/* STEP 4: Who can hand it over? (Screens 5 & 6)                 */}
           {/* -------------------------------------------------------------- */}
-          {currentStep === 3 && (
+          {currentStep === 4 && (
             <>
               <div className={styles.screenTitleBlock}>
                 <h1 className={styles.screenTitle}>Who can hand it over?</h1>
@@ -619,9 +704,9 @@ export default function ForgotSomethingBookingPage() {
           )}
 
           {/* -------------------------------------------------------------- */}
-          {/* STEP 4: Pickup Location (Screens 7 & 8)                       */}
+          {/* STEP 5: Pickup Location (Screens 7 & 8)                       */}
           {/* -------------------------------------------------------------- */}
-          {currentStep === 4 && (
+          {currentStep === 5 && (
             <>
               <div className={styles.screenTitleBlock}>
                 <h1 className={styles.screenTitle}>
@@ -851,9 +936,9 @@ export default function ForgotSomethingBookingPage() {
           )}
 
           {/* -------------------------------------------------------------- */}
-          {/* STEP 6: Schedule & Service (Screens 10 & 11)                   */}
+          {/* STEP 7: Schedule & Service (Screens 10 & 11)                   */}
           {/* -------------------------------------------------------------- */}
-          {currentStep === 6 && (
+          {currentStep === 7 && (
             <>
               <div className={styles.screenTitleBlock}>
                 <h1 className={styles.screenTitle}>
@@ -968,9 +1053,9 @@ export default function ForgotSomethingBookingPage() {
           )}
 
           {/* -------------------------------------------------------------- */}
-          {/* STEP 7: Item Details (Screen 12)                              */}
+          {/* STEP 8: Item Details (Screen 12)                              */}
           {/* -------------------------------------------------------------- */}
-          {currentStep === 7 && (
+          {currentStep === 8 && (
             <>
               <div className={styles.screenTitleBlock}>
                 <h1 className={styles.screenTitle}>Item Details</h1>
@@ -1096,9 +1181,9 @@ export default function ForgotSomethingBookingPage() {
           )}
 
           {/* -------------------------------------------------------------- */}
-          {/* STEP 8: Secure Handling & Verification (Screen 13)            */}
+          {/* STEP 9: Secure Handling & Verification (Screen 13)            */}
           {/* -------------------------------------------------------------- */}
-          {currentStep === 8 && (
+          {currentStep === 9 && (
             <>
               <div className={styles.screenTitleBlock}>
                 <h1 className={styles.screenTitle}>
@@ -1197,6 +1282,16 @@ export default function ForgotSomethingBookingPage() {
                     <small style={{ color: '#64748b', fontWeight: 700 }}>Item</small>
                     <strong>{formData.itemName || 'Yellow Backpack'}</strong>
                     <span>{formData.itemQuantity} Item</span>
+                  </div>
+                </div>
+
+                
+                <div className={styles.reviewItemRow}>
+                  <RotateCcw size={20} color="#d97706" />
+                  <div className={styles.reviewItemContent}>
+                    <small style={{ color: '#64748b', fontWeight: 700 }}>Return Type</small>
+                    <strong>{(options.returnTypes || DEFAULT_RETURN_TYPES).find((r) => r.code === formData.returnType)?.title || 'Return an Item'}</strong>
+                    <span>{(options.returnTypes || DEFAULT_RETURN_TYPES).find((r) => r.code === formData.returnType)?.description || 'Send an item back to the seller or store.'}</span>
                   </div>
                 </div>
 
@@ -1345,7 +1440,7 @@ export default function ForgotSomethingBookingPage() {
                   <button type="button" className={styles.btnContinueYellow} onClick={handleNext}>
                     <span>Continue &gt;</span>
                   </button>
-                ) : currentStep < 9 ? (
+                ) : currentStep < 10 ? (
                   <button type="button" className={styles.btnContinueRed} onClick={handleNext}>
                     <span>Continue &rarr;</span>
                   </button>
@@ -1377,6 +1472,17 @@ export default function ForgotSomethingBookingPage() {
 
               {/* Route Points */}
               <div className={styles.sidebarLocationMini}>
+
+              {formData.returnType && (
+                <div className={styles.sidebarLocPoint} style={{ marginTop: 8 }}>
+                  <RotateCcw size={16} color="#d97706" style={{ marginTop: 2, flexShrink: 0 }} />
+                  <div>
+                    <strong>Return Type</strong>
+                    <span>{(options.returnTypes || DEFAULT_RETURN_TYPES).find((r) => r.code === formData.returnType)?.title || 'Return an Item'}</span>
+                  </div>
+                </div>
+              )}
+
                 <div className={styles.sidebarLocPoint}>
                   <MapPin size={16} color="#dc2626" style={{ marginTop: 2, flexShrink: 0 }} />
                   <div>

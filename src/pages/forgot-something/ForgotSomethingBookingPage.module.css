@@ -1960,3 +1960,94 @@
 .btnHomeWhite:hover {
   background: #f1f5f9;
 }
+
+
+/* --------------------------------------------------------------------------
+   Step 2: Return Type Options
+   -------------------------------------------------------------------------- */
+.returnTypeStack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.returnTypeCard {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  position: relative;
+}
+
+.returnTypeCard:hover {
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+}
+
+.returnTypeCardSelected {
+  border-color: #f59e0b;
+  background: #fffbeb;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.18);
+}
+
+.returnTypeLeft {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+}
+
+.returnTypeIconPill {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #fefce8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0f172a;
+  flex-shrink: 0;
+}
+
+.returnTypeCardSelected .returnTypeIconPill {
+  background: #fef08a;
+  color: #b45309;
+}
+
+.returnTypeText h4 {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.returnTypeText p {
+  margin: 3px 0 0;
+  font-size: 0.84rem;
+  color: #64748b;
+  line-height: 1.35;
+}
+
+.returnTypeRadio {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.returnTypeCardSelected .returnTypeRadio {
+  border-color: #f59e0b;
+  background: #f59e0b;
+  color: #000000;
+}

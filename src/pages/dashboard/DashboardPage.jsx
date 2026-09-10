@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import {
+  Grid,
   ArrowRight,
   Bell,
   Bike,
@@ -81,6 +82,7 @@ import AdminPricingView from './components/AdminPricingView.jsx'
 import AdminAuditView from './components/AdminAuditView.jsx'
 import AdminServiceSlidersView from './components/AdminServiceSlidersView.jsx'
 import AdminKnowMoreCardsView from './components/AdminKnowMoreCardsView.jsx'
+import AdminMoreServicesView from './components/AdminMoreServicesView.jsx'
 import AdminPromptExamplesView from './components/AdminPromptExamplesView.jsx'
 import AdminHomeContentView from './components/AdminHomeContentView.jsx'
 
@@ -107,6 +109,7 @@ const navItems = [
   { id: 'returns', label: 'Return Pickup', icon: RotateCcw, group: 'SERVICES' },
   { id: 'service-sliders', label: 'Service Image Sliders', icon: Sliders, group: 'SERVICES' },
   { id: 'know-more', label: 'Know More Cards', icon: BookOpen, group: 'SERVICES' },
+  { id: 'more-services', label: 'More Services', icon: Grid, group: 'SERVICES' },
 
   { id: 'partners', label: 'Delivery Fleet', icon: UserCog, group: 'MANAGEMENT' },
   { id: 'customers', label: 'Customers', icon: Users, group: 'MANAGEMENT' },
@@ -762,6 +765,7 @@ export default function DashboardPage() {
           {activeNav === 'prompt-examples' && <AdminPromptExamplesView />}
           {activeNav === 'service-sliders' && <AdminServiceSlidersView />}
           {activeNav === 'know-more' && <AdminKnowMoreCardsView />}
+          {activeNav === 'more-services' && <AdminMoreServicesView />}
 
 
           {/* ================================================================= */}

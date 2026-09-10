@@ -1,7 +1,46 @@
 import { apiRequest, ApiError } from '@/services/api/apiClient.js'
 import { getUserAccessToken } from '@/features/auth/services/userAuthService.js'
 
+export const DEFAULT_RETURN_TYPES = [
+  {
+    code: 'RETURN_ITEM',
+    title: 'Return an Item',
+    description: 'Send an item back to the seller or store.',
+  },
+  {
+    code: 'EXCHANGE_ITEM',
+    title: 'Exchange Item',
+    description: 'Return the item and get an exchange.',
+  },
+  {
+    code: 'REPAIR_SERVICE',
+    title: 'Repair / Service',
+    description: 'Send the product to a service centre for repair.',
+  },
+  {
+    code: 'WARRANTY_RETURN',
+    title: 'Warranty Return',
+    description: 'Send the item for warranty inspection or replacement.',
+  },
+  {
+    code: 'RENTAL_RETURN',
+    title: 'Rental Return',
+    description: 'Return rented product(s) at the end of the rental period.',
+  },
+  {
+    code: 'SEND_BACK_TO_SOMEONE',
+    title: 'Send Back to Someone',
+    description: 'Send an item back to another person.',
+  },
+  {
+    code: 'OTHER_RETURN',
+    title: 'Other Return',
+    description: 'Other types of returns or requests.',
+  },
+]
+
 export const DEFAULT_FORGOT_SOMETHING_OPTIONS = {
+  returnTypes: DEFAULT_RETURN_TYPES,
   itemCategories: [
     { id: 'KEYS', name: 'Keys', description: 'House, car, or office keys', icon: 'Key' },
     { id: 'LAPTOP', name: 'Laptop', description: 'Work/personal laptop or tablet', icon: 'Laptop' },
@@ -78,6 +117,24 @@ function authorizedRequest(path, options = {}) {
       Authorization: `Bearer ${token}`,
     },
   })
+}
+
+export async function fetchForgotSomethingReturnTypes() {
+  try {
+    const response = await apiRequest('/forgot-something/return-types')
+    return response?.data || DEFAULT_RETURN_TYPES
+  } catch (err) {
+    console.warn('Using fallback forgot something return types:', err)
+    return DEFAULT_RETURN_TYPES
+  }
+}
+
+export async function saveForgotSomethingReturnType(bookingId, returnType) {
+  const response = await authorizedRequest(`/forgot-something/bookings/${bookingId}/return-type`, {
+    method: 'PATCH',
+    body: JSON.stringify({ returnType }),
+  })
+  return response?.data
 }
 
 export async function fetchForgotSomethingOptions() {

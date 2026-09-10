@@ -61,6 +61,14 @@ function App() {
     return <AdminLoginPage />
   }
 
+  if (pathname === '/admin' || pathname === '/admin/dashboard' || pathname === '/admin-dashboard') {
+    return (
+      <AdminAuthGuard>
+        <DashboardPage />
+      </AdminAuthGuard>
+    )
+  }
+
   if (pathname === '/dashboard') {
     const stored = getStoredUser()
     const isAdmin = stored?.role === 'ADMIN' || Boolean(getAdminAccessToken())
