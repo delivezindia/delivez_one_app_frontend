@@ -13,9 +13,15 @@ export async function apiRequest(path, options = {}) {
   let response
   const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData
 
+  let resolvedBody = options.body
+  if (resolvedBody && !isFormData && typeof resolvedBody === 'object' && !(typeof Blob !== 'undefined' && resolvedBody instanceof Blob)) {
+    resolvedBody = JSON.stringify(resolvedBody)
+  }
+
   try {
     response = await fetch(`${env.apiBaseUrl}${path}`, {
       ...options,
+      body: resolvedBody,
       headers: {
         ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
         ...options.headers,

@@ -56,7 +56,7 @@ export async function updateAdminServiceSlider(serviceSlug, payload) {
     const response = await apiRequest(`/admin/service-sliders/${encodeURIComponent(serviceSlug)}`, {
       method: 'PUT',
       headers: { Authorization: `Bearer ${accessToken}` },
-      body: payload,
+      body: JSON.stringify(payload),
     })
     return response?.data
   } catch (error) {

@@ -394,3 +394,19 @@ export async function updateReturnPickupStatus(id, { status, hubLocation }) {
   })
   return response.data
 }
+
+
+export async function fetchReturnPickupSlider() {
+  try {
+    const res = await apiRequest('/services/return-pickup/sliders');
+    return res?.data?.images || [];
+  } catch (err) {
+    console.warn('Failed to fetch return pickup slider:', err);
+    return [
+      'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=1200&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1200&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1200&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?w=1200&auto=format&fit=crop&q=80'
+    ];
+  }
+}

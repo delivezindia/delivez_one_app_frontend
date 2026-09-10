@@ -21,6 +21,8 @@ import {
   X,
   ArrowRight,
   Eye,
+  Save,
+  Check,
 } from 'lucide-react'
 import {
   fetchAdminKnowMoreCards,
@@ -215,7 +217,7 @@ export default function AdminKnowMoreCardsView() {
   }
 
   const handleSaveCard = async (e) => {
-    e.preventDefault()
+    if (e && e.preventDefault) e.preventDefault()
     if (!formData.heading.trim()) {
       showToast('error', 'Please enter a heading.')
       return
@@ -510,17 +512,35 @@ export default function AdminKnowMoreCardsView() {
         <div className={styles.modalBackdrop} onClick={() => setModalOpen(false)}>
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              <h2>{editingCard ? 'Edit Know More Card' : 'Create Know More Card'}</h2>
-              <button
-                type="button"
-                className={styles.closeModalBtn}
-                onClick={() => setModalOpen(false)}
-              >
-                <X size={20} />
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <h2>{editingCard ? 'Edit Know More Card' : 'Create Know More Card'}</h2>
+                <span style={{ fontSize: 12, color: '#64748b', fontWeight: 500 }}>
+                  ({editingCard ? 'Editing ID: ' + editingCard.id : 'New Entry'})
+                </span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <button
+                  type="button"
+                  className={styles.topSaveBtn}
+                  onClick={handleSaveCard}
+                  disabled={saving}
+                  title="Save Card"
+                >
+                  <Save size={15} />
+                  <span>{saving ? 'Saving...' : editingCard ? 'Save Changes' : 'Save Card'}</span>
+                </button>
+                <button
+                  type="button"
+                  className={styles.closeModalBtn}
+                  onClick={() => setModalOpen(false)}
+                  title="Close Modal"
+                >
+                  <X size={20} />
+                </button>
+              </div>
             </div>
 
-            <form onSubmit={handleSaveCard}>
+            <form className={styles.modalForm} onSubmit={handleSaveCard}>
               <div className={styles.modalBody}>
                 <div className={styles.formCol}>
                   <div className={styles.formRow}>
@@ -750,8 +770,9 @@ export default function AdminKnowMoreCardsView() {
                 >
                   Cancel
                 </button>
-                <button type="submit" className={styles.saveBtn} disabled={saving}>
-                  {saving ? 'Saving...' : editingCard ? 'Update Card' : 'Create Card'}
+                <button type="submit" className={styles.saveBtn} disabled={saving} title="Click to Save">
+                  <Check size={16} />
+                  <span>{saving ? 'Saving...' : editingCard ? 'Save Changes' : 'Save & Publish Card'}</span>
                 </button>
               </div>
             </form>

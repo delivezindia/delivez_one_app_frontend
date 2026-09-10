@@ -548,7 +548,8 @@
   border-radius: 20px;
   max-width: 960px;
   width: 100%;
-  max-height: 90vh;
+  height: min(88vh, 860px);
+  max-height: 88vh;
   display: flex;
   flex-direction: column;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
@@ -556,6 +557,7 @@
 }
 
 .modalHeader {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -585,6 +587,8 @@
 }
 
 .modalBody {
+  flex: 1;
+  min-height: 0;
   display: grid;
   grid-template-columns: 1fr 340px;
   gap: 28px;
@@ -785,6 +789,7 @@
 }
 
 .modalFooter {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -881,4 +886,39 @@
     transform: translateY(0);
     opacity: 1;
   }
+}
+
+/* Modal Layout Styles with Guaranteed Sticky Save Footer and Header Button */
+.modalForm {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.topSaveBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  border-radius: 8px;
+  border: none;
+  background: #e00014;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(224, 0, 20, 0.2);
+}
+
+.topSaveBtn:hover {
+  background: #b80010;
+  box-shadow: 0 4px 10px rgba(224, 0, 20, 0.3);
+}
+
+.topSaveBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }

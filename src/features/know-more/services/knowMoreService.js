@@ -49,7 +49,7 @@ export async function createAdminKnowMoreCard(payload) {
     const response = await apiRequest('/admin/know-more', {
       method: 'POST',
       headers: { Authorization: `Bearer ${accessToken}` },
-      body: payload,
+      body: JSON.stringify(payload),
     })
     return response?.data
   } catch (error) {
@@ -66,7 +66,7 @@ export async function updateAdminKnowMoreCard(id, payload) {
     const response = await apiRequest(`/admin/know-more/${encodeURIComponent(id)}`, {
       method: 'PUT',
       headers: { Authorization: `Bearer ${accessToken}` },
-      body: payload,
+      body: JSON.stringify(payload),
     })
     return response?.data
   } catch (error) {

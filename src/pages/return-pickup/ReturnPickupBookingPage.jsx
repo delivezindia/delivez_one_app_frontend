@@ -41,12 +41,20 @@ import {
   Trash2,
   ChevronRight,
   Phone,
-  Plus
+  FastForward,
+  Bell,
+  CheckCircle,
+  Calendar,
+  Layers,
+  FileCheck,
+  ScanLine,
+  Image as ImageIcon
 } from 'lucide-react'
 import {
   fetchReturnPickupOptions,
   fetchReturnPickupQuote,
   createReturnPickupBooking,
+  fetchReturnPickupSlider,
   DEFAULT_RETURN_PICKUP_OPTIONS
 } from '@/features/return-pickup/services/returnPickupService.js'
 import { getUserAccessToken } from '@/features/auth/services/userAuthService.js'
@@ -54,12 +62,15 @@ import { navigateTo } from '@/app/router/navigation.js'
 import AuthModal from '@/features/auth/components/AuthModal.jsx'
 import styles from './ReturnPickupBookingPage.module.css'
 
-const STEP_TITLES = [
+const STEP_NAMES = [
   'Return Type',
+  'Pickup Location',
+  'Delivery Details',
   'Destination',
-  'Addresses',
-  'Items & Documents',
-  'Schedule & Speed',
+  'Item Details',
+  'Documents',
+  'Return Method',
+  'Schedule',
   'Review & Pay'
 ]
 
@@ -85,78 +96,95 @@ const DESTINATION_ICONS = {
 
 export default function ReturnPickupBookingPage() {
   const [currentStep, setCurrentStep] = useState(1)
+  const [sliderImages, setSliderImages] = useState([])
+  const [currentSliderIdx, setCurrentSliderIdx] = useState(0)
+  const [sliderDismissed, setSliderDismissed] = useState(false)
   const [options, setOptions] = useState(DEFAULT_RETURN_PICKUP_OPTIONS)
   const [loadingOptions, setLoadingOptions] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [copiedBookingId, setCopiedBookingId] = useState(false)
+  const [confirmedBooking, setConfirmedBooking] = useState(null)
 
   // Booking Form State
   const [formData, setFormData] = useState({
     // Step 1: Return Type
     returnType: 'RETURN_ITEM',
 
-    // Step 2: Destination
+    // Step 2: Pickup Location Details
+    pickupStoreName: 'Croma Electronics Hub',
+    pickupAddress: 'No. 45, 100ft Road, HAL 2nd Stage, Indiranagar',
+    pickupCity: 'Bengaluru',
+    pickupState: 'Karnataka',
+    pickupPostalCode: '560038',
+    pickupContactName: 'Ravi Kishan',
+    pickupPhoneNumber: '9876543210',
+    pickupReferenceNumber: 'RET-AMZ-2026-9988',
+    pickupInstructions: 'Store pickup counter on ground floor',
+
+    // Step 3: Where should we deliver the return?
+    returnAddressType: 'My Home',
+    returnAddress: 'Flat 402, Green Glen Layout, Outer Ring Road, Bellandur',
+    returnCity: 'Bengaluru',
+    returnState: 'Karnataka',
+    returnPostalCode: '560103',
+    returnContactName: 'Ravi Kishan',
+    returnPhoneNumber: '9876543210',
+    returnLandmark: 'Behind Central Mall',
+    returnInstructions: '',
+
+    // Step 4: Destination Store / Seller
     destinationType: 'ONLINE_STORE',
     destinationName: 'Amazon India',
     searchStoreQuery: '',
     customStoreName: '',
 
-    // Step 3: Addresses
-    pickupStoreName: 'Home',
-    pickupAddress: '123, MG Road, Indiranagar',
-    pickupCity: 'Bengaluru',
-    pickupState: 'Karnataka',
-    pickupPostalCode: '560038',
-    pickupContactName: 'Ravi Kumar',
-    pickupPhoneNumber: '9876543210',
-    pickupReferenceNumber: '',
-    pickupInstructions: 'Please collect from the main door.',
-
-    returnAddressType: 'Seller / Warehouse',
-    returnAddress: 'Warehouse No. 7, KIADB Industrial Area, Hosur Road',
-    returnCity: 'Bengaluru',
-    returnState: 'Karnataka',
-    returnPostalCode: '560100',
-    returnContactName: 'Warehouse Returns Desk',
-    returnPhoneNumber: '9123456789',
-    returnLandmark: 'Opposite Bosch Gate',
-    returnInstructions: 'Return is for quality check and refund.',
-
-    // Step 4: Items & Documents
-    entryMode: 'MANUAL', // SCAN, UPLOAD, MANUAL, IMPORT
-    orderId: 'ORD-928451',
-    returnId: 'RET-627189',
-    returnBeforeDate: '16 Aug 2026',
-    estimatedRefundAmount: 4999,
+    // Step 5: Item Details
     itemCategory: 'ELECTRONICS',
-    itemDescription: 'Sony Wireless Headphones (Black) - Defective Product',
+    itemDescription: 'Wireless Noise Cancelling Headphones with original retail box and USB cable',
     itemQuantity: 1,
-    declaredValue: 4999,
-    approxWeightKg: 0.5,
-    lengthCm: 20,
+    declaredValue: 2499,
+    approxWeightKg: 0.45,
+    lengthCm: 18,
     widthCm: 15,
     heightCm: 8,
-    itemCondition: 'NEW_UNUSED',
-    specialHandlingTags: ['Fragile', 'Handle with care', 'High Value Item'],
-    documents: [
-      { id: 'doc-inv', name: 'Invoice.pdf', type: 'INVOICE_ORDER_PROOF', uploadedAt: 'Today' },
-      { id: 'doc-rma', name: 'Return Authorization.pdf', type: 'RETURN_AUTHORIZATION', uploadedAt: 'Today' }
+    itemCondition: 'NEW_UNUSED', // 'NEW_UNUSED' | 'USED_GOOD' | 'DAMAGED'
+    specialHandlingTags: ['Fragile', 'Handle with care'],
+    itemPhotos: [
+      'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400',
+      'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=400'
     ],
 
-    // Step 5: Schedule & Speed
-    scheduledDate: '2026-08-28',
+    // Step 6: Return Documents
+    documents: [
+      {
+        id: 'doc-inv',
+        name: 'Amazon_Invoice_ORD9988.pdf',
+        type: 'INVOICE_ORDER_PROOF',
+        title: 'Invoice / Order Proof',
+        uploadedAt: 'Today'
+      }
+    ],
+
+    // Step 7: Return Method
+    returnDetailsMethod: 'SCAN_LABEL', // 'SCAN_LABEL' | 'UPLOAD_SCREENSHOT' | 'ENTER_MANUALLY'
+    orderId: 'ORD-AMZ-88992',
+    returnId: 'RET-998822',
+    estimatedRefundAmount: 2499,
+
+    // Step 8: Pickup Date & Time
+    scheduledDate: '2026-09-12',
     scheduledTimeSlot: '11:00 AM - 1:00 PM',
     deliveryService: 'STANDARD',
     shipmentProtection: true,
 
-    // Step 6: Payment & Promos
+    // Step 9: Review & Pay
     couponCode: 'DELIVEZ10',
-    paymentMethod: 'WALLET'
+    paymentMethod: 'PAY_ON_PICKUP'
   })
 
-  // Live Quote State
+  // Live Pricing Quote State
   const [quote, setQuote] = useState({
     currency: 'INR',
     basePickupCharge: 49,
@@ -165,30 +193,49 @@ export default function ReturnPickupBookingPage() {
     deliveryServiceCharge: 89,
     protectionCharge: 19,
     discountAmount: 18.7,
-    taxAmount: 30.47,
-    totalAmount: 108.00,
-    deliveryServiceName: 'Standard Delivery'
+    taxAmount: 30.11,
+    totalAmount: 197.41,
+    deliveryServiceName: 'Standard Delivery',
+    breakdown: [
+      { key: 'BASE_PICKUP', label: 'Base Pickup Charge', amount: 49 },
+      { key: 'DISTANCE', label: 'Distance Charge', amount: 20 },
+      { key: 'HANDLING', label: 'Item Handling Fee', amount: 10 },
+      { key: 'DELIVERY_SERVICE', label: 'Standard Delivery', amount: 89 },
+      { key: 'PROTECTION', label: 'Shipment Protection Cover', amount: 19 },
+      { key: 'DISCOUNT', label: 'Coupon Discount (DELIVEZ10)', amount: -18.7 },
+      { key: 'TAX', label: 'GST (18%)', amount: 30.11 }
+    ]
   })
 
-  // Confirmation Result
-  const [confirmedBooking, setConfirmedBooking] = useState(null)
-
-  // Fetch Options on mount
+  // Load Slider Images & Config Options
   useEffect(() => {
-    async function load() {
+    async function loadData() {
       try {
-        const data = await fetchReturnPickupOptions()
-        if (data) setOptions(data)
-      } catch (err) {
-        console.error('Error loading return options:', err)
+        const [sliderImgs, opt] = await Promise.all([
+          fetchReturnPickupSlider(),
+          fetchReturnPickupOptions()
+        ])
+        if (sliderImgs && sliderImgs.length > 0) setSliderImages(sliderImgs)
+        if (opt) setOptions(opt)
+      } catch (e) {
+        console.warn('Failed to load return options or slider:', e)
       } finally {
         setLoadingOptions(false)
       }
     }
-    load()
+    loadData()
   }, [])
 
-  // Recalculate Live Quote when inputs change
+  // Auto-advance hero slider
+  useEffect(() => {
+    if (sliderImages.length <= 1) return
+    const interval = setInterval(() => {
+      setCurrentSliderIdx((prev) => (prev + 1) % sliderImages.length)
+    }, 4500)
+    return () => clearInterval(interval)
+  }, [sliderImages.length])
+
+  // Recalculate Quote on Relevant Field Changes
   useEffect(() => {
     async function updateQuote() {
       try {
@@ -201,7 +248,7 @@ export default function ReturnPickupBookingPage() {
         })
         if (q) setQuote(q)
       } catch (err) {
-        console.warn('Quote update failed:', err)
+        console.warn('Quote calculation failed:', err)
       }
     }
     updateQuote()
@@ -213,27 +260,25 @@ export default function ReturnPickupBookingPage() {
     formData.couponCode
   ])
 
-  // Field change helper
+  // Helpers
   const updateField = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+    setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
-  // Toggle Special Handling Tags
-  const toggleHandlingTag = (tag) => {
-    setFormData(prev => {
+  const toggleSpecialHandling = (tag) => {
+    setFormData((prev) => {
       const exists = prev.specialHandlingTags.includes(tag)
       return {
         ...prev,
         specialHandlingTags: exists
-          ? prev.specialHandlingTags.filter(t => t !== tag)
+          ? prev.specialHandlingTags.filter((t) => t !== tag)
           : [...prev.specialHandlingTags, tag]
       }
     })
   }
 
-  // Quick Store Select
   const handleSelectStore = (store) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       destinationName: store.name,
       returnAddress: store.address.line1,
@@ -244,49 +289,56 @@ export default function ReturnPickupBookingPage() {
     }))
   }
 
-  // Auto-Fill Verified Demo Return (From reference screens)
-  const handleAutoFillVerifiedReturn = () => {
-    setFormData(prev => ({
-      ...prev,
-      destinationName: 'ABC Electronics Returns Centre',
-      orderId: 'ORD-928451',
-      returnId: 'RET-627189',
-      returnBeforeDate: '16 Aug 2026',
-      estimatedRefundAmount: 4999,
-      itemCategory: 'ELECTRONICS',
-      itemDescription: 'Sony Wireless Headphones (Defective Unit)',
-      declaredValue: 4999,
-      approxWeightKg: 0.5,
-      itemCondition: 'NEW_UNUSED',
-      returnAddress: 'Warehouse No. 7, KIADB Industrial Area, Hosur Road',
-      returnCity: 'Bengaluru',
-      returnPostalCode: '560100',
-      returnContactName: 'ABC Electronics Hub',
-      returnInstructions: 'Return is for quality check and refund.'
-    }))
-  }
-
-  // Add Document
   const handleAddSampleDoc = (title, type) => {
     const newDoc = {
       id: 'doc-' + Date.now(),
-      name: title + '.pdf',
+      name: `${title.replace(/\s+/g, '_')}.pdf`,
       type: type,
+      title: title,
       uploadedAt: 'Just now'
     }
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       documents: [...(prev.documents || []), newDoc]
     }))
   }
 
-  // Remove Document
-  const handleRemoveDoc = (id) => {
-    setFormData(prev => ({
-      ...prev,
-      documents: (prev.documents || []).filter(d => d.id !== id)
-    }))
-  }
+  // 7-day pickup date options
+  const dateOptions = useMemo(() => {
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    const list = []
+    const now = new Date()
+
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(now)
+      d.setDate(now.getDate() + i)
+      const dayName = days[d.getDay()]
+      const dateNum = String(d.getDate()).padStart(2, '0')
+      const monthName = months[d.getMonth()]
+      const iso = d.toISOString().split('T')[0]
+      list.push({ day: dayName, date: dateNum, month: monthName, iso })
+    }
+    return list
+  }, [])
+
+  const timeSlots = [
+    { time: '9:00 AM - 11:00 AM', badge: 'Fastest pickup' },
+    { time: '11:00 AM - 1:00 PM', badge: 'Most preferred' },
+    { time: '1:00 PM - 3:00 PM', badge: null },
+    { time: '3:00 PM - 5:00 PM', badge: null },
+    { time: '5:00 PM - 7:00 PM', badge: null },
+    { time: '7:00 PM - 9:00 PM', badge: null }
+  ]
+
+  const documentTypesList = [
+    { id: 'INVOICE_ORDER_PROOF', title: 'Invoice / Order Proof', tag: 'Recommended', subtitle: 'Upload invoice or order confirmation' },
+    { id: 'RETURN_AUTHORIZATION', title: 'Return Authorization (If any)', tag: 'Optional', subtitle: 'Return request or authorization document' },
+    { id: 'REPAIR_RECEIPT', title: 'Repair Receipt / Job Card', tag: 'Optional', subtitle: 'Upload repair receipt or job card' },
+    { id: 'WARRANTY_DOC', title: 'Warranty Document (If any)', tag: 'Optional', subtitle: 'Upload warranty card or document' },
+    { id: 'QR_BARCODE', title: 'QR Code / Barcode (If any)', tag: 'Optional', subtitle: 'Upload QR code or barcode screenshot' },
+    { id: 'PICKUP_AUTH', title: 'Pickup Authorization (If required)', tag: 'Optional', subtitle: 'Authorization letter or consent for pickup' }
+  ]
 
   // Step Validation
   const validateStep = (step) => {
@@ -297,22 +349,23 @@ export default function ReturnPickupBookingPage() {
         return false
       }
     } else if (step === 2) {
+      if (!formData.pickupStoreName || !formData.pickupAddress || !formData.pickupContactName || !formData.pickupPhoneNumber) {
+        setErrorMessage('Please complete all required pickup location details.')
+        return false
+      }
+    } else if (step === 3) {
+      if (!formData.returnAddress || !formData.returnContactName || !formData.returnPhoneNumber) {
+        setErrorMessage('Please complete all required delivery address details.')
+        return false
+      }
+    } else if (step === 4) {
       if (!formData.destinationType) {
         setErrorMessage('Please select where you are returning the item.')
         return false
       }
-    } else if (step === 3) {
-      if (!formData.pickupAddress || !formData.pickupContactName || !formData.pickupPhoneNumber) {
-        setErrorMessage('Please complete all required pickup details.')
-        return false
-      }
-      if (!formData.returnAddress || !formData.returnContactName) {
-        setErrorMessage('Please complete all required return destination details.')
-        return false
-      }
-    } else if (step === 4) {
+    } else if (step === 5) {
       if (!formData.itemDescription) {
-        setErrorMessage('Please provide item description.')
+        setErrorMessage('Please enter item description.')
         return false
       }
     }
@@ -321,18 +374,18 @@ export default function ReturnPickupBookingPage() {
 
   const handleNext = () => {
     if (validateStep(currentStep)) {
-      setCurrentStep(prev => Math.min(6, prev + 1))
+      setCurrentStep((prev) => Math.min(9, prev + 1))
       window.scrollTo({ top: 0, behavior: 'smooth' })
     }
   }
 
   const handleBack = () => {
     setErrorMessage('')
-    setCurrentStep(prev => Math.max(1, prev - 1))
+    setCurrentStep((prev) => Math.max(1, prev - 1))
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  // Final Submit
+  // Submit Booking
   const handleConfirmBooking = async () => {
     setSubmitting(true)
     setErrorMessage('')
@@ -349,27 +402,26 @@ export default function ReturnPickupBookingPage() {
       const bookingPayload = {
         returnType: formData.returnType,
         destinationType: formData.destinationType,
-        destinationName: formData.destinationName || formData.customStoreName || 'Seller',
+        destinationName: formData.destinationName || formData.customStoreName || 'Amazon India',
         orderId: formData.orderId || null,
         returnId: formData.returnId || null,
-        returnBeforeDate: formData.returnBeforeDate || null,
-        estimatedRefundAmount: Number(formData.estimatedRefundAmount) || 0,
+        estimatedRefundAmount: Number(formData.estimatedRefundAmount) || null,
 
-        pickupStoreName: formData.pickupStoreName || 'Home',
+        pickupStoreName: formData.pickupStoreName,
         pickupAddress: formData.pickupAddress,
-        pickupCity: formData.pickupCity || 'Bengaluru',
-        pickupState: formData.pickupState || 'Karnataka',
-        pickupPostalCode: formData.pickupPostalCode || '560038',
+        pickupCity: formData.pickupCity,
+        pickupState: formData.pickupState,
+        pickupPostalCode: formData.pickupPostalCode,
         pickupContactName: formData.pickupContactName,
         pickupPhoneNumber: formData.pickupPhoneNumber,
         pickupReferenceNumber: formData.pickupReferenceNumber || null,
         pickupInstructions: formData.pickupInstructions || null,
 
-        returnAddressType: formData.returnAddressType || 'Seller / Warehouse',
+        returnAddressType: formData.returnAddressType,
         returnAddress: formData.returnAddress,
-        returnCity: formData.returnCity || 'Bengaluru',
-        returnState: formData.returnState || 'Karnataka',
-        returnPostalCode: formData.returnPostalCode || '560100',
+        returnCity: formData.returnCity,
+        returnState: formData.returnState,
+        returnPostalCode: formData.returnPostalCode,
         returnContactName: formData.returnContactName,
         returnPhoneNumber: formData.returnPhoneNumber,
         returnLandmark: formData.returnLandmark || null,
@@ -378,7 +430,7 @@ export default function ReturnPickupBookingPage() {
         itemCategory: formData.itemCategory,
         itemDescription: formData.itemDescription,
         itemQuantity: Number(formData.itemQuantity) || 1,
-        declaredValue: Number(formData.declaredValue) || 0,
+        declaredValue: Number(formData.declaredValue) || null,
         approxWeightKg: Number(formData.approxWeightKg) || 0.5,
         lengthCm: Number(formData.lengthCm) || null,
         widthCm: Number(formData.widthCm) || null,
@@ -386,6 +438,7 @@ export default function ReturnPickupBookingPage() {
         itemCondition: formData.itemCondition,
         specialHandlingTags: formData.specialHandlingTags,
         documents: formData.documents,
+        returnDetailsMethod: formData.returnDetailsMethod,
 
         scheduledDate: formData.scheduledDate,
         scheduledTimeSlot: formData.scheduledTimeSlot,
@@ -397,17 +450,16 @@ export default function ReturnPickupBookingPage() {
 
       const created = await createReturnPickupBooking(bookingPayload, idempotencyKey)
       setConfirmedBooking(created)
-      setCurrentStep(7) // Confirmation View
+      setCurrentStep(10) // Confirmation View
       window.scrollTo({ top: 0, behavior: 'smooth' })
     } catch (err) {
-      console.error('Booking submission failed:', err)
+      console.error('Return pickup booking failed:', err)
       setErrorMessage(err.message || 'Failed to confirm return pickup. Please try again.')
     } finally {
       setSubmitting(false)
     }
   }
 
-  // Copy Booking ID
   const handleCopyId = (id) => {
     if (!id) return
     navigator.clipboard.writeText(id)
@@ -415,161 +467,177 @@ export default function ReturnPickupBookingPage() {
     setTimeout(() => setCopiedBookingId(false), 2000)
   }
 
-  // Render Date Pills
-  const datePills = useMemo(() => {
-    const list = []
-    const today = new Date()
-    for (let i = 0; i < 6; i++) {
-      const d = new Date(today)
-      d.setDate(today.getDate() + i)
-      const dayName = i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : d.toLocaleDateString('en-US', { weekday: 'short' })
-      const dateStr = d.toLocaleDateString('en-US', { day: '2-digit', month: 'short' })
-      const isoStr = d.toISOString().split('T')[0]
-      list.push({ dayName, dateStr, isoStr })
-    }
-    return list
-  }, [])
-
   return (
     <div className={styles.pageWrapper}>
-      {/* Top Header Bar */}
+      {/* 1. TOP APP BAR (FLUTTER STYLE) */}
       <header className={styles.topHeader}>
         <div className={styles.headerContainer}>
           <div className={styles.brandRow}>
-            <div className={styles.brandTitle}>
+            <div className={styles.brandTitle} onClick={() => navigateTo('/')}>
               <span className={styles.brandLogo}>DELIVEZ</span>
-              <span className={styles.brandBadge}>BACK</span>
+              <FastForward size={18} className={styles.fastForwardIcon} />
               <span className={styles.securePill}>
-                <ShieldCheck size={14} /> 100% Secure Return
+                <Shield size={12} /> 100% Secure
               </span>
             </div>
-            <div className={styles.headerMeta}>
-              <span className={styles.walletPill}>
-                <Wallet size={14} /> Wallet: ₹108.00
-              </span>
-            </div>
-          </div>
 
-          {/* Stepper Navigation */}
-          {currentStep <= 6 && (
-            <div className={styles.stepperContainer}>
-              <div className={styles.stepperRail}>
-                {STEP_TITLES.map((title, idx) => {
-                  const stepNum = idx + 1
-                  const isDone = stepNum < currentStep
-                  const isCurrent = stepNum === currentStep
-                  return (
-                    <div
-                      key={title}
-                      className={`${styles.stepItem} ${isCurrent ? styles.active : ''} ${isDone ? styles.completed : ''}`}
-                      onClick={() => isDone && setCurrentStep(stepNum)}
-                    >
-                      <div className={styles.stepCircle}>
-                        {isDone ? <Check size={14} /> : stepNum}
-                      </div>
-                      <span className={styles.stepLabel}>{title}</span>
-                    </div>
-                  )
-                })}
+            <div className={styles.headerMeta}>
+              <button
+                type="button"
+                className={styles.notificationBtn}
+                title="Notifications"
+                onClick={() => navigateTo('/user/dashboard')}
+              >
+                <Bell size={20} />
+                <span className={styles.notificationDot} />
+              </button>
+
+              <div className={styles.walletPill}>
+                <Wallet size={15} color="#b45309" />
+                <span>₹0.00</span>
               </div>
             </div>
-          )}
+          </div>
         </div>
       </header>
 
-      {/* Main Content Area */}
-      <main className={styles.mainLayout}>
-        {/* If Step 7: Confirmation Screen */}
-        {currentStep === 7 && confirmedBooking ? (
-          <div className={styles.confirmationHero}>
-            <div className={styles.confCheckIcon}>
-              <CheckCircle2 size={56} color="#16a34a" />
-            </div>
-            <h1>Your Return is Booked!</h1>
-            <p className={styles.confSub}>
-              We have assigned our delivery partner. Your return item will be safely picked up and handed over to the destination seller.
-            </p>
-
-            <div className={styles.bookingIdCard}>
-              <div>
-                <small>RETURN BOOKING ID</small>
-                <strong>{confirmedBooking.bookingNumber || confirmedBooking.id}</strong>
+      {/* 2. PROMOTIONAL HERO SLIDER (PAGE 1 FROM FLUTTER APP) */}
+      {!sliderDismissed && currentStep <= 2 && sliderImages.length > 0 && (
+        <section className={styles.sliderSection}>
+          <div className={styles.sliderContainer}>
+            <img
+              src={sliderImages[currentSliderIdx] || sliderImages[0]}
+              alt="Return Pickup Service Banner"
+              className={styles.sliderImage}
+            />
+            <div className={styles.sliderOverlay}>
+              <div className={styles.sliderContent}>
+                <div className={styles.sliderText}>
+                  <h3>Hassle-Free Return Pickups</h3>
+                  <p>Fast pickup from your doorstep, direct return to seller, store or warehouse.</p>
+                </div>
+                <div className={styles.sliderControls}>
+                  <div className={styles.sliderDots}>
+                    {sliderImages.map((_, idx) => (
+                      <span
+                        key={idx}
+                        className={`${styles.dot} ${idx === currentSliderIdx ? styles.active : ''}`}
+                        onClick={() => setCurrentSliderIdx(idx)}
+                      />
+                    ))}
+                  </div>
+                  <div className={styles.sliderActions}>
+                    <button
+                      type="button"
+                      className={styles.skipBtn}
+                      onClick={() => setSliderDismissed(true)}
+                    >
+                      Skip
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.sliderNextBtn}
+                      onClick={() => {
+                        setCurrentSliderIdx((prev) => (prev + 1) % sliderImages.length)
+                        if (currentStep === 1) setCurrentStep(2)
+                      }}
+                    >
+                      Next <ArrowRight size={14} />
+                    </button>
+                  </div>
+                </div>
               </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* 3. STEPPER PROGRESS RAIL */}
+      {currentStep <= 9 && (
+        <nav className={styles.stepperContainer} aria-label="Return Pickup Progress">
+          <div className={styles.stepperRail}>
+            {STEP_NAMES.map((name, index) => {
+              const stepNum = index + 1
+              const isActive = currentStep === stepNum
+              const isCompleted = currentStep > stepNum
+              return (
+                <React.Fragment key={name}>
+                  <div
+                    className={`${styles.stepItem} ${isActive ? styles.active : ''} ${isCompleted ? styles.completed : ''}`}
+                    onClick={() => {
+                      if (stepNum < currentStep) setCurrentStep(stepNum)
+                    }}
+                  >
+                    <div className={styles.stepNode}>
+                      {isCompleted ? <Check size={12} strokeWidth={3} /> : stepNum}
+                    </div>
+                    <span className={styles.stepLabel}>{name}</span>
+                  </div>
+                  {index < STEP_NAMES.length - 1 && (
+                    <div
+                      className={`${styles.stepLine} ${isCompleted ? styles.completedLine : ''}`}
+                    />
+                  )}
+                </React.Fragment>
+              )
+            })}
+          </div>
+        </nav>
+      )}
+
+      {/* 4. MAIN WORKSPACE */}
+      <main className={styles.mainLayout}>
+        {currentStep === 10 && confirmedBooking ? (
+          /* CONFIRMATION SCREEN */
+          <div className={styles.confirmationCard}>
+            <div className={styles.successCheckCircle}>
+              <CheckCircle2 size={36} />
+            </div>
+            <h2>Return Pickup Confirmed!</h2>
+            <p>Our delivery partner has been assigned and will pick up your item on schedule.</p>
+
+            <div className={styles.bookingIdPill}>
+              <span>{confirmedBooking.bookingNumber || 'DRVZ-RET-SUCCESS'}</span>
               <button
                 type="button"
                 className={styles.copyBtn}
-                onClick={() => handleCopyId(confirmedBooking.bookingNumber || confirmedBooking.id)}
+                title="Copy Booking ID"
+                onClick={() => handleCopyId(confirmedBooking.bookingNumber)}
               >
-                {copiedBookingId ? <Check size={16} /> : <Copy size={16} />}
-                <span>{copiedBookingId ? 'Copied!' : 'Copy ID'}</span>
+                {copiedBookingId ? <Check size={15} color="#10b981" /> : <Copy size={15} />}
               </button>
             </div>
 
-            <div className={styles.confSummaryGrid}>
-              <div className={styles.confSummaryItem}>
-                <CalendarDays size={18} color="#d97706" />
-                <div>
-                  <small>Pickup Date & Time</small>
-                  <strong>{confirmedBooking.scheduledDate || 'Today'} • {confirmedBooking.scheduledTimeSlot || '11:00 AM - 1:00 PM'}</strong>
-                </div>
+            <div className={styles.otpRow}>
+              <div className={styles.otpCard}>
+                <small>Pickup Verification OTP</small>
+                <div className={styles.otpCode}>{confirmedBooking.pickupOtp || '5429'}</div>
               </div>
-
-              <div className={styles.confSummaryItem}>
-                <Store size={18} color="#d97706" />
-                <div>
-                  <small>Return To</small>
-                  <strong>{confirmedBooking.destinationName || 'Seller Warehouse'}</strong>
-                </div>
-              </div>
-
-              <div className={styles.confSummaryItem}>
-                <Package size={18} color="#d97706" />
-                <div>
-                  <small>Item & Speed</small>
-                  <strong>{confirmedBooking.itemDescription || 'Electronic Item'} • {confirmedBooking.deliveryService || 'Standard'}</strong>
-                </div>
-              </div>
-
-              <div className={styles.confSummaryItem}>
-                <ShieldCheck size={18} color="#16a34a" />
-                <div>
-                  <small>Shipment Protection</small>
-                  <strong style={{ color: '#16a34a' }}>Covered up to ₹10,000 ✓</strong>
-                </div>
+              <div className={styles.otpCard}>
+                <small>Delivery Verification OTP</small>
+                <div className={styles.otpCode}>{confirmedBooking.deliveryOtp || '4326'}</div>
               </div>
             </div>
 
-            <div className={styles.confActions}>
+            <div className={styles.confirmActionsRow}>
               <button
                 type="button"
-                className={styles.primaryConfBtn}
-                onClick={() => navigateTo(`/track/return-pickup/${confirmedBooking.bookingNumber || confirmedBooking.id}`)}
+                className={styles.trackBtn}
+                onClick={() => navigateTo(`/track/return-pickup/${confirmedBooking.bookingNumber}`)}
               >
-                <span>Track Return Live</span>
-                <ArrowRight size={18} />
+                <Truck size={16} /> Live Universal Tracking
               </button>
-
               <button
                 type="button"
-                className={styles.secondaryConfBtn}
-                onClick={() => navigateTo(`/return-pickup/details/${confirmedBooking.bookingNumber || confirmedBooking.id}`)}
+                className={styles.invoiceBtn}
+                onClick={() => navigateTo('/returns')}
               >
-                View Return Details
-              </button>
-
-              <button
-                type="button"
-                className={styles.outlineConfBtn}
-                onClick={() => navigateTo('/user/dashboard')}
-              >
-                Go to Dashboard
+                <FileText size={16} /> My Return Bookings
               </button>
             </div>
           </div>
         ) : (
-          /* 2-Column Split: Form Wizard + Live Sticky Summary */
           <div className={styles.wizardGrid}>
-            {/* Left Column: Interactive Form Steps */}
             <div className={styles.formColumn}>
               {errorMessage && (
                 <div className={styles.errorBanner}>
@@ -578,35 +646,43 @@ export default function ReturnPickupBookingPage() {
                 </div>
               )}
 
-              {/* STEP 1: Select Return Type */}
+              {/* STEP 1: SELECT RETURN TYPE */}
               {currentStep === 1 && (
                 <section className={styles.stepCard}>
                   <div className={styles.stepHeader}>
-                    <span className={styles.stepBadge}>Step 1</span>
-                    <h2>Select Return Type</h2>
-                    <p>What would you like to do with your product or package?</p>
+                    <div className={styles.heroHeaderRow}>
+                      <div className={styles.heroHeaderText}>
+                        <span className={styles.stepBadge}>Step 1</span>
+                        <h2>What would you like to do?</h2>
+                        <p>Choose the option that best describes your return.</p>
+                      </div>
+                      <div className={styles.heroIllustrationCircle}>
+                        <div className={styles.heroInnerIconBox}>
+                          <Undo2 size={24} />
+                        </div>
+                        <MapPin size={16} className={styles.heroFloatingPin} />
+                      </div>
+                    </div>
                   </div>
 
-                  <div className={styles.typeGrid}>
+                  <div className={styles.optionsList}>
                     {options.returnTypes.map((type) => {
-                      const IconComponent = RETURN_ICONS[type.id] || Undo2
+                      const IconComp = RETURN_ICONS[type.id] || Undo2
                       const isSelected = formData.returnType === type.id
                       return (
                         <div
                           key={type.id}
-                          className={`${styles.typeCard} ${isSelected ? styles.selectedType : ''}`}
+                          className={`${styles.optionCard} ${isSelected ? styles.selected : ''}`}
                           onClick={() => updateField('returnType', type.id)}
                         >
-                          <div className={styles.typeIconWrapper}>
-                            <IconComponent size={24} />
+                          <div className={styles.optionAmberIcon}>
+                            <IconComp size={22} />
                           </div>
-                          <div className={styles.typeContent}>
+                          <div className={styles.optionDetails}>
                             <strong>{type.name}</strong>
                             <p>{type.description}</p>
                           </div>
-                          <div className={styles.radioDot}>
-                            {isSelected && <div className={styles.radioInner} />}
-                          </div>
+                          <ChevronRight size={18} className={styles.optionChevron} />
                         </div>
                       )
                     })}
@@ -614,704 +690,1059 @@ export default function ReturnPickupBookingPage() {
                 </section>
               )}
 
-              {/* STEP 2: Where is it going? (Destination) */}
+              {/* STEP 2: PICKUP LOCATION DETAILS */}
               {currentStep === 2 && (
                 <section className={styles.stepCard}>
                   <div className={styles.stepHeader}>
                     <span className={styles.stepBadge}>Step 2</span>
-                    <h2>Where are you returning it?</h2>
-                    <p>Select your return destination category or choose a popular store.</p>
+                    <h2>Pickup Location Details</h2>
+                    <p>Enter the details of the place where we need to pick up your item.</p>
                   </div>
 
-                  {/* Destination Categories */}
-                  <div className={styles.destinationGrid}>
-                    {options.destinationTypes.map((dest) => {
-                      const IconComponent = DESTINATION_ICONS[dest.id] || Store
-                      const isSelected = formData.destinationType === dest.id
-                      return (
-                        <div
-                          key={dest.id}
-                          className={`${styles.destCard} ${isSelected ? styles.selectedDest : ''}`}
-                          onClick={() => updateField('destinationType', dest.id)}
-                        >
-                          <div className={styles.destIcon}>
-                            <IconComponent size={22} />
-                          </div>
-                          <strong>{dest.name}</strong>
-                          <small>{dest.description}</small>
-                        </div>
-                      )
-                    })}
-                  </div>
-
-                  {/* Search Store Bar */}
-                  <div className={styles.storeSearchBox}>
-                    <label>Search Store / Brand Name</label>
-                    <div className={styles.searchInputWrap}>
-                      <Search size={18} color="#94a3b8" />
-                      <input
-                        type="text"
-                        placeholder="Search store, brand or seller (e.g. Amazon, Flipkart, ABC Electronics)..."
-                        value={formData.searchStoreQuery}
-                        onChange={(e) => updateField('searchStoreQuery', e.target.value)}
-                      />
-                      <Mic size={18} color="#94a3b8" />
+                  {/* Store / Shop / Center Name */}
+                  <div className={styles.fieldBlock}>
+                    <div className={styles.fieldLabelRow}>
+                      <span className={styles.fieldLabel}>
+                        Store / Shop / Service Center Name <span className={styles.requiredStar}>*</span>
+                      </span>
                     </div>
-                  </div>
-
-                  {/* Recent / Suggested Stores */}
-                  <div className={styles.recentStoresSection}>
-                    <div className={styles.subHeading}>
-                      <span>Recent / Popular Returns Hubs</span>
-                    </div>
-                    <div className={styles.recentStoreList}>
-                      {options.recentStores.map((store) => {
-                        const isSelected = formData.destinationName === store.name
-                        return (
-                          <div
-                            key={store.id}
-                            className={`${styles.storePillCard} ${isSelected ? styles.selectedStore : ''}`}
-                            onClick={() => handleSelectStore(store)}
-                          >
-                            <div className={styles.storeMain}>
-                              <div className={styles.storeTitle}>
-                                <strong>{store.name}</strong>
-                                {store.verified && (
-                                  <span className={styles.verifiedTag}>
-                                    <ShieldCheck size={12} /> Verified
-                                  </span>
-                                )}
-                              </div>
-                              <small>{store.address.line1}, {store.address.city}</small>
-                            </div>
-                            <button type="button" className={styles.selectStoreBtn}>
-                              {isSelected ? 'Selected' : 'Select'}
-                            </button>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-                </section>
-              )}
-
-              {/* STEP 3: Pickup & Delivery Address Details */}
-              {currentStep === 3 && (
-                <section className={styles.stepCard}>
-                  <div className={styles.stepHeader}>
-                    <span className={styles.stepBadge}>Step 3</span>
-                    <h2>Pickup & Return Addresses</h2>
-                    <p>Enter where our partner should collect the item and where to deliver it.</p>
-                  </div>
-
-                  {/* Pickup Location Card */}
-                  <div className={styles.addressFormBlock}>
-                    <div className={styles.blockTitle}>
-                      <MapPin size={18} color="#d97706" />
-                      <span>Pickup Location (Where should we collect?)</span>
-                    </div>
-
-                    <div className={styles.formRow}>
-                      <div className={styles.formGroup}>
-                        <label>Location / Store Name *</label>
+                    <div className={styles.inputRowWithAmberIcon}>
+                      <div className={styles.amberIconSquare}>
+                        <Store size={20} />
+                      </div>
+                      <div className={styles.standardInputWrap}>
                         <input
                           type="text"
-                          placeholder="e.g. Home, My Office, ABC Shop"
+                          className={styles.standardInput}
+                          placeholder="e.g. Croma Mega Store, Customer Home, Apple Service Center"
                           value={formData.pickupStoreName}
                           onChange={(e) => updateField('pickupStoreName', e.target.value)}
                         />
                       </div>
-                      <div className={styles.formGroup}>
-                        <label>Order / Reference No. (Optional)</label>
+                    </div>
+                  </div>
+
+                  {/* Pickup Address with GPS */}
+                  <div className={styles.fieldBlock}>
+                    <div className={styles.fieldLabelRow}>
+                      <span className={styles.fieldLabel}>
+                        Pickup Address <span className={styles.requiredStar}>*</span>
+                      </span>
+                      <button
+                        type="button"
+                        className={styles.gpsActionBtn}
+                        onClick={() => updateField('pickupAddress', '123, 100ft Road, Indiranagar')}
+                      >
+                        <MapPin size={13} /> Use current location
+                      </button>
+                    </div>
+                    <div className={styles.inputRowWithAmberIcon}>
+                      <div className={styles.amberIconSquare}>
+                        <MapPin size={20} />
+                      </div>
+                      <div className={styles.splitAddressBox}>
                         <input
                           type="text"
-                          placeholder="e.g. ORD-928451"
-                          value={formData.pickupReferenceNumber}
-                          onChange={(e) => updateField('pickupReferenceNumber', e.target.value)}
+                          className={styles.addressTopInput}
+                          placeholder="House/Shop no., Building, Street, Area"
+                          value={formData.pickupAddress}
+                          onChange={(e) => updateField('pickupAddress', e.target.value)}
                         />
+                        <div className={styles.splitDividerHorizontal} />
+                        <div className={styles.splitBottomRow}>
+                          <input
+                            type="text"
+                            className={styles.cityInput}
+                            placeholder="City / Town"
+                            value={formData.pickupCity}
+                            onChange={(e) => updateField('pickupCity', e.target.value)}
+                          />
+                          <div className={styles.splitDividerVertical} />
+                          <input
+                            type="text"
+                            className={styles.pincodeInput}
+                            placeholder="Pincode"
+                            value={formData.pickupPostalCode}
+                            onChange={(e) => updateField('pickupPostalCode', e.target.value)}
+                          />
+                        </div>
                       </div>
                     </div>
+                  </div>
 
-                    <div className={styles.formGroup}>
-                      <div className={styles.labelWithAction}>
-                        <label>Pickup Street Address *</label>
-                        <button
-                          type="button"
-                          className={styles.gpsBtn}
-                          onClick={() => updateField('pickupAddress', '123, MG Road, Indiranagar, Bengaluru')}
-                        >
-                          <MapPin size={13} /> Use Current GPS Location
-                        </button>
-                      </div>
-                      <input
-                        type="text"
-                        placeholder="House / Flat / Shop no., Building, Street, Area"
-                        value={formData.pickupAddress}
-                        onChange={(e) => updateField('pickupAddress', e.target.value)}
-                      />
+                  {/* Contact Person Name */}
+                  <div className={styles.fieldBlock}>
+                    <div className={styles.fieldLabelRow}>
+                      <span className={styles.fieldLabel}>
+                        Contact Person Name <span className={styles.requiredStar}>*</span>
+                      </span>
                     </div>
-
-                    <div className={styles.formRowThree}>
-                      <div className={styles.formGroup}>
-                        <label>City *</label>
-                        <input
-                          type="text"
-                          value={formData.pickupCity}
-                          onChange={(e) => updateField('pickupCity', e.target.value)}
-                        />
+                    <div className={styles.inputRowWithAmberIcon}>
+                      <div className={styles.amberIconSquare}>
+                        <User size={20} />
                       </div>
-                      <div className={styles.formGroup}>
-                        <label>State</label>
+                      <div className={styles.standardInputWrap}>
                         <input
                           type="text"
-                          value={formData.pickupState}
-                          onChange={(e) => updateField('pickupState', e.target.value)}
-                        />
-                      </div>
-                      <div className={styles.formGroup}>
-                        <label>Pincode *</label>
-                        <input
-                          type="text"
-                          value={formData.pickupPostalCode}
-                          onChange={(e) => updateField('pickupPostalCode', e.target.value)}
-                        />
-                      </div>
-                    </div>
-
-                    <div className={styles.formRow}>
-                      <div className={styles.formGroup}>
-                        <label>Contact Person Name *</label>
-                        <input
-                          type="text"
-                          placeholder="Enter contact name"
+                          className={styles.standardInput}
+                          placeholder="Enter contact person name"
                           value={formData.pickupContactName}
                           onChange={(e) => updateField('pickupContactName', e.target.value)}
                         />
                       </div>
-                      <div className={styles.formGroup}>
-                        <label>Contact Phone Number *</label>
+                    </div>
+                  </div>
+
+                  {/* Contact Phone Number */}
+                  <div className={styles.fieldBlock}>
+                    <div className={styles.fieldLabelRow}>
+                      <span className={styles.fieldLabel}>
+                        Contact Phone Number <span className={styles.requiredStar}>*</span>
+                      </span>
+                    </div>
+                    <div className={styles.inputRowWithAmberIcon}>
+                      <div className={styles.amberIconSquare}>
+                        <Phone size={20} />
+                      </div>
+                      <div className={styles.standardInputWrap}>
                         <input
                           type="tel"
-                          placeholder="Enter 10-digit mobile"
+                          className={styles.standardInput}
+                          placeholder="Enter 10-digit mobile number"
                           value={formData.pickupPhoneNumber}
                           onChange={(e) => updateField('pickupPhoneNumber', e.target.value)}
                         />
                       </div>
                     </div>
+                  </div>
 
-                    <div className={styles.formGroup}>
-                      <label>Pickup Instructions (Optional)</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Collect from reception, call on arrival"
-                        value={formData.pickupInstructions}
-                        onChange={(e) => updateField('pickupInstructions', e.target.value)}
-                      />
+                  {/* Order / Job / Reference Number */}
+                  <div className={styles.fieldBlock}>
+                    <div className={styles.fieldLabelRow}>
+                      <span className={styles.fieldLabel}>
+                        Order / Job / Reference Number <span className={styles.optionalTag}>(Optional)</span>
+                      </span>
+                    </div>
+                    <div className={styles.inputRowWithAmberIcon}>
+                      <div className={styles.amberIconSquare}>
+                        <FileText size={20} />
+                      </div>
+                      <div className={styles.standardInputWrap}>
+                        <input
+                          type="text"
+                          className={styles.standardInput}
+                          placeholder="Enter order, job or reference number"
+                          value={formData.pickupReferenceNumber}
+                          onChange={(e) => updateField('pickupReferenceNumber', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              )}
+
+              {/* STEP 3: WHERE SHOULD WE DELIVER THE RETURN? */}
+              {currentStep === 3 && (
+                <section className={styles.stepCard}>
+                  <div className={styles.stepHeader}>
+                    <span className={styles.stepBadge}>Step 3</span>
+                    <h2>Where should we deliver the return?</h2>
+                    <p>Enter the address where the item has to be delivered.</p>
+                  </div>
+
+                  {/* Delivery Type Horizontal Cards */}
+                  <div className={styles.deliveryTypeCardsGrid}>
+                    {[
+                      { id: 'My Home', title: 'My Home', sub: 'Deliver to my home address', icon: Home },
+                      { id: 'Another Address', title: 'Another Address', sub: 'Deliver to any other address', icon: Building },
+                      { id: 'Seller / Warehouse', title: 'Seller / Warehouse', sub: 'Deliver to seller or warehouse', icon: Store },
+                      { id: 'Custom Address', title: 'Custom Address', sub: 'Add a new custom address', icon: MapPin }
+                    ].map((item) => {
+                      const IconC = item.icon
+                      const isSel = formData.returnAddressType === item.id
+                      return (
+                        <div
+                          key={item.id}
+                          className={`${styles.deliveryTypeCard} ${isSel ? styles.selected : ''}`}
+                          onClick={() => updateField('returnAddressType', item.id)}
+                        >
+                          <div className={styles.cardCheckCircle}>
+                            {isSel ? <CheckCircle2 size={15} /> : <div className={styles.emptyCircle} />}
+                          </div>
+                          <IconC size={22} className={styles.deliveryTypeIcon} />
+                          <strong>{item.title}</strong>
+                          <small>{item.sub}</small>
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  {/* Delivery Address with GPS */}
+                  <div className={styles.fieldBlock}>
+                    <div className={styles.fieldLabelRow}>
+                      <span className={styles.fieldLabel}>
+                        Delivery Address <span className={styles.requiredStar}>*</span>
+                      </span>
+                      <button
+                        type="button"
+                        className={styles.gpsActionBtn}
+                        onClick={() => updateField('returnAddress', 'Flat 402, Green Glen Layout, Bellandur')}
+                      >
+                        <MapPin size={13} /> Use current location
+                      </button>
+                    </div>
+                    <div className={styles.inputRowWithAmberIcon}>
+                      <div className={styles.amberIconSquare}>
+                        <MapPin size={20} />
+                      </div>
+                      <div className={styles.splitAddressBox}>
+                        <input
+                          type="text"
+                          className={styles.addressTopInput}
+                          placeholder="House/Building, Street, Area"
+                          value={formData.returnAddress}
+                          onChange={(e) => updateField('returnAddress', e.target.value)}
+                        />
+                        <div className={styles.splitDividerHorizontal} />
+                        <div className={styles.splitBottomRow}>
+                          <input
+                            type="text"
+                            className={styles.cityInput}
+                            placeholder="City / Town"
+                            value={formData.returnCity}
+                            onChange={(e) => updateField('returnCity', e.target.value)}
+                          />
+                          <div className={styles.splitDividerVertical} />
+                          <input
+                            type="text"
+                            className={styles.pincodeInput}
+                            placeholder="Pincode"
+                            value={formData.returnPostalCode}
+                            onChange={(e) => updateField('returnPostalCode', e.target.value)}
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Return Delivery Address Card */}
-                  <div className={styles.addressFormBlock} style={{ marginTop: '24px' }}>
-                    <div className={styles.blockTitle}>
-                      <Store size={18} color="#d97706" />
-                      <span>Return Delivery Address (Where should we deliver?)</span>
+                  {/* Contact Person Name */}
+                  <div className={styles.fieldBlock}>
+                    <div className={styles.fieldLabelRow}>
+                      <span className={styles.fieldLabel}>
+                        Contact Person Name <span className={styles.requiredStar}>*</span>
+                      </span>
                     </div>
-
-                    <div className={styles.addressTypeTabs}>
-                      {['My Home', 'Seller / Warehouse', 'Service Centre', 'Custom Address'].map((type) => (
-                        <button
-                          key={type}
-                          type="button"
-                          className={formData.returnAddressType === type ? styles.activeTab : ''}
-                          onClick={() => updateField('returnAddressType', type)}
-                        >
-                          {type}
-                        </button>
-                      ))}
-                    </div>
-
-                    <div className={styles.formGroup}>
-                      <label>Destination Store / Facility Name *</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Amazon Fulfillment Centre, ABC Electronics"
-                        value={formData.destinationName}
-                        onChange={(e) => updateField('destinationName', e.target.value)}
-                      />
-                    </div>
-
-                    <div className={styles.formGroup}>
-                      <label>Delivery Address *</label>
-                      <input
-                        type="text"
-                        placeholder="Building, Warehouse Gate, Street, Area"
-                        value={formData.returnAddress}
-                        onChange={(e) => updateField('returnAddress', e.target.value)}
-                      />
-                    </div>
-
-                    <div className={styles.formRowThree}>
-                      <div className={styles.formGroup}>
-                        <label>City *</label>
-                        <input
-                          type="text"
-                          value={formData.returnCity}
-                          onChange={(e) => updateField('returnCity', e.target.value)}
-                        />
+                    <div className={styles.inputRowWithAmberIcon}>
+                      <div className={styles.amberIconSquare}>
+                        <User size={20} />
                       </div>
-                      <div className={styles.formGroup}>
-                        <label>State</label>
+                      <div className={styles.standardInputWrap}>
                         <input
                           type="text"
-                          value={formData.returnState}
-                          onChange={(e) => updateField('returnState', e.target.value)}
-                        />
-                      </div>
-                      <div className={styles.formGroup}>
-                        <label>Pincode *</label>
-                        <input
-                          type="text"
-                          value={formData.returnPostalCode}
-                          onChange={(e) => updateField('returnPostalCode', e.target.value)}
-                        />
-                      </div>
-                    </div>
-
-                    <div className={styles.formRow}>
-                      <div className={styles.formGroup}>
-                        <label>Recipient Desk / Name *</label>
-                        <input
-                          type="text"
-                          placeholder="e.g. Returns Inward Desk"
+                          className={styles.standardInput}
+                          placeholder="Enter contact person name"
                           value={formData.returnContactName}
                           onChange={(e) => updateField('returnContactName', e.target.value)}
                         />
                       </div>
-                      <div className={styles.formGroup}>
-                        <label>Recipient Phone Number *</label>
+                    </div>
+                  </div>
+
+                  {/* Contact Phone Number */}
+                  <div className={styles.fieldBlock}>
+                    <div className={styles.fieldLabelRow}>
+                      <span className={styles.fieldLabel}>
+                        Contact Phone Number <span className={styles.requiredStar}>*</span>
+                      </span>
+                    </div>
+                    <div className={styles.inputRowWithAmberIcon}>
+                      <div className={styles.amberIconSquare}>
+                        <Phone size={20} />
+                      </div>
+                      <div className={styles.standardInputWrap}>
                         <input
                           type="tel"
-                          placeholder="Enter phone number"
+                          className={styles.standardInput}
+                          placeholder="Enter 10-digit mobile number"
                           value={formData.returnPhoneNumber}
                           onChange={(e) => updateField('returnPhoneNumber', e.target.value)}
                         />
                       </div>
                     </div>
                   </div>
+
+                  {/* Landmark */}
+                  <div className={styles.fieldBlock}>
+                    <div className={styles.fieldLabelRow}>
+                      <span className={styles.fieldLabel}>
+                        Landmark <span className={styles.optionalTag}>(Optional)</span>
+                      </span>
+                    </div>
+                    <div className={styles.inputRowWithAmberIcon}>
+                      <div className={styles.amberIconSquare}>
+                        <Package size={20} />
+                      </div>
+                      <div className={styles.standardInputWrap}>
+                        <input
+                          type="text"
+                          className={styles.standardInput}
+                          placeholder="Enter nearby landmark"
+                          value={formData.returnLandmark}
+                          onChange={(e) => updateField('returnLandmark', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Important Banner */}
+                  <div className={styles.importantBanner}>
+                    <Info size={20} className={styles.bannerAmberIcon} />
+                    <div className={styles.bannerText}>
+                      <strong>Important</strong>
+                      <p>Please double-check the return delivery address. We will deliver the item exactly to this address.</p>
+                    </div>
+                    <div className={styles.bannerRightIllustration}>
+                      <Package size={20} />
+                      <MapPin size={12} className={styles.bannerFloatingPin} />
+                    </div>
+                  </div>
                 </section>
               )}
 
-              {/* STEP 4: Item Details & Return Documents */}
+              {/* STEP 4: WHERE IS IT GOING? (DESTINATION) */}
               {currentStep === 4 && (
                 <section className={styles.stepCard}>
                   <div className={styles.stepHeader}>
-                    <span className={styles.stepBadge}>Step 4</span>
-                    <h2>Item Details & Documents</h2>
-                    <p>Add the return item specifications and attach supporting documents.</p>
-                  </div>
-
-                  {/* Auto-detected Return Verification Banner */}
-                  <div className={styles.autoDetectBanner}>
-                    <div className={styles.autoDetectHeader}>
-                      <div className={styles.autoDetectTitle}>
-                        <Sparkles size={18} color="#d97706" />
-                        <strong>Auto-Detect Return Details</strong>
+                    <div className={styles.heroHeaderRow}>
+                      <div className={styles.heroHeaderText}>
+                        <span className={styles.stepBadge}>Step 4</span>
+                        <h2>Where are you returning it?</h2>
+                        <p>Select where the item should be sent back.</p>
                       </div>
-                      <button
-                        type="button"
-                        className={styles.demoFillBtn}
-                        onClick={handleAutoFillVerifiedReturn}
-                      >
-                        Auto-Fill Sample Return
-                      </button>
-                    </div>
-                    <p>We found verified return details for <b>ABC Electronics</b> (Order #ORD-928451 • Return #RET-627189).</p>
-                    <div className={styles.detectPills}>
-                      <span>Product: Sony Headphones</span>
-                      <span>Return Before: 16 Aug 2026</span>
-                      <span>Est. Refund: ₹4,999.00</span>
+                      <div className={styles.heroIllustrationCircle}>
+                        <div className={styles.heroInnerIconBox}>
+                          <Undo2 size={24} />
+                        </div>
+                        <MapPin size={16} className={styles.heroFloatingPin} />
+                      </div>
                     </div>
                   </div>
 
-                  {/* Item Specs Form */}
-                  <div className={styles.itemFormSection}>
-                    <div className={styles.formRow}>
-                      <div className={styles.formGroup}>
-                        <label>Item Category *</label>
-                        <select
-                          value={formData.itemCategory}
-                          onChange={(e) => updateField('itemCategory', e.target.value)}
+                  {/* Destination Grid 3 columns */}
+                  <div className={styles.destGrid3Col}>
+                    {options.destinationTypes.slice(0, 6).map((item) => {
+                      const IconC = DESTINATION_ICONS[item.id] || Store
+                      const isSel = formData.destinationType === item.id
+                      return (
+                        <div
+                          key={item.id}
+                          className={`${styles.destCard} ${isSel ? styles.selected : ''}`}
+                          onClick={() => updateField('destinationType', item.id)}
                         >
-                          {options.itemCategories.map(cat => (
-                            <option key={cat.id} value={cat.id}>{cat.name}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className={styles.formGroup}>
-                        <label>Quantity *</label>
-                        <div className={styles.quantityPicker}>
-                          {[1, 2, 3, 4, 5].map(q => (
-                            <button
-                              key={q}
-                              type="button"
-                              className={formData.itemQuantity === q ? styles.activeQty : ''}
-                              onClick={() => updateField('itemQuantity', q)}
-                            >
-                              {q}
-                            </button>
-                          ))}
+                          <div className={styles.destCircleIcon}>
+                            <IconC size={18} />
+                          </div>
+                          <strong>{item.name}</strong>
+                          <small>{item.description}</small>
                         </div>
-                      </div>
+                      )
+                    })}
+                  </div>
+
+                  {/* Other Destination Full Card */}
+                  <div
+                    className={`${styles.otherDestCard} ${formData.destinationType === 'OTHER' ? styles.selected : ''}`}
+                    onClick={() => updateField('destinationType', 'OTHER')}
+                  >
+                    <div className={styles.otherIconBox}>
+                      <MoreHorizontal size={18} />
                     </div>
-
-                    <div className={styles.formGroup}>
-                      <label>Item Description / Model Details *</label>
-                      <textarea
-                        rows={3}
-                        placeholder="e.g. Sony Wireless Headphones, Model WH-1000XM4, Black color. Defective power button."
-                        value={formData.itemDescription}
-                        onChange={(e) => updateField('itemDescription', e.target.value)}
-                      />
-                      <small className={styles.charCount}>{formData.itemDescription.length}/250 chars</small>
+                    <div className={styles.otherText}>
+                      <strong>Other</strong>
+                      <small>Any other return destination</small>
                     </div>
+                    <ChevronRight size={18} />
+                  </div>
 
-                    <div className={styles.formRowThree}>
-                      <div className={styles.formGroup}>
-                        <label>Declared Item Value (₹) *</label>
-                        <input
-                          type="number"
-                          placeholder="e.g. 4999"
-                          value={formData.declaredValue}
-                          onChange={(e) => updateField('declaredValue', e.target.value)}
-                        />
+                  {/* Search Store / Seller */}
+                  <div className={styles.searchStoreHeaderRow}>
+                    <strong>Select store or seller</strong>
+                    <button
+                      type="button"
+                      className={styles.cantFindLink}
+                      onClick={() => updateField('destinationName', 'Custom Seller')}
+                    >
+                      Can't find? Enter address <ChevronRight size={11} />
+                    </button>
+                  </div>
+
+                  <div className={styles.storeSearchInputRow}>
+                    <Search size={16} color="#94a3b8" />
+                    <input
+                      type="text"
+                      placeholder="Search store, brand or seller name..."
+                      value={formData.searchStoreQuery}
+                      onChange={(e) => updateField('searchStoreQuery', e.target.value)}
+                    />
+                    <Mic size={16} color="#94a3b8" />
+                  </div>
+
+                  {/* Recent Destinations List */}
+                  <div className={styles.recentDestinationsContainer}>
+                    <div
+                      className={styles.recentDestinationTile}
+                      onClick={() => updateField('destinationName', 'Amazon India')}
+                    >
+                      <div className={styles.recentTileIcon}>
+                        <ShoppingCart size={18} />
                       </div>
-                      <div className={styles.formGroup}>
-                        <label>Approx Weight (kg)</label>
-                        <input
-                          type="number"
-                          step="0.1"
-                          placeholder="e.g. 0.5"
-                          value={formData.approxWeightKg}
-                          onChange={(e) => updateField('approxWeightKg', e.target.value)}
-                        />
+                      <div className={styles.recentTileText}>
+                        <strong>Amazon India</strong>
+                        <small>Bengaluru, Karnataka</small>
                       </div>
-                      <div className={styles.formGroup}>
-                        <label>Est. Refund Amount (₹)</label>
-                        <input
-                          type="number"
-                          placeholder="e.g. 4999"
-                          value={formData.estimatedRefundAmount}
-                          onChange={(e) => updateField('estimatedRefundAmount', e.target.value)}
-                        />
-                      </div>
+                      <ChevronRight size={16} color="#94a3b8" />
                     </div>
-
-                    {/* Item Condition */}
-                    <div className={styles.conditionSection}>
-                      <label>Item Condition *</label>
-                      <div className={styles.conditionGrid}>
-                        {options.itemConditions.map(cond => (
-                          <div
-                            key={cond.id}
-                            className={`${styles.condCard} ${formData.itemCondition === cond.id ? styles.selectedCond : ''}`}
-                            onClick={() => updateField('itemCondition', cond.id)}
-                          >
-                            <strong>{cond.name}</strong>
-                            <small>{cond.description}</small>
-                          </div>
-                        ))}
+                    <div className={styles.tileDivider} />
+                    <div
+                      className={styles.recentDestinationTile}
+                      onClick={() => updateField('destinationName', 'Flipkart')}
+                    >
+                      <div className={styles.recentTileIcon}>
+                        <Store size={18} />
                       </div>
+                      <div className={styles.recentTileText}>
+                        <strong>Flipkart</strong>
+                        <small>Bengaluru, Karnataka</small>
+                      </div>
+                      <ChevronRight size={16} color="#94a3b8" />
                     </div>
-
-                    {/* Special Handling Tags */}
-                    <div className={styles.handlingSection}>
-                      <label>Special Handling & Security Tags</label>
-                      <div className={styles.tagChips}>
-                        {options.specialHandlingOptions.map(tag => {
-                          const isSelected = formData.specialHandlingTags.includes(tag.label)
-                          return (
-                            <button
-                              key={tag.id}
-                              type="button"
-                              className={`${styles.tagChip} ${isSelected ? styles.activeTag : ''}`}
-                              onClick={() => toggleHandlingTag(tag.label)}
-                            >
-                              {isSelected ? <Check size={14} /> : <Plus size={14} />}
-                              <span>{tag.label}</span>
-                            </button>
-                          )
-                        })}
+                    <div className={styles.tileDivider} />
+                    <div
+                      className={styles.recentDestinationTile}
+                      onClick={() => updateField('destinationName', 'ABC Electronics Returns Centre')}
+                    >
+                      <div className={styles.recentTileIcon}>
+                        <Building size={18} />
                       </div>
-                    </div>
-
-                    {/* Documents Upload Section */}
-                    <div className={styles.documentsSection}>
-                      <div className={styles.subHeading}>
-                        <span>Upload Return Documents (PDF / JPG / PNG Max 5MB)</span>
+                      <div className={styles.recentTileText}>
+                        <strong>ABC Electronics Returns Centre</strong>
+                        <small>HSR Layout, Bengaluru, Karnataka</small>
                       </div>
-
-                      <div className={styles.docUploadGrid}>
-                        {options.documentTypes.map(doc => (
-                          <div key={doc.id} className={styles.docCard}>
-                            <div className={styles.docInfo}>
-                              <div className={styles.docTitleRow}>
-                                <strong>{doc.title}</strong>
-                                {doc.badge && <span className={styles.docBadge}>{doc.badge}</span>}
-                              </div>
-                              <small>{doc.description}</small>
-                            </div>
-                            <button
-                              type="button"
-                              className={styles.uploadDocBtn}
-                              onClick={() => handleAddSampleDoc(doc.title, doc.id)}
-                            >
-                              <Upload size={14} /> Attach File
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Uploaded Documents List */}
-                      {formData.documents && formData.documents.length > 0 && (
-                        <div className={styles.uploadedList}>
-                          <strong>Attached Documents ({formData.documents.length}):</strong>
-                          <div className={styles.docItemsRow}>
-                            {formData.documents.map(d => (
-                              <div key={d.id} className={styles.uploadedDocItem}>
-                                <FileText size={16} color="#d97706" />
-                                <span>{d.name}</span>
-                                <button type="button" onClick={() => handleRemoveDoc(d.id)}>
-                                  <Trash2 size={14} />
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
+                      <ChevronRight size={16} color="#94a3b8" />
                     </div>
                   </div>
                 </section>
               )}
 
-              {/* STEP 5: Schedule & Delivery Service Speed */}
+              {/* STEP 5: ITEM DETAILS */}
               {currentStep === 5 && (
                 <section className={styles.stepCard}>
                   <div className={styles.stepHeader}>
                     <span className={styles.stepBadge}>Step 5</span>
-                    <h2>Schedule & Service Speed</h2>
-                    <p>Select your pickup appointment time and choose delivery transit speed.</p>
+                    <h2>Item Details</h2>
+                    <p>Tell us about the item you want to return.</p>
                   </div>
 
-                  {/* Pickup Date Picker */}
-                  <div className={styles.scheduleBlock}>
-                    <label>Select Pickup Date</label>
-                    <div className={styles.datePillsRow}>
-                      {datePills.map(dp => {
-                        const isSelected = formData.scheduledDate === dp.isoStr
-                        return (
-                          <div
-                            key={dp.isoStr}
-                            className={`${styles.datePill} ${isSelected ? styles.selectedDate : ''}`}
-                            onClick={() => updateField('scheduledDate', dp.isoStr)}
-                          >
-                            <span className={styles.pillDay}>{dp.dayName}</span>
-                            <span className={styles.pillDate}>{dp.dateStr}</span>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Pickup Time Slots */}
-                  <div className={styles.scheduleBlock} style={{ marginTop: '20px' }}>
-                    <div className={styles.labelWithAction}>
-                      <label>Select Pickup Time Window</label>
-                      <span style={{ fontSize: '0.8rem', color: '#16a34a', fontWeight: 600 }}>
-                        Fastest Partner Arrival Available
+                  {/* Item Category */}
+                  <div className={styles.fieldBlock}>
+                    <div className={styles.fieldLabelRow}>
+                      <span className={styles.fieldLabel}>
+                        Item Category <span className={styles.requiredStar}>*</span>
                       </span>
                     </div>
-                    <div className={styles.timeSlotsGrid}>
-                      {options.pickupTimeSlots.map((slot, idx) => {
-                        const isSelected = formData.scheduledTimeSlot === slot
-                        return (
-                          <div
-                            key={slot}
-                            className={`${styles.slotPill} ${isSelected ? styles.selectedSlot : ''}`}
-                            onClick={() => updateField('scheduledTimeSlot', slot)}
-                          >
-                            <Clock size={14} />
-                            <span>{slot}</span>
-                            {idx === 0 && <span className={styles.fastestTag}>Fastest</span>}
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Delivery Service Speed Options */}
-                  <div className={styles.servicesBlock} style={{ marginTop: '28px' }}>
-                    <label>Choose Delivery Service Speed</label>
-                    <div className={styles.serviceCardsGrid}>
-                      {options.deliveryServices.map(srv => {
-                        const isSelected = formData.deliveryService === srv.id
-                        return (
-                          <div
-                            key={srv.id}
-                            className={`${styles.serviceSpeedCard} ${isSelected ? styles.selectedService : ''}`}
-                            onClick={() => updateField('deliveryService', srv.id)}
-                          >
-                            <div className={styles.srvTopRow}>
-                              <div className={styles.srvTitleCol}>
-                                <div className={styles.srvNameRow}>
-                                  <strong>{srv.name}</strong>
-                                  {srv.badge && <span className={styles.srvBadge}>{srv.badge}</span>}
-                                </div>
-                                <small>{srv.description}</small>
-                              </div>
-                              <div className={styles.srvPrice}>
-                                <strong>₹{srv.baseCharge}.00</strong>
-                              </div>
-                            </div>
-                            <div className={styles.srvBottomRow}>
-                              <span className={styles.etaPill}>
-                                <Truck size={13} /> {srv.eta}
-                              </span>
-                              <div className={styles.radioDot}>
-                                {isSelected && <div className={styles.radioInner} />}
-                              </div>
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Shipment Protection Toggle */}
-                  <div className={styles.protectionCard} style={{ marginTop: '24px' }}>
-                    <div className={styles.protLeft}>
-                      <ShieldCheck size={28} color="#16a34a" />
-                      <div>
-                        <strong>Add Shipment Protection (Recommended)</strong>
-                        <p>Complete transit cover up to ₹10,000 against package damage, breakage, or loss.</p>
+                    <div className={styles.inputRowWithAmberIcon}>
+                      <div className={styles.amberIconSquare}>
+                        <Layers size={20} />
+                      </div>
+                      <div className={styles.standardInputWrap}>
+                        <select
+                          className={styles.standardInput}
+                          value={formData.itemCategory}
+                          onChange={(e) => updateField('itemCategory', e.target.value)}
+                        >
+                          <option value="ELECTRONICS">Electronics & Gadgets</option>
+                          <option value="CLOTHING_APPAREL">Clothing & Apparel</option>
+                          <option value="FOOTWEAR">Footwear & Shoes</option>
+                          <option value="HOME_KITCHEN">Home & Kitchen Appliances</option>
+                          <option value="BOOKS_STATIONERY">Books & Stationery</option>
+                          <option value="OTHER">Other Items</option>
+                        </select>
                       </div>
                     </div>
-                    <div className={styles.protRight}>
-                      <span className={styles.protPrice}>+₹19.00</span>
-                      <input
-                        type="checkbox"
-                        checked={formData.shipmentProtection}
-                        onChange={(e) => updateField('shipmentProtection', e.target.checked)}
-                      />
+                  </div>
+
+                  {/* Item Description */}
+                  <div className={styles.fieldBlock}>
+                    <div className={styles.fieldLabelRow}>
+                      <span className={styles.fieldLabel}>
+                        Item Description <span className={styles.requiredStar}>*</span>
+                      </span>
+                    </div>
+                    <div className={styles.inputRowWithAmberIcon}>
+                      <div className={styles.amberIconSquare}>
+                        <FileText size={20} />
+                      </div>
+                      <div className={styles.itemDescStack}>
+                        <textarea
+                          className={styles.itemDescTextarea}
+                          maxLength={200}
+                          placeholder="Describe the item, brand, model, color, etc."
+                          value={formData.itemDescription}
+                          onChange={(e) => updateField('itemDescription', e.target.value)}
+                        />
+                        <span className={styles.charCounter}>
+                          {formData.itemDescription.length}/200
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Quantity & Item Value */}
+                  <div className={styles.twoColsRow}>
+                    <div className={styles.fieldBlock}>
+                      <div className={styles.fieldLabelRow}>
+                        <span className={styles.fieldLabel}>
+                          Quantity <span className={styles.requiredStar}>*</span>
+                        </span>
+                      </div>
+                      <div className={styles.inputRowWithAmberIcon}>
+                        <div className={styles.amberIconSquare}>
+                          <Package size={20} />
+                        </div>
+                        <input
+                          type="number"
+                          min={1}
+                          max={20}
+                          className={styles.standardInput}
+                          value={formData.itemQuantity}
+                          onChange={(e) => updateField('itemQuantity', e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    <div className={styles.fieldBlock}>
+                      <div className={styles.fieldLabelRow}>
+                        <span className={styles.fieldLabel}>
+                          Item Value (₹) <span className={styles.requiredStar}>*</span>
+                        </span>
+                      </div>
+                      <div className={styles.inputRowWithAmberIcon}>
+                        <div className={styles.amberIconSquare}>
+                          <Tag size={20} />
+                        </div>
+                        <input
+                          type="number"
+                          className={styles.standardInput}
+                          placeholder="Approximate value"
+                          value={formData.declaredValue}
+                          onChange={(e) => updateField('declaredValue', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Weight & Dimensions */}
+                  <div className={styles.twoColsRow}>
+                    <div className={styles.fieldBlock}>
+                      <div className={styles.fieldLabelRow}>
+                        <span className={styles.fieldLabel}>
+                          Weight (Approx. kg) <span className={styles.requiredStar}>*</span>
+                        </span>
+                      </div>
+                      <div className={styles.inputRowWithAmberIcon}>
+                        <div className={styles.amberIconSquare}>
+                          <Truck size={20} />
+                        </div>
+                        <input
+                          type="number"
+                          step="0.1"
+                          className={styles.standardInput}
+                          placeholder="0.5"
+                          value={formData.approxWeightKg}
+                          onChange={(e) => updateField('approxWeightKg', e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    <div className={styles.fieldBlock}>
+                      <div className={styles.fieldLabelRow}>
+                        <span className={styles.fieldLabel}>
+                          Dimensions (Approx. cm) <span className={styles.optionalTag}>(Optional)</span>
+                        </span>
+                      </div>
+                      <div className={styles.dimBoxesRow}>
+                        <div className={styles.dimBox}>
+                          <input
+                            type="number"
+                            placeholder="18"
+                            value={formData.lengthCm || ''}
+                            onChange={(e) => updateField('lengthCm', e.target.value)}
+                          />
+                          <label>L (cm)</label>
+                        </div>
+                        <div className={styles.dimBox}>
+                          <input
+                            type="number"
+                            placeholder="15"
+                            value={formData.widthCm || ''}
+                            onChange={(e) => updateField('widthCm', e.target.value)}
+                          />
+                          <label>W (cm)</label>
+                        </div>
+                        <div className={styles.dimBox}>
+                          <input
+                            type="number"
+                            placeholder="8"
+                            value={formData.heightCm || ''}
+                            onChange={(e) => updateField('heightCm', e.target.value)}
+                          />
+                          <label>H (cm)</label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Item Condition */}
+                  <div className={styles.fieldBlock}>
+                    <div className={styles.fieldLabelRow}>
+                      <span className={styles.fieldLabel}>
+                        Item Condition <span className={styles.requiredStar}>*</span>
+                      </span>
+                    </div>
+                    <div className={styles.inputRowWithAmberIcon}>
+                      <div className={styles.amberIconSquare}>
+                        <ShieldCheck size={20} />
+                      </div>
+                      <div className={styles.conditionCardsRow}>
+                        {[
+                          { id: 'NEW_UNUSED', label: 'New / Unused', icon: Package },
+                          { id: 'USED_GOOD', label: 'Used - Good', icon: CheckCircle },
+                          { id: 'DAMAGED', label: 'Damaged', icon: AlertCircle }
+                        ].map((cond) => {
+                          const IconC = cond.icon
+                          const isSel = formData.itemCondition === cond.id
+                          return (
+                            <div
+                              key={cond.id}
+                              className={`${styles.conditionCard} ${isSel ? styles.selected : ''}`}
+                              onClick={() => updateField('itemCondition', cond.id)}
+                            >
+                              <div className={styles.conditionCheckMark}>
+                                {isSel && <Check size={8} strokeWidth={3} />}
+                              </div>
+                              <IconC size={18} className={styles.conditionCardIcon} />
+                              <strong>{cond.label}</strong>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Special Handling */}
+                  <div className={styles.fieldBlock}>
+                    <div className={styles.fieldLabelRow}>
+                      <span className={styles.fieldLabel}>
+                        Special Handling <span className={styles.optionalTag}>(Optional)</span>
+                      </span>
+                    </div>
+                    <div className={styles.inputRowWithAmberIcon}>
+                      <div className={styles.amberIconSquare}>
+                        <AlertCircle size={20} />
+                      </div>
+                      <div className={styles.handlingChipsWrap}>
+                        {['Fragile', 'Handle with care', 'Keep Dry', 'High Value Item'].map((tag) => {
+                          const isSel = formData.specialHandlingTags.includes(tag)
+                          return (
+                            <div
+                              key={tag}
+                              className={`${styles.handlingChip} ${isSel ? styles.selected : ''}`}
+                              onClick={() => toggleSpecialHandling(tag)}
+                            >
+                              <span>{tag}</span>
+                              <div className={styles.chipBox}>
+                                {isSel && <Check size={8} strokeWidth={3} />}
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Item Photos */}
+                  <div className={styles.fieldBlock}>
+                    <div className={styles.fieldLabelRow}>
+                      <span className={styles.fieldLabel}>
+                        Item Photos <span className={styles.optionalTag}>(Optional, up to 5 photos)</span>
+                      </span>
+                    </div>
+                    <div className={styles.inputRowWithAmberIcon}>
+                      <div className={styles.amberIconSquare}>
+                        <Camera size={20} />
+                      </div>
+                      <div
+                        className={styles.photosDropBox}
+                        onClick={() => {
+                          const sample = 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=400'
+                          if (formData.itemPhotos.length < 5) {
+                            setFormData((prev) => ({
+                              ...prev,
+                              itemPhotos: [...prev.itemPhotos, sample]
+                            }))
+                          }
+                        }}
+                      >
+                        <Camera size={22} color="#94a3b8" />
+                        <strong>Add photos of the item</strong>
+                        <small>Click to upload photo ({formData.itemPhotos.length}/5 added)</small>
+                        {formData.itemPhotos.length > 0 && (
+                          <div className={styles.photoThumbnailsRow}>
+                            {formData.itemPhotos.map((photo, i) => (
+                              <img key={i} src={photo} alt={`Item ${i}`} className={styles.photoThumb} />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tip Banner */}
+                  <div className={styles.tipBanner}>
+                    <Info size={18} className={styles.bannerAmberIcon} />
+                    <div className={styles.bannerText}>
+                      <strong>Tip</strong>
+                      <p>Clear photos and correct details help us deliver your return smoothly.</p>
+                    </div>
+                    <div className={styles.bannerRightIllustration}>
+                      <Truck size={20} />
                     </div>
                   </div>
                 </section>
               )}
 
-              {/* STEP 6: Review & Payment */}
+              {/* STEP 6: RETURN DOCUMENTS */}
               {currentStep === 6 && (
                 <section className={styles.stepCard}>
                   <div className={styles.stepHeader}>
                     <span className={styles.stepBadge}>Step 6</span>
-                    <h2>Review & Confirm Payment</h2>
-                    <p>Review your return details and select a secure payment method.</p>
+                    <h2>Return Documents</h2>
+                    <p>Upload documents related to your return (if available).</p>
                   </div>
 
-                  {/* Review Cards */}
-                  <div className={styles.reviewBlocks}>
-                    {/* Pickup Address */}
-                    <div className={styles.reviewItem}>
-                      <div className={styles.reviewIcon}><MapPin size={18} /></div>
-                      <div className={styles.reviewDetails}>
-                        <small>PICKUP FROM</small>
-                        <strong>{formData.pickupStoreName} • {formData.pickupContactName} ({formData.pickupPhoneNumber})</strong>
-                        <p>{formData.pickupAddress}, {formData.pickupCity} - {formData.pickupPostalCode}</p>
-                      </div>
-                      <button type="button" onClick={() => setCurrentStep(3)}>
-                        <Edit3 size={14} /> Edit
-                      </button>
-                    </div>
+                  <div className={styles.documentCardsList}>
+                    {documentTypesList.map((doc) => {
+                      const isUploaded = formData.documents.some((d) => d.type === doc.id)
+                      return (
+                        <div key={doc.id} className={styles.docCard}>
+                          <div className={styles.docIconSquare}>
+                            <FileText size={20} />
+                          </div>
+                          <div className={styles.docInfo}>
+                            <div className={styles.docTitleRow}>
+                              <strong>{doc.title}</strong>
+                              <span
+                                className={
+                                  doc.tag === 'Recommended'
+                                    ? styles.recommendedBadge
+                                    : styles.optionalBadge
+                                }
+                              >
+                                {doc.tag}
+                              </span>
+                            </div>
+                            <p>{doc.subtitle}</p>
+                            <small>Accepted formats: JPG, PNG, PDF (Max 5MB)</small>
+                          </div>
+                          <div className={styles.docUploadAction}>
+                            <button
+                              type="button"
+                              className={`${styles.uploadDocBtn} ${isUploaded ? styles.uploaded : ''}`}
+                              onClick={() => handleAddSampleDoc(doc.title, doc.id)}
+                            >
+                              <Upload size={12} /> {isUploaded ? 'Uploaded' : 'Upload'}
+                            </button>
+                            <span className={styles.docCountText}>
+                              {isUploaded ? '1/1 Uploaded' : '0/1 Uploaded'}
+                            </span>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
 
-                    {/* Return Destination */}
-                    <div className={styles.reviewItem}>
-                      <div className={styles.reviewIcon}><Store size={18} /></div>
-                      <div className={styles.reviewDetails}>
-                        <small>RETURN TO</small>
-                        <strong>{formData.destinationName} • {formData.returnContactName}</strong>
-                        <p>{formData.returnAddress}, {formData.returnCity} - {formData.returnPostalCode}</p>
-                      </div>
-                      <button type="button" onClick={() => setCurrentStep(3)}>
-                        <Edit3 size={14} /> Edit
-                      </button>
+                  {/* Why Do We Need Documents Banner */}
+                  <div className={styles.importantBanner}>
+                    <Info size={20} className={styles.bannerAmberIcon} />
+                    <div className={styles.bannerText}>
+                      <strong>Why do we need documents?</strong>
+                      <p>These documents help us process your return faster and ensure a smooth delivery.</p>
                     </div>
-
-                    {/* Item Details */}
-                    <div className={styles.reviewItem}>
-                      <div className={styles.reviewIcon}><Package size={18} /></div>
-                      <div className={styles.reviewDetails}>
-                        <small>ITEM DETAILS</small>
-                        <strong>{formData.itemDescription}</strong>
-                        <p>Qty: {formData.itemQuantity} • Value: ₹{formData.declaredValue} • Condition: {formData.itemCondition}</p>
-                      </div>
-                      <button type="button" onClick={() => setCurrentStep(4)}>
-                        <Edit3 size={14} /> Edit
-                      </button>
+                    <div className={styles.bannerRightIllustration}>
+                      <FileCheck size={20} />
                     </div>
+                  </div>
+                </section>
+              )}
 
-                    {/* Schedule & Speed */}
-                    <div className={styles.reviewItem}>
-                      <div className={styles.reviewIcon}><Clock size={18} /></div>
-                      <div className={styles.reviewDetails}>
-                        <small>SCHEDULE & SPEED</small>
-                        <strong>{formData.scheduledDate} ({formData.scheduledTimeSlot})</strong>
-                        <p>Service: {formData.deliveryService} • Protection: {formData.shipmentProtection ? 'Covered up to ₹10,000' : 'None'}</p>
+              {/* STEP 7: HOW TO ADD RETURN DETAILS */}
+              {currentStep === 7 && (
+                <section className={styles.stepCard}>
+                  <div className={styles.stepHeader}>
+                    <div className={styles.heroHeaderRow}>
+                      <div className={styles.heroHeaderText}>
+                        <span className={styles.stepBadge}>Step 7</span>
+                        <h2>How would you like to add return details?</h2>
+                        <p>Choose the fastest way to provide your order and return information.</p>
                       </div>
-                      <button type="button" onClick={() => setCurrentStep(5)}>
-                        <Edit3 size={14} /> Edit
-                      </button>
+                      <div className={styles.heroIllustrationCircle}>
+                        <div className={styles.heroInnerIconBox}>
+                          <QrCode size={24} />
+                        </div>
+                        <MapPin size={16} className={styles.heroFloatingPin} />
+                      </div>
                     </div>
                   </div>
 
-                  {/* Promo Coupon Code */}
-                  <div className={styles.couponBox}>
-                    <Tag size={18} color="#d97706" />
-                    <input
-                      type="text"
-                      placeholder="Enter promo code (e.g. DELIVEZ10)"
-                      value={formData.couponCode}
-                      onChange={(e) => updateField('couponCode', e.target.value)}
-                    />
-                    <button type="button" className={styles.applyCouponBtn}>
-                      Applied
+                  <div className={styles.methodCardsList}>
+                    {[
+                      {
+                        id: 'SCAN_LABEL',
+                        title: 'Scan Return Label / QR Code',
+                        badge: 'FASTEST',
+                        subtitle: 'Scan the QR code or barcode on your return label / invoice.',
+                        icon: QrCode
+                      },
+                      {
+                        id: 'UPLOAD_SCREENSHOT',
+                        title: 'Upload Screenshot',
+                        subtitle: 'Upload a screenshot of your order, invoice or return details.',
+                        icon: ImageIcon
+                      },
+                      {
+                        id: 'ENTER_MANUALLY',
+                        title: 'Enter Manually',
+                        subtitle: 'Type your order ID, return ID and other details manually.',
+                        icon: Edit3
+                      }
+                    ].map((item) => {
+                      const IconC = item.icon
+                      const isSel = formData.returnDetailsMethod === item.id
+                      return (
+                        <div
+                          key={item.id}
+                          className={`${styles.methodCard} ${isSel ? styles.selected : ''}`}
+                          onClick={() => updateField('returnDetailsMethod', item.id)}
+                        >
+                          <div className={styles.methodIconBox}>
+                            <IconC size={22} />
+                          </div>
+                          <div className={styles.methodText}>
+                            <div className={styles.methodTitleRow}>
+                              <strong>{item.title}</strong>
+                              {item.badge && <span className={styles.fastestBadge}>{item.badge}</span>}
+                            </div>
+                            <p>{item.subtitle}</p>
+                          </div>
+                          <ChevronRight size={18} />
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  {/* Why Scan Box */}
+                  <div className={styles.whyScanBox}>
+                    <div className={styles.whyScanTitle}>
+                      <Sparkles size={16} color="#d97706" />
+                      <span>Why scan?</span>
+                    </div>
+                    <div className={styles.whyScanBullet}>
+                      <span className={styles.bulletCheck}>✓</span>
+                      <span>Auto-detects order, return ID & product details</span>
+                    </div>
+                    <div className={styles.whyScanBullet}>
+                      <span className={styles.bulletCheck}>✓</span>
+                      <span>Saves time and reduces errors</span>
+                    </div>
+                    <div className={styles.whyScanBullet}>
+                      <span className={styles.bulletCheck}>✓</span>
+                      <span>Faster booking experience</span>
+                    </div>
+                  </div>
+
+                  <div className={styles.orDividerRow}>
+                    <div className={styles.orLine} />
+                    <span className={styles.orText}>OR</span>
+                    <div className={styles.orLine} />
+                  </div>
+
+                  {/* Import From Previous Returns Card */}
+                  <div
+                    className={styles.importPrevCard}
+                    onClick={() => {
+                      updateField('orderId', 'ORD-PREV-2918')
+                      updateField('returnId', 'RET-PREV-1192')
+                    }}
+                  >
+                    <div className={styles.docIconSquare}>
+                      <Repeat size={18} />
+                    </div>
+                    <div className={styles.docInfo}>
+                      <strong>Import from Previous Returns</strong>
+                      <p>Select from your recent returns to prefill info</p>
+                    </div>
+                    <ChevronRight size={16} color="#94a3b8" />
+                  </div>
+                </section>
+              )}
+
+              {/* STEP 8: PICKUP DATE & TIME (SCHEDULE) */}
+              {currentStep === 8 && (
+                <section className={styles.stepCard}>
+                  <div className={styles.stepHeader}>
+                    <span className={styles.stepBadge}>Step 8</span>
+                    <h2>Pickup Date & Time</h2>
+                    <p>Choose your preferred pickup date and time.</p>
+                  </div>
+
+                  {/* Date Scroll Pills */}
+                  <div className={styles.fieldBlock}>
+                    <div className={styles.fieldLabelRow}>
+                      <span className={styles.fieldLabel}>
+                        <Calendar size={14} /> Select Pickup Date
+                      </span>
+                    </div>
+                    <div className={styles.datePillsScroll}>
+                      {dateOptions.map((item) => {
+                        const isSel = formData.scheduledDate === item.iso
+                        return (
+                          <div
+                            key={item.iso}
+                            className={`${styles.datePill} ${isSel ? styles.selected : ''}`}
+                            onClick={() => updateField('scheduledDate', item.iso)}
+                          >
+                            <span className={styles.pillDay}>{item.day}</span>
+                            <span className={styles.pillDate}>{item.date}</span>
+                            <span className={styles.pillMonth}>{item.month}</span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Time Slots 2 Columns */}
+                  <div className={styles.fieldBlock}>
+                    <div className={styles.fieldLabelRow}>
+                      <span className={styles.fieldLabel}>
+                        <Clock size={14} /> Select Pickup Time Slot
+                      </span>
+                      <small className={styles.optionalTag}>Timings shown in local time</small>
+                    </div>
+                    <div className={styles.timeSlotsGrid}>
+                      {timeSlots.map((slot) => {
+                        const isSel = formData.scheduledTimeSlot === slot.time
+                        return (
+                          <div
+                            key={slot.time}
+                            className={`${styles.timeSlotCard} ${isSel ? styles.selected : ''}`}
+                            onClick={() => updateField('scheduledTimeSlot', slot.time)}
+                          >
+                            <div className={styles.slotTimeText}>
+                              <strong>{slot.time}</strong>
+                              {slot.badge && <span className={styles.slotBadge}>{slot.badge}</span>}
+                            </div>
+                            <div className={styles.slotCheckCircle}>
+                              {isSel ? <CheckCircle2 size={16} color="#e50914" /> : <div className={styles.emptyCircle} />}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Need Precise Time Box */}
+                  <div className={styles.preciseTimeCard}>
+                    <div className={styles.preciseIconBox}>
+                      <CalendarDays size={18} />
+                    </div>
+                    <div className={styles.preciseText}>
+                      <strong>Need Precise Time?</strong>
+                      <small>Book a precise 2-hour slot for guaranteed on-time pickup.</small>
+                    </div>
+                    <button
+                      type="button"
+                      className={styles.preciseBtn}
+                      onClick={() => updateField('deliveryService', 'PRECISE_TIME')}
+                    >
+                      Choose Precise Time
                     </button>
                   </div>
 
-                  {/* Payment Method Selector */}
-                  <div className={styles.paymentMethodsSection}>
-                    <label>Select Payment Mode</label>
-                    <div className={styles.paymentGrid}>
+                  {/* Important Banner */}
+                  <div className={styles.importantBanner}>
+                    <Info size={18} className={styles.bannerAmberIcon} />
+                    <div className={styles.bannerText}>
+                      <strong>Important</strong>
+                      <p>Our pickup executive will verify the item condition and pack it securely before dispatch.</p>
+                    </div>
+                  </div>
+                </section>
+              )}
+
+              {/* STEP 9: REVIEW & PAYMENT */}
+              {currentStep === 9 && (
+                <section className={styles.stepCard}>
+                  <div className={styles.stepHeader}>
+                    <span className={styles.stepBadge}>Step 9</span>
+                    <h2>Choose Delivery Speed & Payment</h2>
+                    <p>Review the delivery options and select your payment method.</p>
+                  </div>
+
+                  {/* Delivery Service Selection */}
+                  <div className={styles.serviceCardsRow}>
+                    {[
+                      { id: 'STANDARD', name: 'Standard Delivery', eta: '2 - 4 Working Days', price: '₹89', icon: Truck },
+                      { id: 'EXPRESS', name: 'Express Delivery', eta: '24 - 48 Hours', price: '₹149', icon: Rocket },
+                      { id: 'PRECISE_TIME', name: 'Precise Time Delivery', eta: 'Selected 2-hr window', price: '₹199', icon: Clock }
+                    ].map((svc) => {
+                      const IconC = svc.icon
+                      const isSel = formData.deliveryService === svc.id
+                      return (
+                        <div
+                          key={svc.id}
+                          className={`${styles.serviceCard} ${isSel ? styles.selected : ''}`}
+                          onClick={() => updateField('deliveryService', svc.id)}
+                        >
+                          <div className={styles.serviceHeader}>
+                            <strong>{svc.name}</strong>
+                            <span className={styles.servicePrice}>{svc.price}</span>
+                          </div>
+                          <div className={styles.serviceEta}>{svc.eta}</div>
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  {/* Payment Methods */}
+                  <div className={styles.fieldBlock}>
+                    <span className={styles.fieldLabel}>Select Payment Method</span>
+                    <div className={styles.paymentMethodsGrid}>
                       {[
-                        { id: 'WALLET', name: 'Delivez Money (Wallet)', sub: 'Balance: ₹108.00 (Instant)', icon: Wallet },
-                        { id: 'UPI', name: 'UPI / QR', sub: 'Google Pay, PhonePe, Paytm', icon: CreditCard },
-                        { id: 'CARD', name: 'Credit / Debit Card', sub: 'Visa, Mastercard, RuPay', icon: CreditCard },
-                        { id: 'NET_BANKING', name: 'Net Banking', sub: 'All Indian banks supported', icon: Building },
-                        { id: 'PAY_ON_PICKUP', name: 'Pay on Pickup', sub: 'Pay delivery partner via cash/UPI', icon: UserCheck },
-                      ].map(pm => {
-                        const isSelected = formData.paymentMethod === pm.id
-                        const Icon = pm.icon
+                        { id: 'PAY_ON_PICKUP', label: 'Pay on Pickup (Cash / UPI)', icon: Wallet },
+                        { id: 'UPI', label: 'Instant UPI (GPay / PhonePe)', icon: Sparkles },
+                        { id: 'WALLET', label: 'Delivez Wallet', icon: Wallet },
+                        { id: 'CARD', label: 'Debit / Credit Card', icon: CreditCard }
+                      ].map((pm) => {
+                        const IconC = pm.icon
+                        const isSel = formData.paymentMethod === pm.id
                         return (
                           <div
                             key={pm.id}
-                            className={`${styles.payCard} ${isSelected ? styles.selectedPay : ''}`}
+                            className={`${styles.paymentMethodCard} ${isSel ? styles.selected : ''}`}
                             onClick={() => updateField('paymentMethod', pm.id)}
                           >
-                            <div className={styles.payIcon}><Icon size={20} /></div>
-                            <div className={styles.payInfo}>
-                              <strong>{pm.name}</strong>
-                              <small>{pm.sub}</small>
-                            </div>
-                            <div className={styles.radioDot}>
-                              {isSelected && <div className={styles.radioInner} />}
-                            </div>
+                            <IconC size={18} color="#b45309" />
+                            <span>{pm.label}</span>
                           </div>
                         )
                       })}
@@ -1319,147 +1750,92 @@ export default function ReturnPickupBookingPage() {
                   </div>
                 </section>
               )}
-
-              {/* Wizard Navigation Footer */}
-              <div className={styles.wizardFooter}>
-                {currentStep > 1 && (
-                  <button
-                    type="button"
-                    className={styles.backBtn}
-                    onClick={handleBack}
-                    disabled={submitting}
-                  >
-                    <ArrowLeft size={16} /> Back
-                  </button>
-                )}
-
-                {currentStep < 6 ? (
-                  <button
-                    type="button"
-                    className={styles.nextBtn}
-                    onClick={handleNext}
-                  >
-                    <span>Continue</span>
-                    <ArrowRight size={16} />
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    className={styles.confirmPayBtn}
-                    onClick={handleConfirmBooking}
-                    disabled={submitting}
-                  >
-                    {submitting ? (
-                      <>
-                        <Loader2 size={18} className={styles.spinner} />
-                        <span>Confirming Return Pickup...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>Confirm & Book Return (₹{quote.totalAmount.toFixed(2)})</span>
-                        <ArrowRight size={18} />
-                      </>
-                    )}
-                  </button>
-                )}
-              </div>
             </div>
 
-            {/* Right Column: Live Sticky Summary Sidebar */}
-            <aside className={styles.summaryColumn}>
-              <div className={styles.stickyCard}>
-                <div className={styles.sidebarHeader}>
-                  <Undo2 size={20} color="#d97706" />
-                  <div>
-                    <h3>Return Summary</h3>
-                    <small>DELIVEZ SECURE RETURN</small>
-                  </div>
+            {/* SIDEBAR FARE SUMMARY */}
+            <aside className={styles.sidebarColumn}>
+              <div className={styles.summaryCard}>
+                <h3 className={styles.summaryTitle}>Fare Summary</h3>
+
+                <div className={styles.breakdownList}>
+                  {quote.breakdown.map((b) => (
+                    <div
+                      key={b.key}
+                      className={`${styles.breakdownRow} ${b.amount < 0 ? styles.discount : ''}`}
+                    >
+                      <span>{b.label}</span>
+                      <span>
+                        {b.amount < 0 ? '-' : ''}₹{Math.abs(b.amount).toFixed(2)}
+                      </span>
+                    </div>
+                  ))}
                 </div>
 
-                <div className={styles.sidebarDetails}>
-                  <div className={styles.sideItem}>
-                    <small>Return Type</small>
-                    <strong>{formData.returnType.replace('_', ' ')}</strong>
-                  </div>
-
-                  <div className={styles.sideItem}>
-                    <small>Destination Hub</small>
-                    <strong>{formData.destinationName || 'Seller Hub'}</strong>
-                  </div>
-
-                  <div className={styles.sideItem}>
-                    <small>Product</small>
-                    <span className={styles.productSnippet}>{formData.itemDescription}</span>
-                  </div>
-
-                  <div className={styles.sideItem}>
-                    <small>Delivery Speed</small>
-                    <strong>{quote.deliveryServiceName || 'Standard Delivery'}</strong>
-                  </div>
+                <div className={styles.totalRow}>
+                  <span>Total Amount</span>
+                  <span className={styles.totalPrice}>₹{quote.totalAmount.toFixed(2)}</span>
                 </div>
 
-                {/* Price Breakdown */}
-                <div className={styles.priceBreakdown}>
-                  <h4>Price Details</h4>
-                  <div className={styles.priceRow}>
-                    <span>Base Pickup Fee</span>
-                    <span>₹{quote.basePickupCharge.toFixed(2)}</span>
-                  </div>
-                  <div className={styles.priceRow}>
-                    <span>Distance Charge</span>
-                    <span>₹{quote.distanceCharge.toFixed(2)}</span>
-                  </div>
-                  <div className={styles.priceRow}>
-                    <span>Handling & Processing</span>
-                    <span>₹{quote.handlingCharge.toFixed(2)}</span>
-                  </div>
-                  <div className={styles.priceRow}>
-                    <span>Delivery Service Speed</span>
-                    <span>₹{quote.deliveryServiceCharge.toFixed(2)}</span>
-                  </div>
-                  {quote.protectionCharge > 0 && (
-                    <div className={styles.priceRow}>
-                      <span>Shipment Protection</span>
-                      <span>₹{quote.protectionCharge.toFixed(2)}</span>
-                    </div>
-                  )}
-                  {quote.discountAmount > 0 && (
-                    <div className={`${styles.priceRow} ${styles.discountRow}`}>
-                      <span>Coupon Discount (DELIVEZ10)</span>
-                      <span>-₹{quote.discountAmount.toFixed(2)}</span>
-                    </div>
-                  )}
-                  <div className={styles.priceRow}>
-                    <span>Taxes & GST (18%)</span>
-                    <span>₹{quote.taxAmount.toFixed(2)}</span>
-                  </div>
-
-                  <div className={styles.totalRow}>
-                    <div>
-                      <strong>Total Amount</strong>
-                      <small>Inclusive of all taxes</small>
-                    </div>
-                    <span className={styles.totalPrice}>₹{quote.totalAmount.toFixed(2)}</span>
-                  </div>
-                </div>
-
-                <div className={styles.guaranteeBadge}>
-                  <ShieldCheck size={18} color="#16a34a" />
-                  <span>100% Damage Protected Return Guarantee</span>
+                {/* Coupon Input */}
+                <div className={styles.couponWrap}>
+                  <input
+                    type="text"
+                    className={styles.couponInput}
+                    placeholder="COUPON CODE"
+                    value={formData.couponCode}
+                    onChange={(e) => updateField('couponCode', e.target.value)}
+                  />
+                  <button type="button" className={styles.applyCouponBtn}>
+                    Apply
+                  </button>
                 </div>
               </div>
             </aside>
           </div>
         )}
       </main>
-          <AuthModal
-        isOpen={authModalOpen}
-        onClose={() => setAuthModalOpen(false)}
-        onAuthenticated={() => {
-          setAuthModalOpen(false)
-          handleConfirmBooking()
-        }}
-      />
+
+      {/* 5. STICKY BOTTOM ACTION BAR */}
+      {currentStep <= 9 && (
+        <footer className={styles.stickyBottomBar}>
+          <div className={styles.bottomBarContainer}>
+            <button
+              type="button"
+              className={styles.backBtn}
+              onClick={handleBack}
+              disabled={currentStep === 1}
+            >
+              <ArrowLeft size={16} /> Back
+            </button>
+
+            {currentStep < 9 ? (
+              <button type="button" className={styles.continueBtn} onClick={handleNext}>
+                Continue <ArrowRight size={16} />
+              </button>
+            ) : (
+              <button
+                type="button"
+                className={styles.continueBtn}
+                disabled={submitting}
+                onClick={handleConfirmBooking}
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 size={16} className={styles.spin} /> Confirming...
+                  </>
+                ) : (
+                  <>
+                    <Check size={16} /> Book Return Pickup
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+        </footer>
+      )}
+
+      {/* 6. AUTH MODAL */}
+      <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
     </div>
   )
 }

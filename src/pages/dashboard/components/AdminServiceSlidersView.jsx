@@ -11,6 +11,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Trash2,
+  Save,
   CheckCircle2,
   XCircle,
   Upload,
@@ -134,7 +135,7 @@ export default function AdminServiceSlidersView() {
   }
 
   const handleSaveSlider = async (e) => {
-    e.preventDefault()
+    if (e && e.preventDefault) e.preventDefault()
     if (!editingSlider) return
 
     setSaving(true)
@@ -347,16 +348,29 @@ export default function AdminServiceSlidersView() {
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h2>Manage {editingSlider.serviceName} Slider Images</h2>
-              <button
-                type="button"
-                className={styles.closeModalBtn}
-                onClick={() => setEditingSlider(null)}
-              >
-                <X size={20} />
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <button
+                  type="button"
+                  className={styles.topSaveBtn}
+                  onClick={handleSaveSlider}
+                  disabled={saving}
+                  title="Save Slider Changes"
+                >
+                  <Save size={15} />
+                  <span>{saving ? 'Saving...' : 'Save Changes'}</span>
+                </button>
+                <button
+                  type="button"
+                  className={styles.closeModalBtn}
+                  onClick={() => setEditingSlider(null)}
+                  title="Close Modal"
+                >
+                  <X size={20} />
+                </button>
+              </div>
             </div>
 
-            <form onSubmit={handleSaveSlider}>
+            <form className={styles.modalForm} onSubmit={handleSaveSlider}>
               <div className={styles.modalBody} style={{ gridTemplateColumns: '1fr 300px' }}>
                 <div className={styles.formCol}>
                   <div className={styles.imageManager}>
