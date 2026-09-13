@@ -54,7 +54,7 @@ export const COURIER_ROUTE_OPTIONS = [
   { id: 'MULTI_STOP', label: 'Multi-Stop Route' },
 ]
 
-export default function AdminPersonalCourierView() {
+export default function AdminPersonalCourierView({ onViewOrderDetail }) {
   const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(false)
   const [search, setSearch] = useState('')
@@ -93,7 +93,18 @@ export default function AdminPersonalCourierView() {
 
   const handleStatusChange = async (id, newStatus) => {
     try {
-      await updateAdminCourierStatus(id, newStatus)
+      const nowIso = new Date().toISOString()
+      await updateAdminCourierStatus(id, newStatus, { timestamp: nowIso })
+      try {
+        const stored = JSON.parse(localStorage.getItem(`dlvz_status_timings_${id}`) || '{}')
+        const updatedTimestamps = { ...(stored.timestamps || stored || {}), [newStatus]: nowIso }
+        const updatedHistory = [
+          { status: newStatus, timestamp: nowIso, actor: 'Admin Dispatcher', note: `Status updated to ${newStatus}` },
+          ...(Array.isArray(stored.history) ? stored.history : []),
+        ]
+        localStorage.setItem(`dlvz_status_timings_${id}`, JSON.stringify({ ...updatedTimestamps, history: updatedHistory }))
+      } catch (_) {}
+
       showToast(`Status updated to ${newStatus}`)
       loadData()
       if (selected && (selected.id === id || selected.bookingNumber === id)) {
@@ -306,7 +317,11 @@ export default function AdminPersonalCourierView() {
                 return (
                   <tr key={b.id}>
                     <td>
-                      <strong className={styles.link} onClick={() => setSelected(b)}>
+                      <strong
+                        className={styles.link}
+                        onClick={() => (onViewOrderDetail ? onViewOrderDetail(b, 'personal-courier') : setSelected(b))}
+                        title="Open Dedicated Order Page"
+                      >
                         {b.bookingNumber}
                       </strong>
                       <small>
@@ -351,8 +366,8 @@ export default function AdminPersonalCourierView() {
                         <button
                           type="button"
                           className={styles.iconBtn}
-                          onClick={() => setSelected(b)}
-                          title="View Details"
+                          onClick={() => (onViewOrderDetail ? onViewOrderDetail(b, 'personal-courier') : setSelected(b))}
+                          title="Open Dedicated Order Page"
                         >
                           <Eye size={15} />
                         </button>

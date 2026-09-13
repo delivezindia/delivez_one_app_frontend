@@ -45,7 +45,7 @@ export const LUGGAGE_ROUTES = [
   { id: 'HOTEL_TO_HOME', label: 'Hotel to Home' },
 ]
 
-export default function AdminLuggageDeliveryView() {
+export default function AdminLuggageDeliveryView({ onViewOrderDetail }) {
   const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(false)
   const [search, setSearch] = useState('')
@@ -82,7 +82,18 @@ export default function AdminLuggageDeliveryView() {
 
   const handleStatusChange = async (id, newStatus) => {
     try {
-      await updateAdminCourierStatus(id, newStatus)
+      const nowIso = new Date().toISOString()
+      await updateAdminCourierStatus(id, newStatus, { timestamp: nowIso })
+      try {
+        const stored = JSON.parse(localStorage.getItem(`dlvz_status_timings_${id}`) || '{}')
+        const updatedTimestamps = { ...(stored.timestamps || stored || {}), [newStatus]: nowIso }
+        const updatedHistory = [
+          { status: newStatus, timestamp: nowIso, actor: 'Admin Dispatcher', note: `Luggage status updated to ${newStatus}` },
+          ...(Array.isArray(stored.history) ? stored.history : []),
+        ]
+        localStorage.setItem(`dlvz_status_timings_${id}`, JSON.stringify({ ...updatedTimestamps, history: updatedHistory }))
+      } catch (_) {}
+
       showToast(`Luggage status updated to ${newStatus}`)
       loadData()
       if (selected && (selected.id === id || selected.bookingNumber === id)) {
@@ -200,7 +211,11 @@ export default function AdminLuggageDeliveryView() {
                 return (
                   <tr key={b.id || b.bookingNumber}>
                     <td>
-                      <strong className={styles.link} onClick={() => setSelected(b)}>
+                      <strong
+                        className={styles.link}
+                        onClick={() => (onViewOrderDetail ? onViewOrderDetail(b, 'luggage-delivery') : setSelected(b))}
+                        title="Open Dedicated Order Page"
+                      >
                         #{b.bookingNumber}
                       </strong>
                       <small style={{ display: 'block', color: '#64748B' }}>
@@ -263,8 +278,8 @@ export default function AdminLuggageDeliveryView() {
                         <button
                           type="button"
                           className={styles.iconBtn}
-                          onClick={() => setSelected(b)}
-                          title="Inspect Consignment"
+                          onClick={() => (onViewOrderDetail ? onViewOrderDetail(b, 'luggage-delivery') : setSelected(b))}
+                          title="Open Dedicated Order Page"
                         >
                           <Eye size={15} />
                         </button>

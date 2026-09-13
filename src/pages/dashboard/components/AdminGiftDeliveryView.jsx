@@ -63,7 +63,7 @@ import {
 } from '@/features/admin-gift-delivery/services/adminGiftDeliveryService.js'
 import styles from './AdminGiftDeliveryView.module.css'
 
-export default function AdminGiftDeliveryView() {
+export default function AdminGiftDeliveryView({ onViewOrderDetail }) {
   const [activeTab, setActiveTab] = useState('dashboard') // 'dashboard' | 'orders' | 'products' | 'categories' | 'cards' | 'locations'
   const [loading, setLoading] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
@@ -126,8 +126,19 @@ export default function AdminGiftDeliveryView() {
   const handleUpdateStatus = async (orderId, newStatus) => {
     setStatusUpdateLoading(true)
     try {
-      const updated = await updateAdminGiftOrderStatus(orderId, { status: newStatus })
-      showToast(`Order ${updated.bookingNumber} marked as ${newStatus}`)
+      const nowIso = new Date().toISOString()
+      const updated = await updateAdminGiftOrderStatus(orderId, { status: newStatus, timestamp: nowIso })
+      try {
+        const stored = JSON.parse(localStorage.getItem(`dlvz_status_timings_${orderId}`) || '{}')
+        const updatedTimestamps = { ...(stored.timestamps || stored || {}), [newStatus]: nowIso }
+        const updatedHistory = [
+          { status: newStatus, timestamp: nowIso, actor: 'Gift Concierge Dispatcher', note: `Gift order marked as ${newStatus}` },
+          ...(Array.isArray(stored.history) ? stored.history : []),
+        ]
+        localStorage.setItem(`dlvz_status_timings_${orderId}`, JSON.stringify({ ...updatedTimestamps, history: updatedHistory }))
+      } catch (_) {}
+
+      showToast(`Order ${updated?.bookingNumber || orderId} marked as ${newStatus}`)
       if (selectedOrder?.id === orderId) setSelectedOrder(updated)
       loadOrders(ordersPagination.page)
       loadMetrics()
@@ -649,7 +660,11 @@ export default function AdminGiftDeliveryView() {
                   orders.map(order => (
                     <tr key={order.id}>
                       <td>
-                        <strong className={styles.orderNumberLink} onClick={() => setSelectedOrder(order)}>
+                        <strong
+                          className={styles.orderNumberLink}
+                          onClick={() => (onViewOrderDetail ? onViewOrderDetail(order, 'gift-delivery') : setSelectedOrder(order))}
+                          title="Open Dedicated Order Page"
+                        >
                           {order.bookingNumber}
                         </strong>
                         <span className={styles.timestampCell}>
@@ -696,8 +711,8 @@ export default function AdminGiftDeliveryView() {
                         <button
                           type="button"
                           className={styles.iconActionBtn}
-                          onClick={() => setSelectedOrder(order)}
-                          title="View Order Details"
+                          onClick={() => (onViewOrderDetail ? onViewOrderDetail(order, 'gift-delivery') : setSelectedOrder(order))}
+                          title="Open Dedicated Order Page"
                         >
                           <Eye size={16} />
                         </button>

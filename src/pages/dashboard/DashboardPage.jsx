@@ -85,6 +85,7 @@ import AdminKnowMoreCardsView from './components/AdminKnowMoreCardsView.jsx'
 import AdminMoreServicesView from './components/AdminMoreServicesView.jsx'
 import AdminPromptExamplesView from './components/AdminPromptExamplesView.jsx'
 import AdminHomeContentView from './components/AdminHomeContentView.jsx'
+import AdminOrderDetailView from './components/AdminOrderDetailView.jsx'
 
 
 
@@ -107,6 +108,7 @@ const navItems = [
   { id: 'confidential', label: 'Confidential Delivery', icon: ShieldCheck, group: 'SERVICES' },
   { id: 'forgot', label: 'Forgot Something', icon: ShoppingBag, group: 'SERVICES' },
   { id: 'returns', label: 'Return Pickup', icon: RotateCcw, group: 'SERVICES' },
+  { id: 'gifts', label: 'Gift Delivery', icon: Gift, group: 'SERVICES' },
   { id: 'service-sliders', label: 'Service Image Sliders', icon: Sliders, group: 'SERVICES' },
   { id: 'know-more', label: 'Know More Cards', icon: BookOpen, group: 'SERVICES' },
   { id: 'more-services', label: 'More Services', icon: Grid, group: 'SERVICES' },
@@ -203,16 +205,185 @@ export default function DashboardPage() {
   // Operational Settings state
   const [platformSettings, setPlatformSettings] = useState(null)
 
+  // Dedicated Single Order Page State: { orderId, serviceKey, orderData }
+  const [viewingOrder, setViewingOrder] = useState(null)
+
   const savedUser = getStoredAdminProfile()
   const adminName = savedUser?.fullName ?? savedUser?.name ?? 'Admin User'
   const adminEmail = savedUser?.email ?? 'admin@delivez.one'
   const firstName = adminName.split(' ')[0] || 'Admin'
 
+  // Map service key to sidebar nav id
+  const serviceToTabMap = {
+    'courier-delivery': 'courier',
+    'personal-courier': 'courier',
+    'courier': 'courier',
+    'luggage-delivery': 'luggage',
+    'airport-luggage': 'luggage',
+    'luggage': 'luggage',
+    'confidential-delivery': 'confidential',
+    'confidential-courier': 'confidential',
+    'confidential': 'confidential',
+    'vault': 'confidential',
+    'forgot-something': 'forgot',
+    'forgot': 'forgot',
+    'return-pickup': 'returns',
+    'personal-return-pickup': 'returns',
+    'returns': 'returns',
+    'return': 'returns',
+    'gift-delivery': 'gifts',
+    'gift-and-surprise': 'gifts',
+    'gifts': 'gifts',
+    'gift': 'gifts',
+    'orders': 'orders',
+  }
+
+  // Comprehensive URL sync for direct order routing and tab state
+  useEffect(() => {
+    const parseUrlState = () => {
+      const path = window.location.pathname
+      const params = new URLSearchParams(window.location.search)
+
+      // 1. Two-part order route: /admin/orders/:serviceKey/:orderId
+      const twoPartOrderMatch = path.match(/^\/admin\/orders\/([a-z0-9-]+)\/([^/?#]+)\/?$/i)
+      if (twoPartOrderMatch) {
+        const sKey = twoPartOrderMatch[1].toLowerCase()
+        const oId = decodeURIComponent(twoPartOrderMatch[2]).replace(/^#/, '')
+        setViewingOrder(prev => {
+          if (prev && (prev.orderId === oId || prev.orderData?.id === oId || prev.orderData?.bookingNumber === oId)) {
+            return { ...prev, serviceKey: sKey, orderId: oId }
+          }
+          return { serviceKey: sKey, orderId: oId, orderData: null, fromTab: activeNav || 'orders' }
+        })
+        return
+      }
+
+      // 2. Singular order route: /admin/order/:orderId or /admin/orders/:orderId (when orderId is not a tab)
+      const singleOrderMatch = path.match(/^\/admin\/(?:order|orders)\/([^/?#]+)\/?$/i)
+      if (singleOrderMatch) {
+        const possibleId = decodeURIComponent(singleOrderMatch[1]).replace(/^#/, '').toLowerCase()
+        // If it's a known tab or service name, route to that tab instead of treating it as an order ID
+        if (serviceToTabMap[possibleId] || navItems.some(n => n.id === possibleId)) {
+          const tabToSet = serviceToTabMap[possibleId] || possibleId
+          setViewingOrder(null)
+          setActiveNav(tabToSet)
+          return
+        }
+
+        // Otherwise it is an order ID
+        const rawId = decodeURIComponent(singleOrderMatch[1]).replace(/^#/, '')
+        setViewingOrder(prev => {
+          if (prev && (prev.orderId === rawId || prev.orderData?.id === rawId || prev.orderData?.bookingNumber === rawId)) {
+            return { ...prev, orderId: rawId }
+          }
+          return { serviceKey: 'courier', orderId: rawId, orderData: null, fromTab: activeNav || 'orders' }
+        })
+        return
+      }
+
+      // 3. Query param: ?orderId=...&service=...
+      const qOrderId = params.get('orderId')
+      if (qOrderId) {
+        const sKey = (params.get('service') || 'courier').toLowerCase()
+        const cleanId = decodeURIComponent(qOrderId).replace(/^#/, '')
+        setViewingOrder(prev => {
+          if (prev && (prev.orderId === cleanId || prev.orderData?.id === cleanId || prev.orderData?.bookingNumber === cleanId)) {
+            return { ...prev, serviceKey: sKey, orderId: cleanId }
+          }
+          return { serviceKey: sKey, orderId: cleanId, orderData: null, fromTab: activeNav || 'orders' }
+        })
+        return
+      }
+
+      // No order detail active
+      setViewingOrder(null)
+
+      // 4. Tab query param: ?tab=...
+      const qTab = params.get('tab')
+      if (qTab && navItems.some(n => n.id === qTab)) {
+        setActiveNav(qTab)
+        return
+      }
+
+      // 5. Pathname subpath: /admin/:tabId
+      const pathMatch = path.match(/^\/admin\/([a-z0-9-]+)\/?$/i)
+      if (pathMatch) {
+        const subPath = pathMatch[1].toLowerCase()
+        if (navItems.some(n => n.id === subPath)) {
+          setActiveNav(subPath)
+          return
+        }
+        if (serviceToTabMap[subPath]) {
+          setActiveNav(serviceToTabMap[subPath])
+          return
+        }
+      }
+
+      if (path === '/admin' || path === '/admin/' || path === '/admin/dashboard' || path === '/admin-dashboard') {
+        if (!qTab) setActiveNav('overview')
+      }
+    }
+
+    parseUrlState()
+    window.addEventListener('popstate', parseUrlState)
+    return () => window.removeEventListener('popstate', parseUrlState)
+  }, [])
+
+  const handleNavChange = (navId) => {
+    setActiveNav(navId)
+    setViewingOrder(null)
+    setSidebarOpen(false)
+    navigateTo(`/admin/dashboard?tab=${navId}`)
+  }
+
+  const handleOpenOrderDetail = (order, serviceKey) => {
+    const sKey = serviceKey || order?.serviceKey || 'courier'
+    const id = String(order?.bookingNumber || order?.id || order?.orderNumber || '').replace(/^#/, '')
+    const currentOriginTab = activeNav || 'orders'
+    setViewingOrder({
+      orderId: id,
+      serviceKey: sKey,
+      orderData: order,
+      fromTab: currentOriginTab,
+    })
+    navigateTo(`/admin/orders/${sKey}/${encodeURIComponent(id)}`)
+  }
+
+  const handleBackFromOrderDetail = (targetTab) => {
+    const tabToReturn = targetTab || viewingOrder?.fromTab || activeNav || 'orders'
+    setViewingOrder(null)
+    setActiveNav(tabToReturn)
+    navigateTo(`/admin/dashboard?tab=${tabToReturn}`)
+  }
+
+  // Dashboard Stats update timing tracking
+  const [statsUpdatedAt, setStatsUpdatedAt] = useState(() => {
+    try {
+      return localStorage.getItem('dlvz_admin_stats_timing') || null
+    } catch (e) {
+      return null
+    }
+  })
+
+  const loadLiveStats = useCallback(async () => {
+    try {
+      const stats = await fetchUnifiedStats()
+      if (stats) setLiveStats(stats)
+      const now = new Date().toISOString()
+      setStatsUpdatedAt(now)
+      try {
+        localStorage.setItem('dlvz_admin_stats_timing', now)
+      } catch (e) {}
+    } catch (e) {
+      console.error('Failed to load live stats:', e)
+    }
+  }, [])
+
   // Load Live Stats & Platform Settings
   useEffect(() => {
-    fetchUnifiedStats().then(setLiveStats).catch(console.error)
+    loadLiveStats()
     fetchPlatformSettings().then(setPlatformSettings).catch(console.error)
-  }, [])
+  }, [loadLiveStats])
 
   // Load Services
   useEffect(() => {
@@ -353,19 +524,21 @@ export default function DashboardPage() {
             return (
               <div key={group} className={styles.navGroup}>
                 <span className={styles.navGroupTitle}>{group}</span>
-                {items.map(({ id, label, icon: Icon }) => (
-                  <button
-                    key={id}
-                    className={activeNav === id ? styles.activeNav : ''}
-                    type="button"
-                    onClick={() => {
-                      setActiveNav(id)
-                      setSidebarOpen(false)
-                    }}
-                  >
-                    <Icon size={17} /> <span>{label}</span>
-                  </button>
-                ))}
+                {items.map(({ id, label, icon: Icon }) => {
+                  const isItemActive = viewingOrder
+                    ? (serviceToTabMap[viewingOrder.serviceKey] === id)
+                    : (activeNav === id)
+                  return (
+                    <button
+                      key={id}
+                      className={isItemActive ? styles.activeNav : ''}
+                      type="button"
+                      onClick={() => handleNavChange(id)}
+                    >
+                      <Icon size={17} /> <span>{label}</span>
+                    </button>
+                  )
+                })}
               </div>
             )
           })}
@@ -384,9 +557,29 @@ export default function DashboardPage() {
           <button className={styles.mobileMenu} type="button" onClick={() => setSidebarOpen(true)}><Menu /></button>
           
           <div className={styles.breadcrumb}>
-            <span>Admin</span>
+            <span
+              style={{ cursor: 'pointer' }}
+              onClick={() => handleNavChange('overview')}
+              title="Go to Admin Overview"
+            >
+              Admin
+            </span>
             <ChevronRight size={14} />
-            <strong>{currentNav.label}</strong>
+            {viewingOrder ? (
+              <>
+                <span
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => handleNavChange(serviceToTabMap[viewingOrder.serviceKey] || viewingOrder.fromTab || 'orders')}
+                  title={`Go to ${currentNav.label}`}
+                >
+                  {currentNav.label}
+                </span>
+                <ChevronRight size={14} />
+                <strong>Order #{viewingOrder.orderId}</strong>
+              </>
+            ) : (
+              <strong>{currentNav.label}</strong>
+            )}
           </div>
 
           <div className={styles.topActions}>
@@ -418,10 +611,21 @@ export default function DashboardPage() {
         </header>
 
         <main className={styles.main} style={{ padding: 24 }}>
-          {/* ================================================================= */}
-          {/* VIEW 1: OVERVIEW & COMMAND CENTER                                  */}
-          {/* ================================================================= */}
-          {activeNav === 'overview' && (
+          {viewingOrder ? (
+            <AdminOrderDetailView
+              orderId={viewingOrder.orderId}
+              serviceKey={viewingOrder.serviceKey}
+              initialOrder={viewingOrder.orderData}
+              fromTab={viewingOrder.fromTab}
+              onBack={handleBackFromOrderDetail}
+              onNavigate={handleNavChange}
+            />
+          ) : (
+            <>
+              {/* ================================================================= */}
+              {/* VIEW 1: OVERVIEW & COMMAND CENTER                                  */}
+              {/* ================================================================= */}
+              {activeNav === 'overview' && (
             <div>
               {platformSettings?.emergencyDispatchPaused && (
                 <div className={styles.operationalBanner}>
@@ -435,16 +639,22 @@ export default function DashboardPage() {
                   <h1>Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}, {firstName} 👋</h1>
                   <span>Here is the live operational network pulse across all Delivez service categories.</span>
                 </div>
-                <div style={{ display: 'flex', gap: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                  {statsUpdatedAt && (
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: '0.78rem', color: '#475569', background: '#FFFFFF', padding: '8px 12px', borderRadius: 9, border: '1.5px solid #E2E8F0', fontWeight: 600 }}>
+                      <Clock3 size={14} color="#2563EB" />
+                      <span>Stats recorded: <strong style={{ color: '#0F172A' }}>{new Date(statsUpdatedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}</strong></span>
+                    </div>
+                  )}
                   <button
                     type="button"
                     style={{ background: '#FFFFFF', color: '#0F172A', border: '1.5px solid #E2E8F0' }}
-                    onClick={() => fetchUnifiedStats().then(setLiveStats)}
+                    onClick={loadLiveStats}
                     title="Refresh live metrics from database"
                   >
                     <RefreshCw size={15} /> Refresh Data
                   </button>
-                  <button type="button" onClick={() => setActiveNav('orders')}><Plus size={18} /> View All Orders</button>
+                  <button type="button" onClick={() => handleNavChange('orders')}><Plus size={18} /> View All Orders</button>
                 </div>
               </section>
 
@@ -501,12 +711,13 @@ export default function DashboardPage() {
                     { id: 'confidential', label: 'Confidential Delivery', count: liveStats?.breakdown?.confidentialCourier ?? 0, icon: ShieldCheck, color: '#DC2626' },
                     { id: 'forgot', label: 'Forgot Something', count: liveStats?.breakdown?.forgotSomething ?? 0, icon: ShoppingBag, color: '#7C3AED' },
                     { id: 'returns', label: 'Return Pickup', count: liveStats?.breakdown?.returnPickup ?? 0, icon: RotateCcw, color: '#059669' },
+                    { id: 'gifts', label: 'Gift & Surprise', count: liveStats?.breakdown?.giftDelivery ?? 0, icon: Gift, color: '#E11D48' },
                   ].map(s => {
                     const Icon = s.icon
                     return (
                       <div
                         key={s.id}
-                        onClick={() => setActiveNav(s.id)}
+                        onClick={() => handleNavChange(s.id)}
                         style={{
                           background: '#FFFFFF',
                           border: '1.5px solid #E2E8F0',
@@ -546,6 +757,26 @@ export default function DashboardPage() {
                       <span>{trackingResult.id} ({trackingResult.serviceName || 'Delivery'})</span>
                       <strong>{trackingResult.status}</strong>
                       <small>ETA {trackingResult.eta} • Courier: {trackingResult.partnerName || 'Assigned Rider'}</small>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenOrderDetail(trackingResult, trackingResult.serviceKey || 'courier')}
+                        style={{
+                          marginTop: 10,
+                          fontSize: '0.8rem',
+                          background: '#0F172A',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: 6,
+                          padding: '6px 14px',
+                          cursor: 'pointer',
+                          fontWeight: 700,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 6,
+                        }}
+                      >
+                        Open Single Order Details Page →
+                      </button>
                     </div>
                   )}
                 </section>
@@ -553,13 +784,13 @@ export default function DashboardPage() {
                 <section className={styles.infoPanel}>
                   <span><UserCog size={22} /></span>
                   <div><p>DELIVERY PARTNERS</p><h3>{liveStats?.totalDrivers ?? 0} riders online</h3><small>Live verified riders across active hubs</small></div>
-                  <button type="button" onClick={() => setActiveNav('partners')}>Manage partners</button>
+                  <button type="button" onClick={() => handleNavChange('partners')}>Manage partners</button>
                 </section>
 
                 <section className={styles.infoPanel}>
                   <span><Users size={22} /></span>
                   <div><p>CUSTOMERS</p><h3>{usersState.total || liveStats?.totalCustomers || 0} registered users</h3><small>User accounts directory & access</small></div>
-                  <button type="button" onClick={() => setActiveNav('customers')}>View customer directory</button>
+                  <button type="button" onClick={() => handleNavChange('customers')}>View customer directory</button>
                 </section>
               </div>
             </div>
@@ -573,16 +804,17 @@ export default function DashboardPage() {
           {/* ================================================================= */}
           {/* VIEW 3: UNIFIED ORDERS HUB                                        */}
           {/* ================================================================= */}
-          {activeNav === 'orders' && <AdminUnifiedOrdersView />}
+          {activeNav === 'orders' && <AdminUnifiedOrdersView onViewOrderDetail={handleOpenOrderDetail} />}
 
           {/* ================================================================= */}
           {/* 5 CORE SERVICES DASHBOARDS                                        */}
           {/* ================================================================= */}
-          {activeNav === 'courier' && <AdminPersonalCourierView />}
-          {activeNav === 'luggage' && <AdminLuggageDeliveryView />}
-          {activeNav === 'confidential' && <AdminConfidentialCourierView />}
-          {activeNav === 'forgot' && <AdminForgotSomethingView />}
-          {activeNav === 'returns' && <AdminReturnPickupView />}
+          {activeNav === 'courier' && <AdminPersonalCourierView onViewOrderDetail={handleOpenOrderDetail} />}
+          {activeNav === 'luggage' && <AdminLuggageDeliveryView onViewOrderDetail={handleOpenOrderDetail} />}
+          {activeNav === 'confidential' && <AdminConfidentialCourierView onViewOrderDetail={handleOpenOrderDetail} />}
+          {activeNav === 'forgot' && <AdminForgotSomethingView onViewOrderDetail={handleOpenOrderDetail} />}
+          {activeNav === 'returns' && <AdminReturnPickupView onViewOrderDetail={handleOpenOrderDetail} />}
+          {activeNav === 'gifts' && <AdminGiftDeliveryView onViewOrderDetail={handleOpenOrderDetail} />}
 
           {/* ================================================================= */}
           {/* VIEW 8: DELIVERY FLEET PARTNERS                                   */}
@@ -783,6 +1015,8 @@ export default function DashboardPage() {
           {/* VIEW 15: ENTERPRISE AUDIT TRAIL & LOGS                            */}
           {/* ================================================================= */}
           {activeNav === 'audit' && <AdminAuditView />}
+            </>
+          )}
 
           {/* ================================================================= */}
           {/* CUSTOMER PROFILE & ORDER HISTORY DRAWER                           */}
@@ -853,7 +1087,16 @@ export default function DashboardPage() {
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 280, overflowY: 'auto' }}>
                         {(customerDetails?.giftDeliveryBookings || []).map(g => (
-                          <div key={g.id} className={styles.orderHistoryItem}>
+                          <div
+                            key={g.id}
+                            className={styles.orderHistoryItem}
+                            style={{ cursor: 'pointer' }}
+                            onClick={() => {
+                              setSelectedCustomer(null)
+                              handleOpenOrderDetail(g, 'gift-delivery')
+                            }}
+                            title="Open Single Order Details"
+                          >
                             <div>
                               <strong style={{ color: '#E11D48', display: 'block' }}>Gift: #{g.bookingNumber}</strong>
                               <small>{g.productName} • {g.deliveryCity}</small>
@@ -866,7 +1109,16 @@ export default function DashboardPage() {
                         ))}
 
                         {(customerDetails?.courierBookings || []).map(c => (
-                          <div key={c.id} className={styles.orderHistoryItem}>
+                          <div
+                            key={c.id}
+                            className={styles.orderHistoryItem}
+                            style={{ cursor: 'pointer' }}
+                            onClick={() => {
+                              setSelectedCustomer(null)
+                              handleOpenOrderDetail(c, 'personal-courier')
+                            }}
+                            title="Open Single Order Details"
+                          >
                             <div>
                               <strong style={{ color: '#2563EB', display: 'block' }}>Courier: #{c.bookingNumber}</strong>
                               <small>{c.serviceType}</small>
@@ -879,7 +1131,16 @@ export default function DashboardPage() {
                         ))}
 
                         {(customerDetails?.confidentialCourierBookings || []).map(cf => (
-                          <div key={cf.id} className={styles.orderHistoryItem}>
+                          <div
+                            key={cf.id}
+                            className={styles.orderHistoryItem}
+                            style={{ cursor: 'pointer' }}
+                            onClick={() => {
+                              setSelectedCustomer(null)
+                              handleOpenOrderDetail(cf, 'confidential-courier')
+                            }}
+                            title="Open Single Order Details"
+                          >
                             <div>
                               <strong style={{ color: '#D97706', display: 'block' }}>Vault: #{cf.bookingNumber}</strong>
                               <small>{cf.documentType}</small>
@@ -892,7 +1153,16 @@ export default function DashboardPage() {
                         ))}
 
                         {(customerDetails?.forgotSomethingBookings || []).map(f => (
-                          <div key={f.id} className={styles.orderHistoryItem}>
+                          <div
+                            key={f.id}
+                            className={styles.orderHistoryItem}
+                            style={{ cursor: 'pointer' }}
+                            onClick={() => {
+                              setSelectedCustomer(null)
+                              handleOpenOrderDetail(f, 'forgot-something')
+                            }}
+                            title="Open Single Order Details"
+                          >
                             <div>
                               <strong style={{ color: '#7C3AED', display: 'block' }}>Forgot: #{f.bookingNumber}</strong>
                               <small>{f.itemCategory}</small>
@@ -905,7 +1175,16 @@ export default function DashboardPage() {
                         ))}
 
                         {(customerDetails?.returnPickupBookings || []).map(r => (
-                          <div key={r.id} className={styles.orderHistoryItem}>
+                          <div
+                            key={r.id}
+                            className={styles.orderHistoryItem}
+                            style={{ cursor: 'pointer' }}
+                            onClick={() => {
+                              setSelectedCustomer(null)
+                              handleOpenOrderDetail(r, 'return-pickup')
+                            }}
+                            title="Open Single Order Details"
+                          >
                             <div>
                               <strong style={{ color: '#059669', display: 'block' }}>Return: #{r.bookingNumber}</strong>
                               <small>{r.destinationName || r.itemCategory}</small>

@@ -41,7 +41,7 @@ const SERVICE_CONFIG = {
   'return-pickup': { label: 'Return Pickup', icon: RotateCcw, color: '#059669', bg: '#ECFDF5' },
 }
 
-export default function AdminUnifiedOrdersView() {
+export default function AdminUnifiedOrdersView({ onViewOrderDetail }) {
   const [orders, setOrders] = useState([])
   const [partners, setPartners] = useState([])
   const [loading, setLoading] = useState(false)
@@ -127,17 +127,32 @@ export default function AdminUnifiedOrdersView() {
 
     setAssigning(true)
     try {
+      const nowIso = new Date().toISOString()
       await assignPartnerToOrder(selectedOrder.serviceKey, selectedOrder.id, {
         partnerId: partner.id,
         partnerName: partner.name,
         partnerPhone: partner.phone,
         partnerVehicle: partner.vehicle,
+        assignedAt: nowIso,
+        timestamp: nowIso,
       })
+
+      const targetStatus = selectedOrder.status === 'CONFIRMED' ? 'AGENT_ASSIGNED' : selectedOrder.status
+      try {
+        const rawKey = selectedOrder.id || selectedOrder.bookingNumber
+        const stored = JSON.parse(localStorage.getItem(`dlvz_status_timings_${rawKey}`) || '{}')
+        const updatedTimestamps = { ...(stored.timestamps || stored || {}), [targetStatus]: nowIso }
+        const updatedHistory = [
+          { status: targetStatus, timestamp: nowIso, actor: 'Fleet Manager', note: `Assigned rider ${partner.name}` },
+          ...(Array.isArray(stored.history) ? stored.history : []),
+        ]
+        localStorage.setItem(`dlvz_status_timings_${rawKey}`, JSON.stringify({ ...updatedTimestamps, history: updatedHistory }))
+      } catch (_) {}
 
       const updatedPartnerInfo = {
         assignedPartner: partner.name,
         partnerPhone: partner.phone,
-        status: selectedOrder.status === 'CONFIRMED' ? 'IN_TRANSIT' : selectedOrder.status,
+        status: targetStatus,
       }
 
       setOrders(prev => prev.map(o => (o.id === selectedOrder.id ? { ...o, ...updatedPartnerInfo } : o)))
@@ -157,17 +172,31 @@ export default function AdminUnifiedOrdersView() {
   const handleAutoAssign = async (order) => {
     setAutoAssigningId(order.id)
     try {
-      const data = await autoAssignOrderUnified(order.serviceKey, order.id)
+      const nowIso = new Date().toISOString()
+      const data = await autoAssignOrderUnified(order.serviceKey, order.id, { timestamp: nowIso })
+      const targetStatus = data?.updatedStatus || 'AGENT_ASSIGNED'
+
+      try {
+        const rawKey = order.id || order.bookingNumber
+        const stored = JSON.parse(localStorage.getItem(`dlvz_status_timings_${rawKey}`) || '{}')
+        const updatedTimestamps = { ...(stored.timestamps || stored || {}), [targetStatus]: nowIso }
+        const updatedHistory = [
+          { status: targetStatus, timestamp: nowIso, actor: 'Auto-Dispatch Engine', note: `Auto-assigned ${data?.assignedPartner || 'Rider'}` },
+          ...(Array.isArray(stored.history) ? stored.history : []),
+        ]
+        localStorage.setItem(`dlvz_status_timings_${rawKey}`, JSON.stringify({ ...updatedTimestamps, history: updatedHistory }))
+      } catch (_) {}
+
       const updated = {
-        assignedPartner: data.assignedPartner,
-        partnerPhone: data.partnerPhone,
-        status: data.updatedStatus || 'PARTNER_ASSIGNED',
+        assignedPartner: data?.assignedPartner || 'Fleet Rider',
+        partnerPhone: data?.partnerPhone || '',
+        status: targetStatus,
       }
       setOrders(prev => prev.map(o => (o.id === order.id ? { ...o, ...updated } : o)))
       if (selectedOrder?.id === order.id) {
         setSelectedOrder(prev => ({ ...prev, ...updated }))
       }
-      showToast(`⚡ Auto-assigned ${data.assignedPartner} to order #${order.bookingNumber}`)
+      showToast(`⚡ Auto-assigned ${data?.assignedPartner || 'rider'} to order #${order.bookingNumber}`)
     } catch (err) {
       alert(err.message || 'Auto-assign failed.')
     } finally {
@@ -182,7 +211,20 @@ export default function AdminUnifiedOrdersView() {
     if (!reason) return
 
     try {
-      await cancelOrderUnified(selectedOrder.serviceKey, selectedOrder.id, reason)
+      const nowIso = new Date().toISOString()
+      await cancelOrderUnified(selectedOrder.serviceKey, selectedOrder.id, reason, { timestamp: nowIso })
+
+      try {
+        const rawKey = selectedOrder.id || selectedOrder.bookingNumber
+        const stored = JSON.parse(localStorage.getItem(`dlvz_status_timings_${rawKey}`) || '{}')
+        const updatedTimestamps = { ...(stored.timestamps || stored || {}), CANCELLED: nowIso }
+        const updatedHistory = [
+          { status: 'CANCELLED', timestamp: nowIso, actor: 'Admin Dispatcher', note: `Cancelled: ${reason}` },
+          ...(Array.isArray(stored.history) ? stored.history : []),
+        ]
+        localStorage.setItem(`dlvz_status_timings_${rawKey}`, JSON.stringify({ ...updatedTimestamps, history: updatedHistory }))
+      } catch (_) {}
+
       setOrders(prev => prev.map(o => (o.id === selectedOrder.id ? { ...o, status: 'CANCELLED' } : o)))
       setSelectedOrder(prev => ({ ...prev, status: 'CANCELLED' }))
       showToast(`Order #${selectedOrder.bookingNumber} cancelled.`)
@@ -299,7 +341,11 @@ export default function AdminUnifiedOrdersView() {
                 return (
                   <tr key={order.id || order.bookingNumber}>
                     <td>
-                      <strong className={styles.orderLink} onClick={() => setSelectedOrder(order)}>
+                      <strong
+                        className={styles.orderLink}
+                        onClick={() => (onViewOrderDetail ? onViewOrderDetail(order, order.serviceKey) : setSelectedOrder(order))}
+                        title="Open Dedicated Order Page"
+                      >
                         {order.bookingNumber}
                       </strong>
                       <span className={styles.metaSub}>
@@ -359,8 +405,8 @@ export default function AdminUnifiedOrdersView() {
                       <button
                         type="button"
                         className={styles.viewBtn}
-                        onClick={() => setSelectedOrder(order)}
-                        title="Manage Order & Dispatch"
+                        onClick={() => (onViewOrderDetail ? onViewOrderDetail(order, order.serviceKey) : setSelectedOrder(order))}
+                        title="Open Dedicated Order Page"
                       >
                         <Eye size={15} />
                       </button>

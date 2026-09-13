@@ -219,10 +219,18 @@ export async function cancelForgotSomethingBooking(id, reason = 'Cancelled by us
   return response.data
 }
 
-export async function updateForgotSomethingStatus(id, status) {
+export async function updateForgotSomethingStatus(id, status, metadata = {}) {
+  const timestamp = metadata?.timestamp || new Date().toISOString()
   const response = await apiRequest(`/forgot-something/track/${id}/status`, {
     method: 'PATCH',
-    body: JSON.stringify({ status }),
+    body: JSON.stringify({
+      status,
+      timestamp,
+      statusChangedAt: timestamp,
+      updatedAt: timestamp,
+      statusTimestamps: metadata?.statusTimestamps || { [status]: timestamp },
+      ...metadata,
+    }),
   })
   return response.data
 }

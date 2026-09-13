@@ -539,10 +539,19 @@ export async function submitGiftDeliveryFeedback(id, { rating, reviewText }) {
   return response.data
 }
 
-export async function updateGiftDeliveryStatus(id, { status, hubLocation }) {
+export async function updateGiftDeliveryStatus(id, { status, hubLocation, timestamp, ...metadata } = {}) {
+  const ts = timestamp || new Date().toISOString()
   const response = await apiRequest(`/gift-delivery/track/${id}/status`, {
     method: 'PATCH',
-    body: JSON.stringify({ status, hubLocation }),
+    body: JSON.stringify({
+      status,
+      hubLocation,
+      timestamp: ts,
+      statusChangedAt: ts,
+      updatedAt: ts,
+      statusTimestamps: metadata?.statusTimestamps || { [status]: ts },
+      ...metadata,
+    }),
   })
   return response.data
 }

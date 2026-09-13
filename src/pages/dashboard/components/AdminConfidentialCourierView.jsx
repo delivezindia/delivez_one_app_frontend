@@ -20,7 +20,7 @@ import {
 } from '@/features/admin-management/services/adminManagementService.js'
 import styles from './AdminServiceViews.module.css'
 
-export default function AdminConfidentialCourierView() {
+export default function AdminConfidentialCourierView({ onViewOrderDetail }) {
   const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(false)
   const [search, setSearch] = useState('')
@@ -46,7 +46,18 @@ export default function AdminConfidentialCourierView() {
 
   const handleStatus = async (id, st) => {
     try {
-      await updateAdminConfidentialStatus(id, st)
+      const nowIso = new Date().toISOString()
+      await updateAdminConfidentialStatus(id, st, { timestamp: nowIso })
+      try {
+        const stored = JSON.parse(localStorage.getItem(`dlvz_status_timings_${id}`) || '{}')
+        const updatedTimestamps = { ...(stored.timestamps || stored || {}), [st]: nowIso }
+        const updatedHistory = [
+          { status: st, timestamp: nowIso, actor: 'Vault Dispatcher', note: `Vault consignment marked as ${st}` },
+          ...(Array.isArray(stored.history) ? stored.history : []),
+        ]
+        localStorage.setItem(`dlvz_status_timings_${id}`, JSON.stringify({ ...updatedTimestamps, history: updatedHistory }))
+      } catch (_) {}
+
       setToast(`Vault delivery status updated to ${st}`)
       setTimeout(() => setToast(''), 3500)
       loadData()
@@ -130,7 +141,11 @@ export default function AdminConfidentialCourierView() {
                 return (
                   <tr key={b.id}>
                     <td>
-                      <strong className={styles.link} onClick={() => setSelected(b)}>
+                      <strong
+                        className={styles.link}
+                        onClick={() => (onViewOrderDetail ? onViewOrderDetail(b, 'confidential-courier') : setSelected(b))}
+                        title="Open Dedicated Order Page"
+                      >
                         {b.vaultId || b.bookingNumber}
                       </strong>
                     </td>
@@ -173,8 +188,8 @@ export default function AdminConfidentialCourierView() {
                         <button
                           type="button"
                           className={styles.iconBtn}
-                          onClick={() => setSelected(b)}
-                          title="View Details"
+                          onClick={() => (onViewOrderDetail ? onViewOrderDetail(b, 'confidential-courier') : setSelected(b))}
+                          title="Open Dedicated Order Page"
                         >
                           <Eye size={15} />
                         </button>

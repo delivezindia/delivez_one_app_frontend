@@ -1,1265 +1,2033 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   ArrowLeft,
   ArrowRight,
-  Plane,
-  Building,
-  Home,
-  Check,
-  Clock,
   MapPin,
-  Luggage,
-  ShieldCheck,
-  Lock,
-  Sparkles,
-  Phone,
-  User,
-  Plus,
-  Minus,
-  Trash2,
-  Copy,
+  Calendar,
+  Clock,
+  Check,
   CheckCircle2,
+  ShieldCheck,
   AlertCircle,
-  Truck,
+  Copy,
+  Info,
+  Radio,
+  FileText,
+  Smartphone,
+  Shirt,
+  Gift,
+  HeartPulse,
+  Home as HomeIcon,
+  Briefcase,
+  MoreHorizontal,
+  Package,
+  Layers,
+  Wine,
+  Lock,
   CreditCard,
   Wallet,
-  Calendar,
-  ExternalLink,
+  Zap,
   ChevronRight,
-  Info
+  Bike,
+  Truck,
+  ExternalLink,
+  Edit2,
+  Receipt,
+  X,
+  Plus
 } from 'lucide-react'
 import { navigateTo } from '@/app/router/navigation.js'
-import {
-  createCourierBooking,
-  fetchCourierQuote,
-  fetchSavedAddresses,
-} from '@/features/personal-courier/services/personalCourierService.js'
-import CourierServiceSelectView, { COURIER_SERVICES } from './components/CourierServiceSelectView.jsx'
 import CourierTrackingView from './components/CourierTrackingView.jsx'
-import CourierProofOfDeliveryView from './components/CourierProofOfDeliveryView.jsx'
 import styles from './PersonalCourierBookingPage.module.css'
 
-export default function PersonalCourierBookingPage() {
-  // Step index: 0 = Route Select, 1 = Pickup, 2 = Delivery, 3 = Luggage, 4 = Addons, 5 = Schedule, 6 = Review, 7 = Payment, 8 = Confirmed
-  const [currentStep, setCurrentStep] = useState(1)
-  const [serviceId, setServiceId] = useState('AIRPORT_TO_HOTEL')
-  const [isRoundTrip, setIsRoundTrip] = useState(false)
-  const [trackingViewBookingId, setTrackingViewBookingId] = useState(null)
-  const [podViewBookingId, setPodViewBookingId] = useState(null)
+export default function PersonalCourierBookingPage({ serviceSlug }) {
+  // Step state: 1 to 9 (1: Pickup, 2: Drop-off, 3: Content, 4: Details, 5: Service, 6: Insurance, 7: Review, 8: Payment, 9: Confirmed)
+  const [step, setStep] = useState(1)
+  const [activeTrackingId, setActiveTrackingId] = useState(null)
 
-  // Step 1: Pickup Details (Screens 09 & 10)
-  const [pickupOption, setPickupOption] = useState('luggage_belt') // 'luggage_belt' | 'doorstep'
-  const [pickup, setPickup] = useState({
-    terminal: 'Terminal 3',
-    flightNumber: 'AI 102',
-    pnr: 'AB12CD',
-    luggageBelt: '04',
-    contactName: 'Rahul Sharma',
-    countryCode: '+91',
-    phoneNumber: '9876543210',
-    alternatePhone: '',
-    addressLine1: 'Indira Gandhi International Airport, Terminal 3',
-    city: 'New Delhi',
-    state: 'Delhi',
-    postalCode: '110037',
-    flightArrivalDate: '10 May 2025',
-    timeSlot: '09:00 AM - 11:00 AM',
+  // URL / initial service heuristic
+  const searchParams = new URLSearchParams(window.location.search)
+  const initialServiceName = searchParams.get('service') || (serviceSlug?.includes('intercity') ? 'Intercity' : 'Local Delivery')
+
+  // Booking model state
+  const [booking, setBooking] = useState({
+    selectedService: initialServiceName,
+    deliverySpeed: 'Bike Priority Delivery',
+    deliveryPrice: 120,
+
+    // Step 1: Pickup Location
+    pickupTitle: 'Home',
+    pickupAddressLine: 'B-1204, Lodha Park, Near Shreyas Cinema, Ghatkopar East, Mumbai 400077',
+    pickupPhone: '+91 98765 43210',
+    pickupContactPerson: 'Rahul Sharma',
+    pickupInstructions: 'Call before arriving',
+    preferredPickupTime: 'ASAP',
+    pickupScheduleDate: 'Today',
+    pickupScheduleSlot: '11:00 AM - 1:00 PM',
+
+    // Step 2: Drop-off Location
+    dropTitle: 'Office',
+    dropAddressLine: 'DLF Cyber City, Tower A, 6th Floor, Gurugram, Haryana 122002',
+    dropPhone: '+91 98765 43211',
+    dropContactPerson: 'Rohit Mehra',
+    dropInstructions: 'Please leave at reception',
+    preferredDropTime: 'ASAP',
+    dropScheduleDate: 'Tomorrow',
+    dropScheduleSlot: '2:00 PM - 4:00 PM',
+
+    // Step 3: Package Content
+    packageCategory: 'Documents',
+    packageDescription: '',
+
+    // Step 4: Package Details
+    packageBoxRequired: 'yes',
+    selectedWeightCapacity: '10 Kg',
+    selectedBoxSize: 'Small Box',
+    parcelType: 'Small',
+    dimensions: { length: 30, width: 20, height: 20 },
+    actualWeight: 2.5,
+    specialHandling: false,
+    isFragile: false,
+    isSecure: false,
+    isCod: false,
+    pickupReadiness: 'Today',
+
+    // Step 5: Service Type & Self Service
+    selfServiceOption: null, // null | 'Self Pickup' | 'Self Drop'
+
+    // Step 6: Insurance
+    insuranceOption: 0, // 0 = Insure (Full), 1 = Basic (10k), 2 = None
+    declaredValue: 25000,
+
+    // Step 8: Payment
+    paymentMethod: 'wallet',
+    promoCode: 'DELIVEZ10',
+    promoApplied: true,
+    isGstEnabled: false,
+    gstDetails: {
+      businessName: 'Delivez Technologies Pvt. Ltd.',
+      gstin: '27ABCDE1234F1Z5',
+      legalName: 'Delivez Technologies Pvt. Ltd.',
+      billingAddress: '501, 5th Floor, Tower A, Corporate Park, Andheri East, Mumbai 400093',
+      state: 'Maharashtra',
+      stateCode: '27',
+      pincode: '400093'
+    },
+
+    // Step 9: Confirmed
+    bookingId: 'DLZC' + Math.floor(10000000 + Math.random() * 90000000)
   })
 
-  // Step 2: Delivery Details (Screens 11 & 12)
-  const [deliveryOption, setDeliveryOption] = useState('hotel_reception') // 'hotel_reception' | 'doorstep' | 'airport'
-  const [delivery, setDelivery] = useState({
-    hotelName: 'Taj City Centre',
-    roomNumber: '402',
-    guestName: 'Rahul Sharma',
-    contactName: 'Rahul Sharma',
-    countryCode: '+91',
-    phoneNumber: '9876543210',
-    alternatePhone: '',
-    addressLine1: 'Taj City Centre, Sector 44',
-    city: 'Gurugram',
-    state: 'Haryana',
-    postalCode: '122004',
-    specialInstructions: 'Please leave with Hotel Front Desk reception if guest has not checked in.',
-    leaveAtReception: true,
-  })
+  // Modal Dialogs state
+  const [showScheduleModal, setShowScheduleModal] = useState(false)
+  const [scheduleTarget, setScheduleTarget] = useState('pickup') // 'pickup' | 'drop'
+  const [showInfoModal, setShowInfoModal] = useState(false)
+  const [showDescModal, setShowDescModal] = useState(false)
+  const [showCustomBoxModal, setShowCustomBoxModal] = useState(false)
+  const [showGstModal, setShowGstModal] = useState(false)
+  const [showNewPickupAddressForm, setShowNewPickupAddressForm] = useState(false)
+  const [showNewDropAddressForm, setShowNewDropAddressForm] = useState(false)
 
-  // Step 3: Luggage Details (Screens 13 & 14)
-  const [luggageList, setLuggageList] = useState([
-    { id: 1, type: 'Check-in Bag', size: 'Large', weight: 15, tag: 'AI-48291' },
-    { id: 2, type: 'Cabin Bag', size: 'Medium', weight: 13, tag: 'AI-48292' },
-  ])
-  const [fragile, setFragile] = useState(true)
-  const [keepDry, setKeepDry] = useState(true)
-  const [uprightOnly, setUprightOnly] = useState(false)
-
-  // Step 4: Add-on Services (Screens 15 - 20)
-  const [selectedAddons, setSelectedAddons] = useState([
-    'AIRPORT_ASSIST',
-    'SEAL_WRAP',
-    'SANITISED_VAN',
-  ])
-  const [selectedProtection, setSelectedProtection] = useState([
-    'THEFT_COVER',
-    'DAMAGE_COVER',
-  ])
-  const [selectedAirportAssist, setSelectedAirportAssist] = useState([
-    'BELT_PICKUP',
-    'PORTER_HELP',
-  ])
-
-  // Step 5: Schedule (Screens 21 & 22)
-  const [schedule, setSchedule] = useState({
-    pickupDate: 'Today', // 'Today' | 'Tomorrow' | 'Custom'
-    pickupSlot: '10:00 AM - 12:00 PM',
-    deliverySpeed: 'STANDARD', // 'STANDARD' | 'FAST_TRACK' | 'CRITICAL_FLIGHT_RUSH'
-    flightSyncUrgency: true,
-    estimatedDelivery: '12 May 2025 by 06:00 PM',
-  })
-
-  // Step 7: Payment (Screens 25 & 26)
-  const [paymentMethod, setPaymentMethod] = useState('UPI') // 'UPI' | 'CARD' | 'WALLET' | 'NET_BANKING' | 'PAY_ON_DELIVERY'
-  const [promoCode, setPromoCode] = useState('DELIVEZ10')
-  const [promoApplied, setPromoApplied] = useState(true)
-  const [submitting, setSubmitting] = useState(false)
-
-  // Confirmed booking state
-  const [confirmedBooking, setConfirmedBooking] = useState(null)
-  const [copiedId, setCopiedId] = useState(false)
-
-  const activeService = useMemo(() => {
-    return COURIER_SERVICES.find((s) => s.id === serviceId) || COURIER_SERVICES[3]
-  }, [serviceId])
-
-  // Luggage helpers
-  const totalBags = luggageList.length
-  const totalWeightKg = luggageList.reduce((sum, item) => sum + (Number(item.weight) || 0), 0)
-
-  const addLuggagePiece = () => {
-    if (luggageList.length >= 6) return
-    const newId = Date.now()
-    setLuggageList([
-      ...luggageList,
-      { id: newId, type: 'Cabin Bag', size: 'Medium', weight: 10, tag: '' },
-    ])
-  }
-
-  const removeLuggagePiece = (id) => {
-    if (luggageList.length <= 1) return
-    setLuggageList(luggageList.filter((item) => item.id !== id))
-  }
-
-  const updateLuggagePiece = (id, field, val) => {
-    setLuggageList(
-      luggageList.map((item) => (item.id === id ? { ...item, [field]: val } : item))
-    )
-  }
-
-  // Add-on toggle helpers
-  const toggleAddon = (key, list, setList) => {
-    if (list.includes(key)) {
-      setList(list.filter((k) => k !== key))
-    } else {
-      setList([...list, key])
+  // Saved Addresses
+  const [savedPickupAddresses, setSavedPickupAddresses] = useState([
+    {
+      id: 'p1',
+      title: 'Home',
+      addressLine: 'B-1204, Lodha Park, Near Shreyas Cinema, Ghatkopar East, Mumbai 400077',
+      phone: '+91 98765 43210'
+    },
+    {
+      id: 'p2',
+      title: 'Warehouse Hub',
+      addressLine: 'Unit 4B, Godown Area, Kanjurmarg West, Mumbai 400078',
+      phone: '+91 98765 99887'
     }
-  }
+  ])
 
-  // Fare calculations matching Screen 26
-  const fareBreakdown = useMemo(() => {
-    const baseFare = isRoundTrip ? 2160 : 1200
-    const distanceFee = 360
-    const luggageFee = totalBags > 1 ? (totalBags - 1) * 160 : 0
-    const airportFee = 150
+  const [savedDropAddresses, setSavedDropAddresses] = useState([
+    {
+      id: 'd1',
+      title: 'Office',
+      addressLine: 'DLF Cyber City, Tower A, 6th Floor, Gurugram, Haryana 122002',
+      phone: '+91 98765 43211'
+    },
+    {
+      id: 'd2',
+      title: 'Client Branch',
+      addressLine: 'Ground Floor, Galleria Market, DLF Phase 4, Gurugram 122009',
+      phone: '+91 98111 22334'
+    }
+  ])
 
-    // Addons fee
-    const addonCount = selectedAddons.length + selectedProtection.length + selectedAirportAssist.length
-    const addonsFee = Math.max(150, addonCount * 50)
-
-    // Delivery speed fee
-    let speedFee = 100
-    if (schedule.deliverySpeed === 'FAST_TRACK') speedFee = 200
-    if (schedule.deliverySpeed === 'CRITICAL_FLIGHT_RUSH') speedFee = 350
-
-    const subtotal = baseFare + distanceFee + luggageFee + airportFee + addonsFee + speedFee
-    const gst = Math.round(subtotal * 0.18 * 100) / 100
-    const discount = promoApplied ? 235 : 0
-    const total = Math.max(0, Math.round((subtotal + gst - discount) * 100) / 100)
+  // Pricing calculations
+  const calculatePricing = () => {
+    const baseSpeedPrice = booking.deliveryPrice || 120
+    const boxFee = booking.packageBoxRequired === 'yes' ? (booking.selectedWeightCapacity === '25 Kg' ? 60 : booking.selectedWeightCapacity === '15 Kg' ? 45 : 30) : 0
+    const handlingFee = (booking.isFragile ? 25 : 0) + (booking.isSecure ? 35 : 0)
+    const insuranceFee = booking.insuranceOption === 0 ? Math.round(booking.declaredValue * 0.0075) : (booking.insuranceOption === 1 ? 49 : 0)
+    const selfServiceDiscount = booking.selfServiceOption === 'Self Pickup' ? -30 : booking.selfServiceOption === 'Self Drop' ? -20 : 0
+    const subtotal = Math.max(50, baseSpeedPrice + boxFee + handlingFee + insuranceFee + selfServiceDiscount)
+    const discount = booking.promoApplied ? Math.min(50, Math.round(subtotal * 0.1)) : 0
+    const tax = Math.round((subtotal - discount) * 0.18)
+    const total = Math.round(subtotal - discount + tax)
 
     return {
-      baseFare,
-      distanceFee,
-      luggageFee,
-      airportFee,
-      addonsFee,
-      speedFee,
-      gst,
+      baseSpeedPrice,
+      boxFee,
+      handlingFee,
+      insuranceFee,
+      selfServiceDiscount,
+      subtotal,
       discount,
-      total,
-    }
-  }, [isRoundTrip, totalBags, selectedAddons, selectedProtection, selectedAirportAssist, schedule.deliverySpeed, promoApplied])
-
-  // Handle final booking creation
-  const handleConfirmAndPay = async () => {
-    setSubmitting(true)
-    try {
-      const payload = {
-        serviceType: serviceId,
-        selectedServiceId: serviceId,
-        isRoundTrip,
-        pickup: {
-          label: `${pickup.terminal || 'Airport'} Luggage Belt ${pickup.luggageBelt || '04'}`,
-          contactName: pickup.contactName,
-          countryCode: pickup.countryCode || '+91',
-          phoneNumber: pickup.phoneNumber,
-          alternatePhone: pickup.alternatePhone || null,
-          addressLine1: pickup.addressLine1,
-          city: pickup.city,
-          state: pickup.state,
-          postalCode: pickup.postalCode,
-          country: 'India',
-        },
-        dropoff: {
-          label: `${delivery.hotelName || 'Hotel'} Reception`,
-          contactName: delivery.contactName,
-          countryCode: delivery.countryCode || '+91',
-          phoneNumber: delivery.phoneNumber,
-          alternatePhone: delivery.alternatePhone || null,
-          addressLine1: delivery.addressLine1,
-          city: delivery.city,
-          state: delivery.state,
-          postalCode: delivery.postalCode,
-          country: 'India',
-        },
-        package: {
-          luggageType: luggageList[0]?.type || 'Check-in Bag',
-          luggageSize: luggageList[0]?.size || 'Large',
-          pieceCount: totalBags,
-          totalWeightKg: totalWeightKg,
-          actualWeightKg: totalWeightKg,
-          chargeableWeightKg: totalWeightKg,
-          lengthCm: 55,
-          widthCm: 35,
-          heightCm: 25,
-          declaredValue: 25000,
-          fragile,
-          keepDry,
-          temperatureSensitive: uprightOnly,
-        },
-        addons: [...selectedAddons, ...selectedProtection, ...selectedAirportAssist],
-        schedule: {
-          pickupDate: schedule.pickupDate,
-          pickupSlot: schedule.pickupSlot,
-          deliverySpeed: schedule.deliverySpeed,
-          estimatedDelivery: schedule.estimatedDelivery,
-          flightSyncUrgency: schedule.flightSyncUrgency,
-        },
-        deliverySpeed: schedule.deliverySpeed,
-        paymentMethod: paymentMethod === 'PAY_ON_DELIVERY' ? 'PAY_ON_DELIVERY' : 'ONLINE',
-        promoCode: promoApplied ? promoCode : '',
-        pickupDetails: pickup,
-        deliveryDetails: delivery,
-        luggage: luggageList,
-        totalBags,
-        totalWeightKg,
-        luggageProtection: selectedProtection,
-        airportAssistance: selectedAirportAssist,
-      }
-
-      const booking = await createCourierBooking(payload)
-      setConfirmedBooking(booking)
-      setCurrentStep(8) // Booking confirmed
-    } catch (err) {
-      alert('Error booking courier: ' + (err.message || 'Server error'))
-    } finally {
-      setSubmitting(false)
+      tax,
+      total
     }
   }
 
-  // Tracking View trigger
-  if (trackingViewBookingId) {
+  const pricing = calculatePricing()
+
+  // Handle Stepper Navigation
+  const handleNext = () => {
+    if (step < 9) {
+      setStep((prev) => prev + 1)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }
+
+  const handleBack = () => {
+    if (step > 1) {
+      setStep((prev) => prev - 1)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    } else {
+      navigateTo('/courier')
+    }
+  }
+
+  // Categories list for Step 3
+  const categories = [
+    { title: 'Documents', subtitle: 'Papers, files, certificates, books', icon: FileText, bg: '#FFF9E6', color: '#D97706' },
+    { title: 'Electronics', subtitle: 'Mobile, laptop, gadgets, accessories', icon: Smartphone, bg: '#FFF1F2', color: '#E11D48' },
+    { title: 'Clothing & Apparel', subtitle: 'Clothes, shoes, cap, fashion items', icon: Shirt, bg: '#EEF2FF', color: '#4F46E5' },
+    { title: 'Gifts & Toys', subtitle: 'Gift items, toys, decorative items', icon: Gift, bg: '#FFFDF0', color: '#D97706' },
+    { title: 'Health & Medicine', subtitle: 'Medicines, supplements, medical supplies', icon: HeartPulse, bg: '#ECFDF5', color: '#059669' },
+    { title: 'Household Items', subtitle: 'Kitchenware, home decor, daily use', icon: HomeIcon, bg: '#FFF7ED', color: '#EA580C' },
+    { title: 'Commercial Goods', subtitle: 'Samples, parts, raw materials, products', icon: Briefcase, bg: '#F0F9FF', color: '#0284C7' },
+    { title: 'Others', subtitle: 'Other items not listed above', icon: MoreHorizontal, bg: '#F9FAFB', color: '#4B5563' }
+  ]
+
+  // Box data for Step 4
+  const boxOptions = {
+    '10 Kg': [
+      { title: 'Small Box', dims: '30 cm (L) x 20 cm (W) x 20 cm (H)', tag: 'Best for Documents, Books, Electronics', cap: 'Up to 10 Kg', vol: '12,000 cm³' },
+      { title: 'Medium Box', dims: '30 cm (L) x 30 cm (W) x 25 cm (H)', tag: 'Best for Clothing, Accessories, Home Items', cap: 'Up to 10 Kg', vol: '22,500 cm³' },
+      { title: 'Large Box', dims: '40 cm (L) x 30 cm (W) x 30 cm (H)', tag: 'Best for Shoes, Helmets, Small Appliances', cap: 'Up to 10 Kg', vol: '36,000 cm³' }
+    ],
+    '15 Kg': [
+      { title: 'Medium Box', dims: '35 cm (L) x 28 cm (W) x 32 cm (H)', tag: 'Best for Clothes, Books, Home Items', cap: 'Up to 15 Kg', vol: '31,360 cm³' },
+      { title: 'Large Box', dims: '40 cm (L) x 30 cm (W) x 35 cm (H)', tag: 'Best for Appliances, Toys, Accessories', cap: 'Up to 15 Kg', vol: '42,000 cm³' },
+      { title: 'Extra Large Box', dims: '45 cm (L) x 32 cm (W) x 40 cm (H)', tag: 'Best for Kitchen Items, Medium Appliances', cap: 'Up to 15 Kg', vol: '57,600 cm³' }
+    ],
+    '25 Kg': [
+      { title: 'Medium Box', dims: '45 cm (L) x 35 cm (W) x 40 cm (H)', tag: 'Best for Clothing, Shoes, Books, Home Items', cap: 'Up to 25 Kg', vol: '63,000 cm³' },
+      { title: 'Large Box', dims: '50 cm (L) x 40 cm (W) x 45 cm (H)', tag: 'Best for Appliances, Toys, Small Machines', cap: 'Up to 25 Kg', vol: '90,000 cm³' },
+      { title: 'Extra Large Box', dims: '60 cm (L) x 45 cm (W) x 50 cm (H)', tag: 'Best for Large Appliances, Bulk Items, Luggage', cap: 'Up to 25 Kg', vol: '135,000 cm³' }
+    ]
+  }
+
+  // Service tiers for Step 5
+  const localServices = [
+    { title: 'Bike Priority Delivery', badge: 'FASTEST', desc: 'Lightning fast delivery by bike for urgent shipments.', time: 'Delivery in 1 – 3 hours', price: 120, icon: Bike },
+    { title: 'Same Day Delivery', badge: 'TODAY', desc: 'Delivered on the same day within city limits.', time: 'Delivery by 8 PM today', price: 150, icon: Truck },
+    { title: 'Hybrid Drone Delivery', badge: 'INNOVATIVE', desc: 'Next-gen delivery using drone & road hybrid network.', time: 'Delivery in 30 – 90 mins', price: 200, icon: Zap },
+    { title: 'Next Day Delivery', badge: 'AFFORDABLE', desc: 'Cost-effective delivery for non-urgent shipments.', time: 'Delivery by end of next day', price: 100, icon: Package }
+  ]
+
+  const intercityServices = [
+    { title: 'Standard Delivery', badge: 'MOST POPULAR', desc: 'Reliable delivery within 2 – 3 business days across India.', time: 'Delivery in 2 – 3 days', price: 100, icon: Truck },
+    { title: 'Express Delivery', badge: 'FAST', desc: 'Priority delivery within city or across major air routes.', time: 'Delivery in 24 – 48 hours', price: 180, icon: Zap },
+    { title: 'Precise Time Delivery', badge: 'GUARANTEED', desc: 'Guaranteed delivery at your chosen exact time slot.', time: 'Delivery at chosen time slot', price: 250, icon: Clock },
+    { title: 'Schedule Delivery', badge: 'ADVANCE', desc: 'Choose your preferred date and time for pickup and delivery.', time: 'Deliver on selected date', price: 130, icon: Calendar },
+    { title: 'Next Day Delivery', badge: 'NEXT BUSINESS DAY', desc: 'Cost-effective with guaranteed next business day transit.', time: 'Delivery by next business day', price: 120, icon: Package }
+  ]
+
+  const isIntercity = booking.selectedService?.toLowerCase().includes('intercity')
+  const availableServices = isIntercity ? intercityServices : localServices
+
+  if (activeTrackingId) {
     return (
       <CourierTrackingView
-        bookingId={trackingViewBookingId}
-        initialBooking={confirmedBooking}
-        onBack={() => setTrackingViewBookingId(null)}
-      />
-    )
-  }
-
-  // POD View trigger
-  if (podViewBookingId) {
-    return (
-      <CourierProofOfDeliveryView
-        bookingId={podViewBookingId}
-        onBack={() => setPodViewBookingId(null)}
-      />
-    )
-  }
-
-  // Step 0: Route Select View
-  if (currentStep === 0) {
-    return (
-      <CourierServiceSelectView
-        selectedServiceId={serviceId}
-        onSelectService={(id, roundTrip) => {
-          setServiceId(id)
-          setIsRoundTrip(roundTrip)
-        }}
-        onContinue={({ serviceId: id, isRoundTrip: rt }) => {
-          setServiceId(id)
-          setIsRoundTrip(rt)
-          setCurrentStep(1)
-        }}
-        onBack={() => navigateTo('/')}
+        bookingId={activeTrackingId}
+        onBack={() => setActiveTrackingId(null)}
       />
     )
   }
 
   return (
     <div className={styles.container}>
-      {/* Top Header with Stepper Progress */}
-      <div className={styles.header}>
+      {/* Top Header */}
+      <header className={styles.header}>
         <div className={styles.headerInner}>
-          <button
-            className={styles.backBtn}
-            onClick={() => {
-              if (currentStep > 1 && currentStep < 8) {
-                setCurrentStep(currentStep - 1)
-              } else {
-                setCurrentStep(0)
-              }
-            }}
-            aria-label="Back"
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <div className={styles.headerTitleCol}>
-            <div className={styles.routeHeaderBadge}>
-              {activeService.title} {isRoundTrip ? '(Round Trip)' : ''}
+          <div className={styles.headerLeft}>
+            <button type="button" className={styles.backBtn} onClick={handleBack} aria-label="Go Back">
+              <ArrowLeft size={18} />
+            </button>
+            <div className={styles.headerTitleCol}>
+              <h1 className={styles.headerTitle}>
+                {step === 1 && 'Pickup Location'}
+                {step === 2 && 'Drop-off Location'}
+                {step === 3 && 'Package Content'}
+                {step === 4 && 'Package Details'}
+                {step === 5 && 'Service Type'}
+                {step === 6 && 'Add Insurance'}
+                {step === 7 && 'Review & Confirm'}
+                {step === 8 && 'Payment Method'}
+                {step === 9 && 'Booking Confirmed'}
+              </h1>
+              <p className={styles.headerSub}>Step {step} of 8 • Personal Courier</p>
             </div>
-            <h1 className={styles.headerTitle}>
-              {currentStep === 1 && 'Step 1: Pickup Details'}
-              {currentStep === 2 && 'Step 2: Delivery Details'}
-              {currentStep === 3 && 'Step 3: Luggage Details'}
-              {currentStep === 4 && 'Step 4: Add-on Services'}
-              {currentStep === 5 && 'Step 5: Schedule Pickup & Delivery'}
-              {currentStep === 6 && 'Step 6: Review Booking Summary'}
-              {currentStep === 7 && 'Payment & Fare Summary'}
-              {currentStep === 8 && 'Booking Confirmed'}
-            </h1>
           </div>
-          <div className={styles.stepCounterBadge}>
-            {currentStep < 7 ? `Step ${currentStep} of 6` : currentStep === 7 ? 'Payment' : 'Done'}
-          </div>
-        </div>
 
-        {/* Progress Bar */}
-        {currentStep <= 6 && (
-          <div className={styles.progressBarWrap}>
-            <div
-              className={styles.progressBarFill}
-              style={{ width: `${(currentStep / 6) * 100}%` }}
-            ></div>
-          </div>
-        )}
+          <span className={styles.serviceBadge}>
+            <Package size={13} />
+            {booking.selectedService}
+          </span>
+        </div>
+      </header>
+
+      {/* Stepper Bar (Steps 1 to 8) */}
+      <div className={styles.stepperWrap}>
+        <div className={styles.stepperInner}>
+          {[
+            { num: 1, label: 'Pickup' },
+            { num: 2, label: 'Drop-off' },
+            { num: 3, label: 'Content' },
+            { num: 4, label: 'Details' },
+            { num: 5, label: 'Service' },
+            { num: 6, label: 'Insurance' },
+            { num: 7, label: 'Review' },
+            { num: 8, label: 'Payment' }
+          ].map((s, idx) => (
+            <React.Fragment key={s.num}>
+              <div
+                className={styles.stepItem}
+                onClick={() => {
+                  if (s.num < step) setStep(s.num)
+                }}
+              >
+                <div
+                  className={`${styles.stepCircle} ${
+                    step === s.num ? styles.stepCircleActive : step > s.num ? styles.stepCircleCompleted : ''
+                  }`}
+                >
+                  {step > s.num ? <Check size={14} /> : s.num}
+                </div>
+                <span className={`${styles.stepLabel} ${step === s.num ? styles.stepLabelActive : ''}`}>
+                  {s.label}
+                </span>
+              </div>
+              {idx < 7 && (
+                <div
+                  className={`${styles.stepLine} ${step > s.num ? styles.stepLineCompleted : ''}`}
+                />
+              )}
+            </React.Fragment>
+          ))}
+        </div>
       </div>
 
-      <div className={styles.mainContent}>
-        {/* ================= STEP 1: PICKUP DETAILS (Screens 09 & 10) ================= */}
-        {currentStep === 1 && (
-          <div className={styles.stepCard}>
-            <div className={styles.sectionHeader}>
-              <h2 className={styles.sectionTitle}>Where should we pick up your luggage?</h2>
-              <p className={styles.sectionSub}>Airport arrival luggage belt or terminal collection</p>
-            </div>
-
-            {/* Handover Tabs */}
-            <div className={styles.radioTabs}>
-              <button
-                type="button"
-                className={`${styles.radioTab} ${pickupOption === 'luggage_belt' ? styles.radioTabActive : ''}`}
-                onClick={() => setPickupOption('luggage_belt')}
-              >
-                <Luggage size={16} />
-                <span>Luggage Belt Collection</span>
-              </button>
-              <button
-                type="button"
-                className={`${styles.radioTab} ${pickupOption === 'doorstep' ? styles.radioTabActive : ''}`}
-                onClick={() => setPickupOption('doorstep')}
-              >
-                <Building size={16} />
-                <span>Airport Counter / Doorstep</span>
-              </button>
-            </div>
-
-            <div className={styles.formGrid}>
-              <div className={styles.formGroup}>
-                <label>Airport Terminal</label>
-                <select
-                  value={pickup.terminal}
-                  onChange={(e) => setPickup({ ...pickup, terminal: e.target.value })}
-                >
-                  <option value="Terminal 3">Terminal 3 (Domestic & International)</option>
-                  <option value="Terminal 2">Terminal 2 (Domestic)</option>
-                  <option value="Terminal 1">Terminal 1 (Domestic Departures/Arrivals)</option>
-                </select>
-              </div>
-
-              <div className={styles.formGroup}>
-                <label>Flight Number</label>
-                <input
-                  type="text"
-                  placeholder="e.g. AI 102 / 6E 543"
-                  value={pickup.flightNumber}
-                  onChange={(e) => setPickup({ ...pickup, flightNumber: e.target.value.toUpperCase() })}
-                  required
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label>PNR / Booking Reference</label>
-                <input
-                  type="text"
-                  placeholder="e.g. AB12CD"
-                  value={pickup.pnr}
-                  onChange={(e) => setPickup({ ...pickup, pnr: e.target.value.toUpperCase() })}
-                  required
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label>Baggage Belt Number</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Belt 04 / Arrival Carousel"
-                  value={pickup.luggageBelt}
-                  onChange={(e) => setPickup({ ...pickup, luggageBelt: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label>Passenger / Contact Name</label>
-                <input
-                  type="text"
-                  placeholder="Full name as on ticket"
-                  value={pickup.contactName}
-                  onChange={(e) => setPickup({ ...pickup, contactName: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label>Mobile Number (for Driver OTP)</label>
-                <input
-                  type="tel"
-                  placeholder="10-digit mobile number"
-                  value={pickup.phoneNumber}
-                  onChange={(e) => setPickup({ ...pickup, phoneNumber: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                <label>Airport Address</label>
-                <input
-                  type="text"
-                  value={pickup.addressLine1}
-                  onChange={(e) => setPickup({ ...pickup, addressLine1: e.target.value })}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className={styles.nextBtnRow}>
-              <button
-                className={styles.nextBtn}
-                onClick={() => setCurrentStep(2)}
-              >
-                <span>Continue to Delivery Details</span>
-                <ArrowRight size={18} />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* ================= STEP 2: DELIVERY DETAILS (Screens 11 & 12) ================= */}
-        {currentStep === 2 && (
-          <div className={styles.stepCard}>
-            <div className={styles.sectionHeader}>
-              <h2 className={styles.sectionTitle}>Where should we deliver your luggage?</h2>
-              <p className={styles.sectionSub}>Hotel front desk, residence, or destination address</p>
-            </div>
-
-            {/* Delivery Destination Options */}
-            <div className={styles.radioTabs}>
-              <button
-                type="button"
-                className={`${styles.radioTab} ${deliveryOption === 'hotel_reception' ? styles.radioTabActive : ''}`}
-                onClick={() => setDeliveryOption('hotel_reception')}
-              >
-                <Building size={16} />
-                <span>Hotel / Resort</span>
-              </button>
-              <button
-                type="button"
-                className={`${styles.radioTab} ${deliveryOption === 'doorstep' ? styles.radioTabActive : ''}`}
-                onClick={() => setDeliveryOption('doorstep')}
-              >
-                <Home size={16} />
-                <span>Home / Office</span>
-              </button>
-            </div>
-
-            <div className={styles.formGrid}>
-              <div className={styles.formGroup}>
-                <label>Hotel Name</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Taj City Centre / The Leela"
-                  value={delivery.hotelName}
-                  onChange={(e) => setDelivery({ ...delivery, hotelName: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label>Room Number (if assigned)</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Room 402 or Check-in Pending"
-                  value={delivery.roomNumber}
-                  onChange={(e) => setDelivery({ ...delivery, roomNumber: e.target.value })}
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label>Guest / Recipient Name</label>
-                <input
-                  type="text"
-                  placeholder="Name as registered at hotel"
-                  value={delivery.guestName}
-                  onChange={(e) =>
-                    setDelivery({ ...delivery, guestName: e.target.value, contactName: e.target.value })
-                  }
-                  required
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label>Recipient Phone Number</label>
-                <input
-                  type="tel"
-                  placeholder="10-digit mobile number"
-                  value={delivery.phoneNumber}
-                  onChange={(e) => setDelivery({ ...delivery, phoneNumber: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                <label>Hotel Full Address</label>
-                <input
-                  type="text"
-                  value={delivery.addressLine1}
-                  onChange={(e) => setDelivery({ ...delivery, addressLine1: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label>City</label>
-                <input
-                  type="text"
-                  value={delivery.city}
-                  onChange={(e) => setDelivery({ ...delivery, city: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label>Pincode</label>
-                <input
-                  type="text"
-                  value={delivery.postalCode}
-                  onChange={(e) => setDelivery({ ...delivery, postalCode: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div className={`${styles.formGroup} ${styles.fullWidth}`}>
-                <label>Delivery Instructions</label>
-                <textarea
-                  rows={2}
-                  value={delivery.specialInstructions}
-                  onChange={(e) => setDelivery({ ...delivery, specialInstructions: e.target.value })}
-                />
-              </div>
-            </div>
-
-            <div className={styles.toggleRow}>
-              <input
-                type="checkbox"
-                id="leaveAtReception"
-                checked={delivery.leaveAtReception}
-                onChange={(e) => setDelivery({ ...delivery, leaveAtReception: e.target.checked })}
-              />
-              <label htmlFor="leaveAtReception">
-                Leave luggage with Hotel Front Desk reception if I haven't checked in yet
-              </label>
-            </div>
-
-            <div className={styles.nextBtnRow}>
-              <button
-                className={styles.nextBtn}
-                onClick={() => setCurrentStep(3)}
-              >
-                <span>Continue to Luggage Details</span>
-                <ArrowRight size={18} />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* ================= STEP 3: LUGGAGE DETAILS (Screens 13 & 14) ================= */}
-        {currentStep === 3 && (
-          <div className={styles.stepCard}>
-            <div className={styles.sectionHeader}>
-              <div className={styles.headerWithCounter}>
+      {/* Main Step Container */}
+      <main className={styles.mainContent}>
+        {/* ==================================================================== */}
+        {/* STEP 1: PICKUP LOCATION (LocalPickupLocationPage)                   */}
+        {/* ==================================================================== */}
+        {step === 1 && (
+          <>
+            {/* Saved Addresses Section */}
+            <div className={styles.card}>
+              <div className={styles.cardHeader}>
                 <div>
-                  <h2 className={styles.sectionTitle}>Baggage & Piece Details</h2>
-                  <p className={styles.sectionSub}>Specify each piece for tamper-evident sealing</p>
+                  <h2 className={styles.cardTitle}>Saved Addresses</h2>
+                  <p className={styles.cardSub}>Select where our courier should collect the parcel</p>
                 </div>
-                <div className={styles.counterControl}>
-                  <button
-                    type="button"
-                    className={styles.counterBtn}
-                    onClick={() => removeLuggagePiece(luggageList[luggageList.length - 1]?.id)}
-                    disabled={luggageList.length <= 1}
-                  >
-                    <Minus size={16} />
-                  </button>
-                  <span className={styles.counterVal}>{totalBags} Bags</span>
-                  <button
-                    type="button"
-                    className={styles.counterBtn}
-                    onClick={addLuggagePiece}
-                    disabled={luggageList.length >= 6}
-                  >
-                    <Plus size={16} />
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  style={{
+                    border: 'none',
+                    background: 'transparent',
+                    color: '#E11D48',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    fontSize: '0.86rem'
+                  }}
+                  onClick={() => setShowNewPickupAddressForm(!showNewPickupAddressForm)}
+                >
+                  {showNewPickupAddressForm ? 'Cancel' : '+ Add New'}
+                </button>
               </div>
-            </div>
 
-            {/* Luggage Piece Cards */}
-            <div className={styles.luggageListWrap}>
-              {luggageList.map((item, index) => (
-                <div key={item.id} className={styles.luggagePieceCard}>
-                  <div className={styles.pieceHeader}>
-                    <span className={styles.pieceIndexBadge}>Bag #{index + 1}</span>
-                    {luggageList.length > 1 && (
-                      <button
-                        type="button"
-                        className={styles.removePieceBtn}
-                        onClick={() => removeLuggagePiece(item.id)}
-                      >
-                        <Trash2 size={14} /> Remove
-                      </button>
-                    )}
-                  </div>
-
-                  <div className={styles.pieceGrid}>
-                    <div className={styles.formGroup}>
-                      <label>Luggage Type</label>
-                      <select
-                        value={item.type}
-                        onChange={(e) => updateLuggagePiece(item.id, 'type', e.target.value)}
-                      >
-                        <option value="Check-in Bag">Check-in Suitcase / Trolley</option>
-                        <option value="Cabin Bag">Cabin Bag / Overhead</option>
-                        <option value="Duffle Bag">Duffle Bag / Backpack</option>
-                        <option value="Carton Box">Carton Box / Packaging</option>
-                        <option value="Fragile Case">Fragile Equipment Case</option>
-                      </select>
+              <div className={styles.addressList}>
+                {savedPickupAddresses.map((addr) => {
+                  const isSelected = booking.pickupAddressLine === addr.addressLine
+                  return (
+                    <div
+                      key={addr.id}
+                      className={`${styles.addressItem} ${isSelected ? styles.addressItemSelected : ''}`}
+                      onClick={() =>
+                        setBooking({
+                          ...booking,
+                          pickupTitle: addr.title,
+                          pickupAddressLine: addr.addressLine,
+                          pickupPhone: addr.phone
+                        })
+                      }
+                    >
+                      <div className={styles.addressIconWrap}>
+                        <MapPin size={18} />
+                      </div>
+                      <div className={styles.addressBody}>
+                        <div className={styles.addressTitle}>{addr.title}</div>
+                        <div className={styles.addressLine}>{addr.addressLine}</div>
+                        <div className={styles.addressPhone}>{addr.phone}</div>
+                      </div>
+                      <div className={`${styles.radioCircle} ${isSelected ? styles.radioCircleActive : ''}`}>
+                        {isSelected && <div className={styles.radioInnerDot} />}
+                      </div>
                     </div>
+                  )
+                })}
+              </div>
 
-                    <div className={styles.formGroup}>
-                      <label>Bag Size</label>
-                      <select
-                        value={item.size}
-                        onChange={(e) => updateLuggagePiece(item.id, 'size', e.target.value)}
-                      >
-                        <option value="Small">Cabin / Small (Up to 10 Kg)</option>
-                        <option value="Medium">Medium (Up to 20 Kg)</option>
-                        <option value="Large">Large (Up to 32 Kg)</option>
-                        <option value="Extra Large">Extra Large (Over 32 Kg)</option>
-                      </select>
-                    </div>
-
-                    <div className={styles.formGroup}>
-                      <label>Approx Weight (Kg)</label>
-                      <input
-                        type="number"
-                        min="1"
-                        max="50"
-                        value={item.weight}
-                        onChange={(e) => updateLuggagePiece(item.id, 'weight', e.target.value)}
-                      />
-                    </div>
-
-                    <div className={styles.formGroup}>
-                      <label>Airline Baggage Tag #</label>
+              {/* Inline Add Address Form */}
+              {showNewPickupAddressForm && (
+                <div style={{ background: '#f8fafc', padding: 14, borderRadius: 12, border: '1px solid #e2e8f0', marginTop: 12 }}>
+                  <strong style={{ display: 'block', marginBottom: 8, fontSize: '0.9rem' }}>Enter New Pickup Address</strong>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <input
+                      type="text"
+                      placeholder="Address Line 1 (Flat, House no, Building)"
+                      style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1' }}
+                      id="newPickupLine1"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Area / Landmark / Sector"
+                      style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1' }}
+                      id="newPickupArea"
+                    />
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                       <input
                         type="text"
-                        placeholder="e.g. AI-48291"
-                        value={item.tag}
-                        onChange={(e) => updateLuggagePiece(item.id, 'tag', e.target.value.toUpperCase())}
+                        placeholder="City (e.g. Mumbai)"
+                        defaultValue="Mumbai"
+                        style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1' }}
+                        id="newPickupCity"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Pincode (e.g. 400077)"
+                        defaultValue="400077"
+                        style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1' }}
+                        id="newPickupPincode"
                       />
                     </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                      <input
+                        type="text"
+                        placeholder="Contact Person"
+                        defaultValue={booking.pickupContactPerson}
+                        style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1' }}
+                        id="newPickupName"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Mobile Number"
+                        defaultValue={booking.pickupPhone}
+                        style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1' }}
+                        id="newPickupPhone"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      style={{
+                        padding: '9px 16px',
+                        background: '#0f172a',
+                        color: '#fff',
+                        borderRadius: 8,
+                        fontWeight: 750,
+                        border: 'none',
+                        cursor: 'pointer',
+                        marginTop: 4
+                      }}
+                      onClick={() => {
+                        const line1 = document.getElementById('newPickupLine1')?.value
+                        const area = document.getElementById('newPickupArea')?.value
+                        const city = document.getElementById('newPickupCity')?.value
+                        const pincode = document.getElementById('newPickupPincode')?.value
+                        const name = document.getElementById('newPickupName')?.value
+                        const phone = document.getElementById('newPickupPhone')?.value
+
+                        if (line1 && phone) {
+                          const full = `${line1}, ${area || ''}, ${city} ${pincode}`.trim()
+                          const newAddr = { id: 'p' + Date.now(), title: name ? `Other (${name})` : 'Other', addressLine: full, phone }
+                          setSavedPickupAddresses([...savedPickupAddresses, newAddr])
+                          setBooking({
+                            ...booking,
+                            pickupTitle: newAddr.title,
+                            pickupAddressLine: full,
+                            pickupPhone: phone,
+                            pickupContactPerson: name || booking.pickupContactPerson
+                          })
+                          setShowNewPickupAddressForm(false)
+                        }
+                      }}
+                    >
+                      Save Pickup Address
+                    </button>
                   </div>
                 </div>
-              ))}
-            </div>
+              )}
 
-            {/* Special Handling Notice */}
-            <div className={styles.handlingBox}>
-              <h4 className={styles.handlingTitle}>Special Handling Flags</h4>
-              <div className={styles.checkGrid}>
-                <label className={styles.checkItem}>
-                  <input
-                    type="checkbox"
-                    checked={fragile}
-                    onChange={(e) => setFragile(e.target.checked)}
-                  />
-                  <span>Fragile Items Inside</span>
-                </label>
-                <label className={styles.checkItem}>
-                  <input
-                    type="checkbox"
-                    checked={keepDry}
-                    onChange={(e) => setKeepDry(e.target.checked)}
-                  />
-                  <span>Keep Dry / Moisture Sensitive</span>
-                </label>
-                <label className={styles.checkItem}>
-                  <input
-                    type="checkbox"
-                    checked={uprightOnly}
-                    onChange={(e) => setUprightOnly(e.target.checked)}
-                  />
-                  <span>Keep Upright Only</span>
-                </label>
+              {/* Map Preview Card */}
+              <div className={styles.mapPreviewBox}>
+                <div className={styles.mapFloatingCard}>
+                  <strong>{booking.pickupTitle} • Current Pickup Point</strong>
+                  <span>{booking.pickupAddressLine}</span>
+                </div>
+                <MapPin size={34} className={styles.mapPinCenter} />
+                <button
+                  type="button"
+                  className={styles.mapLocateBtn}
+                  title="Detect my location"
+                  onClick={() => alert('GPS location acquired: Ghatkopar East, Mumbai')}
+                >
+                  <MapPin size={16} />
+                </button>
               </div>
             </div>
 
-            {/* Seal Notification Banner */}
-            <div className={styles.sealInfoNotice}>
-              <ShieldCheck size={20} className={styles.sealInfoIcon} />
-              <p>
-                <strong>Tamper-Evident Security Seal:</strong> Every bag will be locked with an individual barcode seal (DLV-SEAL-88492) upon collection at the airport.
+            {/* Preferred Pickup Time Card */}
+            <div className={styles.card}>
+              <h2 className={styles.cardTitle} style={{ marginBottom: 10 }}>Preferred Pickup Time</h2>
+              <div className={styles.timingGrid}>
+                {/* ASAP Option */}
+                <div
+                  className={`${styles.timingCard} ${booking.preferredPickupTime === 'ASAP' ? styles.timingCardSelected : ''}`}
+                  onClick={() => setBooking({ ...booking, preferredPickupTime: 'ASAP' })}
+                >
+                  <div className={styles.timingLeft}>
+                    <div className={styles.timingIconBox} style={{ background: '#FFF0B3', color: '#D97706' }}>
+                      <Zap size={22} />
+                    </div>
+                    <div>
+                      <div className={styles.timingTitleRow}>
+                        <span className={styles.timingTitle}>ASAP</span>
+                        <span className={styles.tagGreen}>Recommended</span>
+                      </div>
+                      <p className={styles.timingSub}>Pickup as soon as driver partner is assigned (30-45 mins)</p>
+                    </div>
+                  </div>
+                  <div className={`${styles.radioCircle} ${booking.preferredPickupTime === 'ASAP' ? styles.radioCircleActive : ''}`}>
+                    {booking.preferredPickupTime === 'ASAP' && <div className={styles.radioInnerDot} />}
+                  </div>
+                </div>
+
+                {/* Schedule Later Option */}
+                <div
+                  className={`${styles.timingCard} ${booking.preferredPickupTime === 'SCHEDULE' ? styles.timingCardSelected : ''}`}
+                  onClick={() => {
+                    setScheduleTarget('pickup')
+                    setShowScheduleModal(true)
+                  }}
+                >
+                  <div className={styles.timingLeft}>
+                    <div className={styles.timingIconBox} style={{ background: '#F1F5F9', color: '#475569' }}>
+                      <Calendar size={22} />
+                    </div>
+                    <div>
+                      <span className={styles.timingTitle}>Schedule Later</span>
+                      <p className={styles.timingSub}>
+                        {booking.preferredPickupTime === 'SCHEDULE'
+                          ? `${booking.pickupScheduleDate}, ${booking.pickupScheduleSlot}`
+                          : 'Pick a custom pickup date and time slot'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className={`${styles.radioCircle} ${booking.preferredPickupTime === 'SCHEDULE' ? styles.radioCircleActive : ''}`}>
+                    {booking.preferredPickupTime === 'SCHEDULE' && <div className={styles.radioInnerDot} />}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ==================================================================== */}
+        {/* STEP 2: DROP-OFF LOCATION (LocalDropOffLocationPage)                 */}
+        {/* ==================================================================== */}
+        {step === 2 && (
+          <>
+            <div className={styles.card}>
+              <div className={styles.cardHeader}>
+                <div>
+                  <h2 className={styles.cardTitle}>Saved Drop-off Addresses</h2>
+                  <p className={styles.cardSub}>Where should we deliver your package?</p>
+                </div>
+                <button
+                  type="button"
+                  style={{
+                    border: 'none',
+                    background: 'transparent',
+                    color: '#E11D48',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    fontSize: '0.86rem'
+                  }}
+                  onClick={() => setShowNewDropAddressForm(!showNewDropAddressForm)}
+                >
+                  {showNewDropAddressForm ? 'Cancel' : '+ Add New'}
+                </button>
+              </div>
+
+              <div className={styles.addressList}>
+                {savedDropAddresses.map((addr) => {
+                  const isSelected = booking.dropAddressLine === addr.addressLine
+                  return (
+                    <div
+                      key={addr.id}
+                      className={`${styles.addressItem} ${isSelected ? styles.addressItemSelected : ''}`}
+                      onClick={() =>
+                        setBooking({
+                          ...booking,
+                          dropTitle: addr.title,
+                          dropAddressLine: addr.addressLine,
+                          dropPhone: addr.phone
+                        })
+                      }
+                    >
+                      <div className={styles.addressIconWrap}>
+                        <MapPin size={18} />
+                      </div>
+                      <div className={styles.addressBody}>
+                        <div className={styles.addressTitle}>{addr.title}</div>
+                        <div className={styles.addressLine}>{addr.addressLine}</div>
+                        <div className={styles.addressPhone}>{addr.phone}</div>
+                      </div>
+                      <div className={`${styles.radioCircle} ${isSelected ? styles.radioCircleActive : ''}`}>
+                        {isSelected && <div className={styles.radioInnerDot} />}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Inline Add Drop Address Form */}
+              {showNewDropAddressForm && (
+                <div style={{ background: '#f8fafc', padding: 14, borderRadius: 12, border: '1px solid #e2e8f0', marginTop: 12 }}>
+                  <strong style={{ display: 'block', marginBottom: 8, fontSize: '0.9rem' }}>Enter New Drop-off Address</strong>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <input
+                      type="text"
+                      placeholder="Address Line 1 (Flat, House no, Building)"
+                      style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1' }}
+                      id="newDropLine1"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Area / Locality / Landmark"
+                      style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1' }}
+                      id="newDropArea"
+                    />
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                      <input
+                        type="text"
+                        placeholder="City"
+                        defaultValue="Gurugram"
+                        style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1' }}
+                        id="newDropCity"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Pincode"
+                        defaultValue="122002"
+                        style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1' }}
+                        id="newDropPincode"
+                      />
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                      <input
+                        type="text"
+                        placeholder="Recipient Name"
+                        defaultValue={booking.dropContactPerson}
+                        style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1' }}
+                        id="newDropName"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Recipient Phone"
+                        defaultValue={booking.dropPhone}
+                        style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #cbd5e1' }}
+                        id="newDropPhone"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      style={{
+                        padding: '9px 16px',
+                        background: '#0f172a',
+                        color: '#fff',
+                        borderRadius: 8,
+                        fontWeight: 750,
+                        border: 'none',
+                        cursor: 'pointer',
+                        marginTop: 4
+                      }}
+                      onClick={() => {
+                        const line1 = document.getElementById('newDropLine1')?.value
+                        const area = document.getElementById('newDropArea')?.value
+                        const city = document.getElementById('newDropCity')?.value
+                        const pincode = document.getElementById('newDropPincode')?.value
+                        const name = document.getElementById('newDropName')?.value
+                        const phone = document.getElementById('newDropPhone')?.value
+
+                        if (line1 && phone) {
+                          const full = `${line1}, ${area || ''}, ${city} ${pincode}`.trim()
+                          const newAddr = { id: 'd' + Date.now(), title: name ? `Other (${name})` : 'Other', addressLine: full, phone }
+                          setSavedDropAddresses([...savedDropAddresses, newAddr])
+                          setBooking({
+                            ...booking,
+                            dropTitle: newAddr.title,
+                            dropAddressLine: full,
+                            dropPhone: phone,
+                            dropContactPerson: name || booking.dropContactPerson
+                          })
+                          setShowNewDropAddressForm(false)
+                        }
+                      }}
+                    >
+                      Save Drop Address
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Delivery Instructions */}
+              <div style={{ marginTop: 14 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <label style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 700 }}>
+                    Delivery Instructions (Optional)
+                  </label>
+                  <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+                    {booking.dropInstructions.length}/150
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  maxLength={150}
+                  value={booking.dropInstructions}
+                  onChange={(e) => setBooking({ ...booking, dropInstructions: e.target.value })}
+                  placeholder="E.g. Call upon arrival, leave at reception"
+                  style={{
+                    width: '100%',
+                    padding: '9px 12px',
+                    borderRadius: 8,
+                    border: '1px solid #cbd5e1',
+                    fontSize: '0.85rem'
+                  }}
+                />
+              </div>
+
+              {/* Map Preview Box */}
+              <div className={styles.mapPreviewBox} style={{ marginTop: 14 }}>
+                <div className={styles.mapFloatingCard}>
+                  <strong>{booking.dropTitle} • Destination Point</strong>
+                  <span>{booking.dropAddressLine}</span>
+                </div>
+                <MapPin size={34} className={styles.mapPinCenter} style={{ color: '#0F172A' }} />
+              </div>
+            </div>
+
+            {/* Timing Card */}
+            <div className={styles.card}>
+              <h2 className={styles.cardTitle} style={{ marginBottom: 10 }}>Preferred Drop-off Time</h2>
+              <div className={styles.timingGrid}>
+                <div
+                  className={`${styles.timingCard} ${booking.preferredDropTime === 'ASAP' ? styles.timingCardSelected : ''}`}
+                  onClick={() => setBooking({ ...booking, preferredDropTime: 'ASAP' })}
+                >
+                  <div className={styles.timingLeft}>
+                    <div className={styles.timingIconBox} style={{ background: '#FFF0B3', color: '#D97706' }}>
+                      <Zap size={22} />
+                    </div>
+                    <div>
+                      <div className={styles.timingTitleRow}>
+                        <span className={styles.timingTitle}>Direct Drop</span>
+                        <span className={styles.tagGreen}>Fastest</span>
+                      </div>
+                      <p className={styles.timingSub}>Deliver immediately following courier pickup</p>
+                    </div>
+                  </div>
+                  <div className={`${styles.radioCircle} ${booking.preferredDropTime === 'ASAP' ? styles.radioCircleActive : ''}`}>
+                    {booking.preferredDropTime === 'ASAP' && <div className={styles.radioInnerDot} />}
+                  </div>
+                </div>
+
+                <div
+                  className={`${styles.timingCard} ${booking.preferredDropTime === 'SCHEDULE' ? styles.timingCardSelected : ''}`}
+                  onClick={() => {
+                    setScheduleTarget('drop')
+                    setShowScheduleModal(true)
+                  }}
+                >
+                  <div className={styles.timingLeft}>
+                    <div className={styles.timingIconBox} style={{ background: '#F1F5F9', color: '#475569' }}>
+                      <Calendar size={22} />
+                    </div>
+                    <div>
+                      <span className={styles.timingTitle}>Schedule Delivery Slot</span>
+                      <p className={styles.timingSub}>
+                        {booking.preferredDropTime === 'SCHEDULE'
+                          ? `${booking.dropScheduleDate}, ${booking.dropScheduleSlot}`
+                          : 'Deliver at a specific time slot'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className={`${styles.radioCircle} ${booking.preferredDropTime === 'SCHEDULE' ? styles.radioCircleActive : ''}`}>
+                    {booking.preferredDropTime === 'SCHEDULE' && <div className={styles.radioInnerDot} />}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ==================================================================== */}
+        {/* STEP 3: PACKAGE CONTENT (PackageContentScreen)                       */}
+        {/* ==================================================================== */}
+        {step === 3 && (
+          <>
+            {/* Location Route Summary */}
+            <div className={styles.locationSummaryCard}>
+              <div className={styles.locCol}>
+                <MapPin size={18} color="#FFB800" />
+                <div className={styles.locText}>
+                  <small>From</small>
+                  <strong>{booking.pickupTitle || 'Mumbai'}</strong>
+                  <span>400001</span>
+                </div>
+              </div>
+
+              <div className={styles.locArrow}>
+                <ArrowRight size={16} />
+              </div>
+
+              <div className={styles.locCol}>
+                <MapPin size={18} color="#DC2626" />
+                <div className={styles.locText}>
+                  <small>To</small>
+                  <strong>{booking.dropTitle || 'Gurugram'}</strong>
+                  <span>122002</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Content Categories Grid */}
+            <div className={styles.card}>
+              <div className={styles.cardHeader}>
+                <div>
+                  <h2 className={styles.cardTitle}>What's inside your package?</h2>
+                  <p className={styles.cardSub}>Helps us handle your shipment safely and comply with regulations</p>
+                </div>
+                <button
+                  type="button"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    border: 'none',
+                    background: 'transparent',
+                    color: '#64748b',
+                    fontSize: '0.8rem',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => setShowInfoModal(true)}
+                >
+                  <Info size={14} />
+                  Why is this important?
+                </button>
+              </div>
+
+              <div className={styles.categoriesGrid}>
+                {categories.map((cat) => {
+                  const IconComp = cat.icon
+                  const isSelected = booking.packageCategory === cat.title
+                  return (
+                    <div
+                      key={cat.title}
+                      className={`${styles.catTile} ${isSelected ? styles.catTileSelected : ''}`}
+                      onClick={() => setBooking({ ...booking, packageCategory: cat.title })}
+                    >
+                      <div className={styles.catIconBox} style={{ background: cat.bg, color: cat.color }}>
+                        <IconComp size={20} />
+                      </div>
+                      <div className={styles.catText}>
+                        <div className={styles.catTitle}>{cat.title}</div>
+                        <div className={styles.catSub}>{cat.subtitle}</div>
+                      </div>
+                      <ChevronRight size={14} color="#94a3b8" />
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Describe your package box */}
+              <div className={styles.describeBox} style={{ marginTop: 16 }}>
+                <div className={styles.describeLeft}>
+                  <div className={styles.describeIconCircle}>
+                    <Edit2 size={18} />
+                  </div>
+                  <div>
+                    <strong style={{ display: 'block', fontSize: '0.88rem', color: '#0F172A' }}>
+                      Describe your package <span style={{ color: '#64748b', fontWeight: 500 }}>(Optional)</span>
+                    </strong>
+                    <span style={{ fontSize: '0.78rem', color: booking.packageDescription ? '#0f172a' : '#64748b' }}>
+                      {booking.packageDescription || 'Add a brief note about items inside (e.g. 2 books, office files)'}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className={styles.describeBtn}
+                  onClick={() => setShowDescModal(true)}
+                >
+                  {booking.packageDescription ? 'Edit Description' : 'Add Description'}
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ==================================================================== */}
+        {/* STEP 4: PACKAGE DETAILS (PackageDetailsScreen)                       */}
+        {/* ==================================================================== */}
+        {step === 4 && (
+          <>
+            {/* Location Route Summary */}
+            <div className={styles.locationSummaryCard}>
+              <div className={styles.locCol}>
+                <MapPin size={18} color="#FFB800" />
+                <div className={styles.locText}>
+                  <small>From</small>
+                  <strong>{booking.pickupTitle}</strong>
+                  <span>400001</span>
+                </div>
+              </div>
+              <ArrowRight size={16} className={styles.locArrow} />
+              <div className={styles.locCol}>
+                <MapPin size={18} color="#DC2626" />
+                <div className={styles.locText}>
+                  <small>To</small>
+                  <strong>{booking.dropTitle}</strong>
+                  <span>122002</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Package Box Required Card */}
+            <div className={styles.card}>
+              <h2 className={styles.cardTitle} style={{ marginBottom: 12 }}>Package Box Required?</h2>
+              <div className={styles.boxRequiredRow}>
+                {/* Option Yes */}
+                <div
+                  className={`${styles.boxOptionCard} ${booking.packageBoxRequired === 'yes' ? styles.boxOptionCardSelected : ''}`}
+                  onClick={() => setBooking({ ...booking, packageBoxRequired: 'yes' })}
+                >
+                  <div className={`${styles.radioCircle} ${booking.packageBoxRequired === 'yes' ? styles.radioCircleActive : ''}`}>
+                    {booking.packageBoxRequired === 'yes' && <div className={styles.radioInnerDot} />}
+                  </div>
+                  <div>
+                    <strong style={{ display: 'block', fontSize: '0.92rem', color: '#0F172A' }}>Yes, I need a box</strong>
+                    <span className={styles.tagGreen} style={{ display: 'inline-block', margin: '3px 0' }}>Recommended</span>
+                    <p style={{ margin: 0, fontSize: '0.74rem', color: '#64748B' }}>Delivez will bring a packaging box during pickup</p>
+                  </div>
+                </div>
+
+                {/* Option No */}
+                <div
+                  className={`${styles.boxOptionCard} ${booking.packageBoxRequired === 'no' ? styles.boxOptionCardSelected : ''}`}
+                  onClick={() => setBooking({ ...booking, packageBoxRequired: 'no' })}
+                >
+                  <div className={`${styles.radioCircle} ${booking.packageBoxRequired === 'no' ? styles.radioCircleActive : ''}`}>
+                    {booking.packageBoxRequired === 'no' && <div className={styles.radioInnerDot} />}
+                  </div>
+                  <div>
+                    <strong style={{ display: 'block', fontSize: '0.92rem', color: '#0F172A' }}>No, I have my own packaging</strong>
+                    <p style={{ margin: '4px 0 0', fontSize: '0.74rem', color: '#64748B' }}>I will pack the items securely myself</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* If Yes: Select Box Size */}
+            {booking.packageBoxRequired === 'yes' ? (
+              <div className={styles.card}>
+                <h2 className={styles.cardTitle}>Select Box Size</h2>
+                <p className={styles.cardSub} style={{ marginBottom: 14 }}>Our executive will bring the box matching your selection</p>
+
+                {/* Weight Capacity Tabs */}
+                <div className={styles.capacityTabs}>
+                  {['10 Kg', '15 Kg', '25 Kg'].map((weight) => (
+                    <button
+                      key={weight}
+                      type="button"
+                      className={`${styles.capTab} ${booking.selectedWeightCapacity === weight ? styles.capTabActive : ''}`}
+                      onClick={() =>
+                        setBooking({
+                          ...booking,
+                          selectedWeightCapacity: weight,
+                          selectedBoxSize: boxOptions[weight][0].title
+                        })
+                      }
+                    >
+                      {weight}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Box Cards */}
+                <div className={styles.boxList}>
+                  {boxOptions[booking.selectedWeightCapacity]?.map((box) => {
+                    const isSelected = booking.selectedBoxSize === box.title
+                    return (
+                      <div
+                        key={box.title}
+                        className={`${styles.boxCardItem} ${isSelected ? styles.boxCardItemSelected : ''}`}
+                        onClick={() => setBooking({ ...booking, selectedBoxSize: box.title })}
+                      >
+                        <div className={styles.boxCardLeft}>
+                          <Package size={28} color="#D97706" />
+                          <div>
+                            <strong style={{ fontSize: '0.92rem', color: '#0F172A' }}>
+                              {box.title} ({booking.selectedWeightCapacity})
+                            </strong>
+                            <div style={{ fontSize: '0.76rem', color: '#64748B' }}>{box.dims}</div>
+                            <span className={styles.boxTag}>{box.tag}</span>
+                          </div>
+                        </div>
+
+                        <div style={{ textAlign: 'right' }}>
+                          <div className={`${styles.radioCircle} ${isSelected ? styles.radioCircleActive : ''}`} style={{ margin: '0 0 6px auto' }}>
+                            {isSelected && <div className={styles.radioInnerDot} />}
+                          </div>
+                          <strong style={{ display: 'block', fontSize: '0.8rem', color: '#0F172A' }}>{box.cap}</strong>
+                          <span style={{ fontSize: '0.72rem', color: '#64748B' }}>{box.vol}</span>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                {/* Custom Box Link */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '10px 12px',
+                    borderRadius: 10,
+                    border: '1px dashed #cbd5e1',
+                    marginTop: 12,
+                    cursor: 'pointer',
+                    background: '#f8fafc'
+                  }}
+                  onClick={() => setShowCustomBoxModal(true)}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <Layers size={22} color="#D97706" />
+                    <div>
+                      <strong style={{ fontSize: '0.86rem', color: '#0F172A' }}>Need a Custom Size Box?</strong>
+                      <p style={{ margin: 0, fontSize: '0.74rem', color: '#64748B' }}>Our executive will assess and bring custom box material</p>
+                    </div>
+                  </div>
+                  <ChevronRight size={16} color="#64748B" />
+                </div>
+              </div>
+            ) : (
+              /* If No: Custom Dimensions input */
+              <div className={styles.card}>
+                <h2 className={styles.cardTitle}>Own Packaging Dimensions (cm)</h2>
+                <p className={styles.cardSub} style={{ marginBottom: 14 }}>Enter approximate size of your packaged parcel</p>
+
+                <div className={styles.dimGrid}>
+                  <div className={styles.inputGroup}>
+                    <label>Length (cm)</label>
+                    <input
+                      type="number"
+                      value={booking.dimensions.length}
+                      onChange={(e) => setBooking({ ...booking, dimensions: { ...booking.dimensions, length: e.target.value } })}
+                    />
+                  </div>
+                  <span style={{ fontWeight: 800, color: '#94a3b8' }}>×</span>
+                  <div className={styles.inputGroup}>
+                    <label>Width (cm)</label>
+                    <input
+                      type="number"
+                      value={booking.dimensions.width}
+                      onChange={(e) => setBooking({ ...booking, dimensions: { ...booking.dimensions, width: e.target.value } })}
+                    />
+                  </div>
+                  <span style={{ fontWeight: 800, color: '#94a3b8' }}>×</span>
+                  <div className={styles.inputGroup}>
+                    <label>Height (cm)</label>
+                    <input
+                      type="number"
+                      value={booking.dimensions.height}
+                      onChange={(e) => setBooking({ ...booking, dimensions: { ...booking.dimensions, height: e.target.value } })}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Package Weight & Special Handling */}
+            <div className={styles.card}>
+              <h2 className={styles.cardTitle} style={{ marginBottom: 12 }}>Package Weight & Handling</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 14 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#475569', marginBottom: 4 }}>
+                    Actual Weight (Approx)
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="number"
+                      step="0.5"
+                      value={booking.actualWeight}
+                      onChange={(e) => setBooking({ ...booking, actualWeight: parseFloat(e.target.value) || 1 })}
+                      style={{
+                        width: '100%',
+                        padding: '10px 38px 10px 12px',
+                        borderRadius: 8,
+                        border: '1px solid #cbd5e1',
+                        fontSize: '1rem',
+                        fontWeight: 750
+                      }}
+                    />
+                    <span style={{ position: 'absolute', right: 12, top: 12, fontSize: '0.84rem', fontWeight: 800, color: '#64748B' }}>
+                      kg
+                    </span>
+                  </div>
+                  <small style={{ fontSize: '0.72rem', color: '#94a3b8' }}>Weight verified by executive on calibrated digital scale.</small>
+                </div>
+
+                <div style={{ background: '#FFFDF5', border: '1px solid #FEF3C7', borderRadius: 8, padding: 10 }}>
+                  <small style={{ color: '#D97706', fontWeight: 800, fontSize: '0.7rem', textTransform: 'uppercase' }}>Chargeable Weight</small>
+                  <strong style={{ display: 'block', fontSize: '1.4rem', color: '#0F172A', margin: '2px 0' }}>
+                    {Math.max(booking.actualWeight, 2.0)} kg
+                  </strong>
+                  <span style={{ fontSize: '0.72rem', color: '#64748B' }}>Calculated by higher of volumetric or actual mass</span>
+                </div>
+              </div>
+
+              {/* Special Handling Options */}
+              <div className={styles.specialHandlingCard}>
+                <strong style={{ display: 'block', fontSize: '0.88rem', color: '#0F172A' }}>Special Handling Safeguards</strong>
+                <div className={styles.handlingToggles}>
+                  <div
+                    className={`${styles.handlingBtn} ${booking.isFragile ? styles.handlingBtnActive : ''}`}
+                    onClick={() => setBooking({ ...booking, isFragile: !booking.isFragile })}
+                  >
+                    <Wine size={18} />
+                    <strong style={{ fontSize: '0.78rem' }}>Fragile (+₹25)</strong>
+                    <span style={{ fontSize: '0.68rem', color: '#64748B' }}>Handle with care</span>
+                  </div>
+
+                  <div
+                    className={`${styles.handlingBtn} ${booking.isSecure ? styles.handlingBtnActive : ''}`}
+                    onClick={() => setBooking({ ...booking, isSecure: !booking.isSecure })}
+                  >
+                    <Lock size={18} />
+                    <strong style={{ fontSize: '0.78rem' }}>Tamper-Seal (+₹35)</strong>
+                    <span style={{ fontSize: '0.68rem', color: '#64748B' }}>Numbered seal</span>
+                  </div>
+
+                  <div className={`${styles.handlingBtn} ${styles.handlingBtnDisabled}`}>
+                    <Wallet size={18} />
+                    <strong style={{ fontSize: '0.78rem' }}>COD</strong>
+                    <span style={{ fontSize: '0.68rem', color: '#94A3B8' }}>Unavailable</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ==================================================================== */}
+        {/* STEP 5: SERVICE TYPE (LocalServiceTypeScreen)                        */}
+        {/* ==================================================================== */}
+        {step === 5 && (
+          <>
+            <div className={styles.card}>
+              <div className={styles.cardHeader}>
+                <div>
+                  <h2 className={styles.cardTitle}>
+                    {isIntercity ? 'Intercity Delivery Options' : 'Local Delivery Speed'}
+                  </h2>
+                  <p className={styles.cardSub}>Choose the delivery speed matching your timeline</p>
+                </div>
+              </div>
+
+              <div className={styles.serviceList}>
+                {availableServices.map((srv) => {
+                  const isSelected = booking.deliverySpeed === srv.title
+                  const IconC = srv.icon
+                  return (
+                    <div
+                      key={srv.title}
+                      className={`${styles.serviceCard} ${isSelected ? styles.serviceCardSelected : ''}`}
+                      onClick={() =>
+                        setBooking({
+                          ...booking,
+                          deliverySpeed: srv.title,
+                          deliveryPrice: srv.price
+                        })
+                      }
+                    >
+                      <div className={styles.serviceTop}>
+                        <div className={styles.serviceIconBox}>
+                          <IconC size={26} />
+                        </div>
+                        <div className={styles.serviceDetails}>
+                          <div className={styles.serviceTitleRow}>
+                            <strong style={{ fontSize: '1rem', color: '#0F172A' }}>{srv.title}</strong>
+                            <span className={srv.badge === 'FASTEST' ? styles.serviceBadgeRed : styles.serviceBadgeSoft}>
+                              {srv.badge}
+                            </span>
+                          </div>
+                          <p className={styles.serviceDesc}>{srv.desc}</p>
+                        </div>
+                        <div className={`${styles.radioCircle} ${isSelected ? styles.radioCircleActive : ''}`}>
+                          {isSelected && <div className={styles.radioInnerDot} />}
+                        </div>
+                      </div>
+
+                      <div className={styles.serviceBottomRow}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8rem', color: '#64748B' }}>
+                          <Clock size={14} color="#D97706" />
+                          <span>{srv.time}</span>
+                        </div>
+                        <span className={styles.priceTag}>₹{srv.price}.00</span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Self Service Options Row */}
+              <div style={{ marginTop: 20 }}>
+                <strong style={{ display: 'block', fontSize: '0.88rem', color: '#0F172A', marginBottom: 8 }}>
+                  Optional Self Service Saver
+                </strong>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  <div
+                    className={`${styles.boxOptionCard} ${booking.selfServiceOption === 'Self Pickup' ? styles.boxOptionCardSelected : ''}`}
+                    onClick={() =>
+                      setBooking({
+                        ...booking,
+                        selfServiceOption: booking.selfServiceOption === 'Self Pickup' ? null : 'Self Pickup'
+                      })
+                    }
+                  >
+                    <Package size={20} color="#16A34A" />
+                    <div>
+                      <strong style={{ fontSize: '0.84rem' }}>Self Pickup</strong>
+                      <span className={styles.tagGreen}>Save ₹30</span>
+                      <p style={{ margin: 0, fontSize: '0.72rem', color: '#64748B' }}>You drop at nearest hub</p>
+                    </div>
+                  </div>
+
+                  <div
+                    className={`${styles.boxOptionCard} ${booking.selfServiceOption === 'Self Drop' ? styles.boxOptionCardSelected : ''}`}
+                    onClick={() =>
+                      setBooking({
+                        ...booking,
+                        selfServiceOption: booking.selfServiceOption === 'Self Drop' ? null : 'Self Drop'
+                      })
+                    }
+                  >
+                    <Truck size={20} color="#16A34A" />
+                    <div>
+                      <strong style={{ fontSize: '0.84rem' }}>Self Collection</strong>
+                      <span className={styles.tagGreen}>Save ₹20</span>
+                      <p style={{ margin: 0, fontSize: '0.72rem', color: '#64748B' }}>Recipient collects at hub</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ==================================================================== */}
+        {/* STEP 6: ADD INSURANCE (LocalAddInsurancePage)                        */}
+        {/* ==================================================================== */}
+        {step === 6 && (
+          <>
+            <div className={styles.card}>
+              <h2 className={styles.cardTitle}>Protect Your Shipment</h2>
+              <p className={styles.cardSub} style={{ marginBottom: 14 }}>
+                Transit insurance safeguards against loss, theft, tampering or transit damage
+              </p>
+
+              {/* Insurance Option 1: Full */}
+              <div
+                className={`${styles.insuranceOptionCard} ${booking.insuranceOption === 0 ? styles.insuranceOptionCardSelected : ''}`}
+                onClick={() => setBooking({ ...booking, insuranceOption: 0 })}
+              >
+                <div className={`${styles.radioCircle} ${booking.insuranceOption === 0 ? styles.radioCircleActive : ''}`}>
+                  {booking.insuranceOption === 0 && <div className={styles.radioInnerDot} />}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <ShieldCheck size={18} color="#16A34A" />
+                    <strong style={{ fontSize: '0.94rem', color: '#0F172A' }}>Insure Shipment (Full Protection)</strong>
+                    <span className={styles.tagGreen}>Recommended</span>
+                  </div>
+                  <p style={{ margin: '3px 0 0', fontSize: '0.78rem', color: '#64748B' }}>
+                    Comprehensive 100% coverage up to declared consignment value (0.75% fee)
+                  </p>
+                </div>
+              </div>
+
+              {/* Insurance Option 2: Basic */}
+              <div
+                className={`${styles.insuranceOptionCard} ${booking.insuranceOption === 1 ? styles.insuranceOptionCardSelected : ''}`}
+                onClick={() => setBooking({ ...booking, insuranceOption: 1 })}
+              >
+                <div className={`${styles.radioCircle} ${booking.insuranceOption === 1 ? styles.radioCircleActive : ''}`}>
+                  {booking.insuranceOption === 1 && <div className={styles.radioInnerDot} />}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <ShieldCheck size={18} color="#D97706" />
+                    <strong style={{ fontSize: '0.94rem', color: '#0F172A' }}>Basic Carrier Coverage (₹49)</strong>
+                  </div>
+                  <p style={{ margin: '3px 0 0', fontSize: '0.78rem', color: '#64748B' }}>
+                    Limited coverage as per standard carrier terms up to ₹10,000 maximum liability
+                  </p>
+                </div>
+              </div>
+
+              {/* Insurance Option 3: None */}
+              <div
+                className={`${styles.insuranceOptionCard} ${booking.insuranceOption === 2 ? styles.insuranceOptionCardSelected : ''}`}
+                onClick={() => setBooking({ ...booking, insuranceOption: 2 })}
+              >
+                <div className={`${styles.radioCircle} ${booking.insuranceOption === 2 ? styles.radioCircleActive : ''}`}>
+                  {booking.insuranceOption === 2 && <div className={styles.radioInnerDot} />}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <strong style={{ fontSize: '0.94rem', color: '#0F172A' }}>No Insurance</strong>
+                  <p style={{ margin: '3px 0 0', fontSize: '0.78rem', color: '#64748B' }}>
+                    I understand the risk of transit loss and opt out of insurance protection
+                  </p>
+                </div>
+              </div>
+
+              {/* Declared Value Input Box (Shown if option 0) */}
+              {booking.insuranceOption === 0 && (
+                <div style={{ marginTop: 14, background: '#f8fafc', padding: 14, borderRadius: 12, border: '1px solid #e2e8f0' }}>
+                  <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, color: '#0F172A', marginBottom: 4 }}>
+                    Declare Shipment Value (INR)
+                  </label>
+                  <div className={styles.declaredValueBox}>
+                    <span style={{ fontSize: '1.2rem', fontWeight: 800, color: '#64748B' }}>₹</span>
+                    <input
+                      type="number"
+                      className={styles.declaredInput}
+                      value={booking.declaredValue}
+                      onChange={(e) => setBooking({ ...booking, declaredValue: parseInt(e.target.value) || 0 })}
+                    />
+                    <div style={{ textAlign: 'right' }}>
+                      <small style={{ display: 'block', fontSize: '0.7rem', color: '#64748B' }}>Premium (0.75%)</small>
+                      <strong style={{ fontSize: '1.1rem', color: '#E11D48' }}>
+                        ₹{Math.round(booking.declaredValue * 0.0075)}.00
+                      </strong>
+                    </div>
+                  </div>
+                  <small style={{ display: 'block', marginTop: 4, fontSize: '0.72rem', color: '#94a3b8' }}>
+                    Minimum insurable value: ₹1,000 • Maximum coverage: ₹5,000,000 per consignment.
+                  </small>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* ==================================================================== */}
+        {/* STEP 7: REVIEW & CONFIRM (ReviewConfirmScreen)                       */}
+        {/* ==================================================================== */}
+        {step === 7 && (
+          <>
+            <div className={styles.reviewGrid}>
+              {/* ETA Banner */}
+              <div className={styles.etaBanner}>
+                <Clock size={24} color="#D97706" />
+                <div>
+                  <small style={{ fontSize: '0.72rem', color: '#94A3B8', fontWeight: 700, textTransform: 'uppercase' }}>
+                    Estimated Arrival (ETA)
+                  </small>
+                  <strong style={{ display: 'block', fontSize: '1.05rem', color: '#0F172A' }}>
+                    {booking.deliverySpeed.includes('Same Day') ? 'Today, before 08:00 PM' : 'Tomorrow, before 06:00 PM'}
+                  </strong>
+                </div>
+              </div>
+
+              {/* Pickup Review Card */}
+              <div className={styles.reviewCard}>
+                <div className={styles.reviewCardHead}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <MapPin size={18} color="#FFB800" />
+                    <strong style={{ fontSize: '0.94rem' }}>Pickup Details</strong>
+                  </div>
+                  <button type="button" className={styles.editBtn} onClick={() => setStep(1)}>
+                    <Edit2 size={13} /> Edit
+                  </button>
+                </div>
+                <div style={{ fontSize: '0.84rem', color: '#334155' }}>
+                  <strong>{booking.pickupContactPerson}</strong> ({booking.pickupPhone})
+                  <div style={{ color: '#64748B', marginTop: 2 }}>{booking.pickupAddressLine}</div>
+                  <div style={{ marginTop: 4, fontSize: '0.76rem', color: '#D97706' }}>
+                    Pickup Mode: {booking.preferredPickupTime === 'ASAP' ? 'ASAP (Immediate Dispatch)' : `${booking.pickupScheduleDate}, ${booking.pickupScheduleSlot}`}
+                  </div>
+                </div>
+              </div>
+
+              {/* Drop-off Review Card */}
+              <div className={styles.reviewCard}>
+                <div className={styles.reviewCardHead}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <MapPin size={18} color="#DC2626" />
+                    <strong style={{ fontSize: '0.94rem' }}>Drop-off Details</strong>
+                  </div>
+                  <button type="button" className={styles.editBtn} onClick={() => setStep(2)}>
+                    <Edit2 size={13} /> Edit
+                  </button>
+                </div>
+                <div style={{ fontSize: '0.84rem', color: '#334155' }}>
+                  <strong>{booking.dropContactPerson}</strong> ({booking.dropPhone})
+                  <div style={{ color: '#64748B', marginTop: 2 }}>{booking.dropAddressLine}</div>
+                  {booking.dropInstructions && (
+                    <div style={{ marginTop: 4, fontSize: '0.76rem', color: '#64748B' }}>
+                      Note: {booking.dropInstructions}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Package & Service Summary Card */}
+              <div className={styles.reviewCard}>
+                <div className={styles.reviewCardHead}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Package size={18} color="#2563EB" />
+                    <strong style={{ fontSize: '0.94rem' }}>Package & Service Breakdown</strong>
+                  </div>
+                  <button type="button" className={styles.editBtn} onClick={() => setStep(4)}>
+                    <Edit2 size={13} /> Edit
+                  </button>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, fontSize: '0.8rem' }}>
+                  <div>Category: <strong>{booking.packageCategory}</strong></div>
+                  <div>Box Type: <strong>{booking.packageBoxRequired === 'yes' ? booking.selectedBoxSize : 'Own Packaging'}</strong></div>
+                  <div>Weight: <strong>{booking.actualWeight} kg</strong></div>
+                  <div>Speed: <strong>{booking.deliverySpeed}</strong></div>
+                  <div>Insurance: <strong>{booking.insuranceOption === 0 ? 'Full Coverage' : booking.insuranceOption === 1 ? 'Basic (₹10k)' : 'None'}</strong></div>
+                  <div>Special Handling: <strong>{booking.isFragile ? 'Fragile' : 'Standard'}</strong></div>
+                </div>
+
+                {/* Price Summary inside Review */}
+                <div style={{ marginTop: 14, background: '#f8fafc', padding: 12, borderRadius: 10, border: '1px solid #e2e8f0' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: 4 }}>
+                    <span>Delivery Speed Charge</span>
+                    <strong>₹{pricing.baseSpeedPrice}.00</strong>
+                  </div>
+                  {pricing.boxFee > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#64748B', marginBottom: 3 }}>
+                      <span>Packaging Box Fee</span>
+                      <span>₹{pricing.boxFee}.00</span>
+                    </div>
+                  )}
+                  {pricing.handlingFee > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#64748B', marginBottom: 3 }}>
+                      <span>Special Handling (Fragile/Seal)</span>
+                      <span>₹{pricing.handlingFee}.00</span>
+                    </div>
+                  )}
+                  {pricing.insuranceFee > 0 && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#64748B', marginBottom: 3 }}>
+                      <span>Transit Insurance Fee</span>
+                      <span>₹{pricing.insuranceFee}.00</span>
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#16A34A', marginBottom: 3 }}>
+                    <span>Promo Discount (DELIVEZ10)</span>
+                    <span>- ₹{pricing.discount}.00</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#64748B', marginBottom: 6 }}>
+                    <span>Taxes (GST 18%)</span>
+                    <span>₹{pricing.tax}.00</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #cbd5e1', paddingTop: 6, fontSize: '1.1rem', fontWeight: 900, color: '#0F172A' }}>
+                    <span>Total Payable</span>
+                    <span style={{ color: '#E11D48' }}>₹{pricing.total}.00</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ==================================================================== */}
+        {/* STEP 8: PAYMENT METHOD (CourierPaymentMethodScreen)                 */}
+        {/* ==================================================================== */}
+        {step === 8 && (
+          <>
+            <div className={styles.card}>
+              <div className={styles.cardHeader}>
+                <div>
+                  <h2 className={styles.cardTitle}>Choose Payment Method</h2>
+                  <p className={styles.cardSub}>Select your preferred payment option to complete booking securely</p>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: '#E8F5E9', border: '1px solid #A5D6A7', padding: '4px 8px', borderRadius: 6, fontSize: '0.72rem', color: '#2E7D32', fontWeight: 800 }}>
+                  <ShieldCheck size={14} />
+                  100% Secure Payment
+                </div>
+              </div>
+
+              {/* Payment Methods List */}
+              <div className={styles.paymentList}>
+                {/* Delivez Money Wallet */}
+                <div
+                  className={`${styles.paymentTile} ${booking.paymentMethod === 'wallet' ? styles.paymentTileSelected : ''}`}
+                  onClick={() => setBooking({ ...booking, paymentMethod: 'wallet' })}
+                >
+                  <div className={styles.paymentLeft}>
+                    <div className={`${styles.radioCircle} ${booking.paymentMethod === 'wallet' ? styles.radioCircleActive : ''}`}>
+                      {booking.paymentMethod === 'wallet' && <div className={styles.radioInnerDot} />}
+                    </div>
+                    <Wallet size={20} color="#D97706" />
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <strong style={{ fontSize: '0.9rem', color: '#0F172A' }}>Delivez Money (Wallet)</strong>
+                        <span className={styles.tagGreen}>Preferred</span>
+                      </div>
+                      <span style={{ fontSize: '0.74rem', color: '#16A34A', fontWeight: 700 }}>
+                        ₹1,245.60 Available Balance
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* UPI */}
+                <div
+                  className={`${styles.paymentTile} ${booking.paymentMethod === 'upi' ? styles.paymentTileSelected : ''}`}
+                  onClick={() => setBooking({ ...booking, paymentMethod: 'upi' })}
+                >
+                  <div className={styles.paymentLeft}>
+                    <div className={`${styles.radioCircle} ${booking.paymentMethod === 'upi' ? styles.radioCircleActive : ''}`}>
+                      {booking.paymentMethod === 'upi' && <div className={styles.radioInnerDot} />}
+                    </div>
+                    <Zap size={20} color="#2563EB" />
+                    <div>
+                      <strong style={{ fontSize: '0.9rem', color: '#0F172A' }}>UPI (Google Pay, PhonePe, Paytm)</strong>
+                      <div style={{ fontSize: '0.74rem', color: '#64748B' }}>Instant scan & pay via any UPI app</div>
+                    </div>
+                  </div>
+                  <ChevronRight size={16} color="#94A3B8" />
+                </div>
+
+                {/* Credit / Debit Card */}
+                <div
+                  className={`${styles.paymentTile} ${booking.paymentMethod === 'card' ? styles.paymentTileSelected : ''}`}
+                  onClick={() => setBooking({ ...booking, paymentMethod: 'card' })}
+                >
+                  <div className={styles.paymentLeft}>
+                    <div className={`${styles.radioCircle} ${booking.paymentMethod === 'card' ? styles.radioCircleActive : ''}`}>
+                      {booking.paymentMethod === 'card' && <div className={styles.radioInnerDot} />}
+                    </div>
+                    <CreditCard size={20} color="#0F172A" />
+                    <div>
+                      <strong style={{ fontSize: '0.9rem', color: '#0F172A' }}>Credit / Debit Card</strong>
+                      <div style={{ fontSize: '0.74rem', color: '#64748B' }}>Visa, MasterCard, RuPay accepted</div>
+                    </div>
+                  </div>
+                  <ChevronRight size={16} color="#94A3B8" />
+                </div>
+
+                {/* Net Banking */}
+                <div
+                  className={`${styles.paymentTile} ${booking.paymentMethod === 'netbanking' ? styles.paymentTileSelected : ''}`}
+                  onClick={() => setBooking({ ...booking, paymentMethod: 'netbanking' })}
+                >
+                  <div className={styles.paymentLeft}>
+                    <div className={`${styles.radioCircle} ${booking.paymentMethod === 'netbanking' ? styles.radioCircleActive : ''}`}>
+                      {booking.paymentMethod === 'netbanking' && <div className={styles.radioInnerDot} />}
+                    </div>
+                    <Briefcase size={20} color="#475569" />
+                    <div>
+                      <strong style={{ fontSize: '0.9rem', color: '#0F172A' }}>Net Banking</strong>
+                      <div style={{ fontSize: '0.74rem', color: '#64748B' }}>All major Indian banks supported</div>
+                    </div>
+                  </div>
+                  <ChevronRight size={16} color="#94A3B8" />
+                </div>
+              </div>
+
+              {/* Additional Options (GST Switch & Promo) */}
+              <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {/* GST Toggle */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: '#F8FAFC', borderRadius: 10, border: '1px solid #E2E8F0' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Receipt size={18} color="#E11D48" />
+                    <div>
+                      <strong style={{ fontSize: '0.86rem', color: '#0F172A' }}>GST / Business Tax Invoice</strong>
+                      <div style={{ fontSize: '0.72rem', color: '#64748B' }}>Add company details for input tax credit claim</div>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    style={{
+                      padding: '4px 10px',
+                      borderRadius: 6,
+                      border: '1px solid #cbd5e1',
+                      background: booking.isGstEnabled ? '#E11D48' : '#ffffff',
+                      color: booking.isGstEnabled ? '#ffffff' : '#334155',
+                      fontSize: '0.78rem',
+                      fontWeight: 750,
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => {
+                      if (!booking.isGstEnabled) setShowGstModal(true)
+                      setBooking({ ...booking, isGstEnabled: !booking.isGstEnabled })
+                    }}
+                  >
+                    {booking.isGstEnabled ? 'Added ✓' : '+ Add GST'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Fare Summary Table */}
+              <div className={styles.fareTable} style={{ marginTop: 14 }}>
+                <strong style={{ display: 'block', fontSize: '0.86rem', color: '#0F172A', marginBottom: 6 }}>Fare Summary</strong>
+                <div className={styles.fareRow}>
+                  <span>Base Courier Fee</span>
+                  <span>₹{pricing.baseSpeedPrice}.00</span>
+                </div>
+                {pricing.boxFee > 0 && (
+                  <div className={styles.fareRow}>
+                    <span>Packaging Box Fee</span>
+                    <span>₹{pricing.boxFee}.00</span>
+                  </div>
+                )}
+                {pricing.handlingFee > 0 && (
+                  <div className={styles.fareRow}>
+                    <span>Handling Protection</span>
+                    <span>₹{pricing.handlingFee}.00</span>
+                  </div>
+                )}
+                {pricing.insuranceFee > 0 && (
+                  <div className={styles.fareRow}>
+                    <span>Transit Insurance</span>
+                    <span>₹{pricing.insuranceFee}.00</span>
+                  </div>
+                )}
+                <div className={styles.fareRow} style={{ color: '#16A34A', fontWeight: 700 }}>
+                  <span>Discount (DELIVEZ10)</span>
+                  <span>- ₹{pricing.discount}.00</span>
+                </div>
+                <div className={styles.fareRow}>
+                  <span>Taxes (GST 18%)</span>
+                  <span>₹{pricing.tax}.00</span>
+                </div>
+                <div className={`${styles.fareRow} ${styles.fareRowTotal}`}>
+                  <span>Total Amount</span>
+                  <span style={{ color: '#DC2626' }}>₹{pricing.total}.00</span>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ==================================================================== */}
+        {/* STEP 9: BOOKING CONFIRMED (BookingConfirmedScreen)                   */}
+        {/* ==================================================================== */}
+        {step === 9 && (
+          <div className={styles.card}>
+            <div className={styles.confirmedHero}>
+              <div className={styles.confirmedCheckCircle}>
+                <Check size={36} />
+              </div>
+              <h2 style={{ fontSize: '1.6rem', fontWeight: 900, color: '#0F172A', margin: '0 0 6px' }}>
+                Booking Confirmed!
+              </h2>
+              <p style={{ margin: 0, color: '#64748B', fontSize: '0.9rem' }}>
+                Your courier shipment has been successfully scheduled. We will take care of the rest.
               </p>
             </div>
 
-            <div className={styles.nextBtnRow}>
+            {/* Booking ID Box */}
+            <div className={styles.bookingIdBox}>
+              <div>
+                <small style={{ display: 'block', fontSize: '0.72rem', color: '#64748B', fontWeight: 700 }}>BOOKING ID</small>
+                <strong style={{ fontSize: '1.15rem', color: '#0F172A' }}>{booking.bookingId}</strong>
+              </div>
               <button
-                className={styles.nextBtn}
-                onClick={() => setCurrentStep(4)}
-              >
-                <span>Continue to Add-on Services</span>
-                <ArrowRight size={18} />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* ================= STEP 4: ADD-ON SERVICES (Screens 15 - 20) ================= */}
-        {currentStep === 4 && (
-          <div className={styles.stepCard}>
-            <div className={styles.sectionHeader}>
-              <h2 className={styles.sectionTitle}>Select Add-on Services</h2>
-              <p className={styles.sectionSub}>Enhance safety, airport assistance, and luggage protection</p>
-            </div>
-
-            {/* 1. Value-Added Courier Add-ons (Screens 15 & 16) */}
-            <div className={styles.addonSection}>
-              <h3 className={styles.addonCategoryTitle}>Value-Added Courier Add-ons</h3>
-              <div className={styles.addonGrid}>
-                {[
-                  { id: 'AIRPORT_ASSIST', title: 'Airport Terminal Assistance', price: 150, desc: 'Driver assists with portering & terminal escort' },
-                  { id: 'SEAL_WRAP', title: 'Tamper-Evident Security Seal & Wrap', price: 100, desc: 'Heavy-duty PVC protective stretch film with barcode seal' },
-                  { id: 'SANITISED_VAN', title: 'GPS Live Real-time Tracked Van', price: 100, desc: 'Dedicated air-conditioned sanitized van with continuous telemetry' },
-                  { id: 'WEIGHING', title: 'Doorstep Weighing & Verification', price: 50, desc: 'Digital luggage scale check with weight certificate' },
-                ].map((item) => {
-                  const isChecked = selectedAddons.includes(item.id)
-                  return (
-                    <div
-                      key={item.id}
-                      className={`${styles.addonCard} ${isChecked ? styles.addonCardActive : ''}`}
-                      onClick={() => toggleAddon(item.id, selectedAddons, setSelectedAddons)}
-                    >
-                      <div className={styles.addonCardTop}>
-                        <h4 className={styles.addonTitle}>{item.title}</h4>
-                        <span className={styles.addonPrice}>+₹{item.price}</span>
-                      </div>
-                      <p className={styles.addonDesc}>{item.desc}</p>
-                      <div className={styles.addonSelectIndicator}>
-                        {isChecked ? <CheckCircle2 size={16} /> : <div className={styles.circleUnchecked}></div>}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* 2. Luggage Protection (Screens 17 & 18) */}
-            <div className={styles.addonSection}>
-              <h3 className={styles.addonCategoryTitle}>Luggage Protection & Insurance</h3>
-              <div className={styles.addonGrid}>
-                {[
-                  { id: 'THEFT_COVER', title: 'Theft & Loss Cover (₹50,000)', price: 100, desc: 'Extended compensation guarantee in case of complete transit loss' },
-                  { id: 'DAMAGE_COVER', title: 'Luggage Outer Damage Cover', price: 80, desc: 'Covers suitcase shell cracks, zip breaks, and wheel damage' },
-                  { id: 'FLIGHT_DELAY', title: 'Flight Delay Baggage Hold', price: 150, desc: 'Free secure storage for up to 24 hours if flight is rescheduled' },
-                ].map((item) => {
-                  const isChecked = selectedProtection.includes(item.id)
-                  return (
-                    <div
-                      key={item.id}
-                      className={`${styles.addonCard} ${isChecked ? styles.addonCardActive : ''}`}
-                      onClick={() => toggleAddon(item.id, selectedProtection, setSelectedProtection)}
-                    >
-                      <div className={styles.addonCardTop}>
-                        <h4 className={styles.addonTitle}>{item.title}</h4>
-                        <span className={styles.addonPrice}>+₹{item.price}</span>
-                      </div>
-                      <p className={styles.addonDesc}>{item.desc}</p>
-                      <div className={styles.addonSelectIndicator}>
-                        {isChecked ? <CheckCircle2 size={16} /> : <div className={styles.circleUnchecked}></div>}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* 3. Airport Assistance (Screens 19 & 20) */}
-            <div className={styles.addonSection}>
-              <h3 className={styles.addonCategoryTitle}>Airport Assistance Add-ons</h3>
-              <div className={styles.addonGrid}>
-                {[
-                  { id: 'BELT_PICKUP', title: 'Luggage Belt Retrieval Assistance', price: 120, desc: 'Dedicated agent collects bags directly from luggage carousel' },
-                  { id: 'PORTER_HELP', title: 'Luggage Porter Assistance', price: 120, desc: 'Airport certified porter helps load onto courier vehicle' },
-                ].map((item) => {
-                  const isChecked = selectedAirportAssist.includes(item.id)
-                  return (
-                    <div
-                      key={item.id}
-                      className={`${styles.addonCard} ${isChecked ? styles.addonCardActive : ''}`}
-                      onClick={() => toggleAddon(item.id, selectedAirportAssist, setSelectedAirportAssist)}
-                    >
-                      <div className={styles.addonCardTop}>
-                        <h4 className={styles.addonTitle}>{item.title}</h4>
-                        <span className={styles.addonPrice}>+₹{item.price}</span>
-                      </div>
-                      <p className={styles.addonDesc}>{item.desc}</p>
-                      <div className={styles.addonSelectIndicator}>
-                        {isChecked ? <CheckCircle2 size={16} /> : <div className={styles.circleUnchecked}></div>}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-
-            <div className={styles.nextBtnRow}>
-              <button
-                className={styles.nextBtn}
-                onClick={() => setCurrentStep(5)}
-              >
-                <span>Continue to Schedule</span>
-                <ArrowRight size={18} />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* ================= STEP 5: SCHEDULE (Screens 21 & 22) ================= */}
-        {currentStep === 5 && (
-          <div className={styles.stepCard}>
-            <div className={styles.sectionHeader}>
-              <h2 className={styles.sectionTitle}>Schedule Pickup & Delivery</h2>
-              <p className={styles.sectionSub}>Choose time slots and delivery speed</p>
-            </div>
-
-            {/* Pickup Date Selector */}
-            <div className={styles.scheduleGroup}>
-              <label className={styles.scheduleLabel}>Pickup Date</label>
-              <div className={styles.datePills}>
-                {['Today', 'Tomorrow', '12 May 2025'].map((d) => (
-                  <button
-                    key={d}
-                    type="button"
-                    className={`${styles.datePill} ${schedule.pickupDate === d ? styles.datePillActive : ''}`}
-                    onClick={() => setSchedule({ ...schedule, pickupDate: d })}
-                  >
-                    <Calendar size={14} />
-                    <span>{d}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Time Slot Pills */}
-            <div className={styles.scheduleGroup}>
-              <label className={styles.scheduleLabel}>Preferred Time Slot</label>
-              <div className={styles.slotGrid}>
-                {[
-                  '08:00 AM - 10:00 AM',
-                  '10:00 AM - 12:00 PM',
-                  '12:00 PM - 02:00 PM',
-                  '02:00 PM - 04:00 PM',
-                  '04:00 PM - 06:00 PM',
-                  '06:00 PM - 08:00 PM',
-                ].map((slot) => (
-                  <button
-                    key={slot}
-                    type="button"
-                    className={`${styles.slotPill} ${schedule.pickupSlot === slot ? styles.slotPillActive : ''}`}
-                    onClick={() => setSchedule({ ...schedule, pickupSlot: slot })}
-                  >
-                    <Clock size={13} />
-                    <span>{slot}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Delivery Speed Options */}
-            <div className={styles.scheduleGroup}>
-              <label className={styles.scheduleLabel}>Delivery Speed</label>
-              <div className={styles.speedGrid}>
-                {[
-                  { id: 'STANDARD', title: 'Standard Express', time: 'Same Day by 6:00 PM', fee: 'Included' },
-                  { id: 'FAST_TRACK', title: 'Fast Track Priority', time: 'Delivered in 4 Hours', fee: '+₹100' },
-                  { id: 'CRITICAL_FLIGHT_RUSH', title: 'Critical Flight Rush', time: 'Direct within 2-3 Hours', fee: '+₹250' },
-                ].map((speed) => (
-                  <div
-                    key={speed.id}
-                    className={`${styles.speedCard} ${schedule.deliverySpeed === speed.id ? styles.speedCardActive : ''}`}
-                    onClick={() => setSchedule({ ...schedule, deliverySpeed: speed.id })}
-                  >
-                    <div className={styles.speedTop}>
-                      <h4>{speed.title}</h4>
-                      <span className={styles.speedFee}>{speed.fee}</span>
-                    </div>
-                    <p className={styles.speedTime}>{speed.time}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Flight Sync Toggle */}
-            <div className={styles.toggleRow}>
-              <input
-                type="checkbox"
-                id="flightSync"
-                checked={schedule.flightSyncUrgency}
-                onChange={(e) => setSchedule({ ...schedule, flightSyncUrgency: e.target.checked })}
-              />
-              <label htmlFor="flightSync">
-                Sync schedule with live flight arrival (driver automatically tracks delays)
-              </label>
-            </div>
-
-            <div className={styles.nextBtnRow}>
-              <button
-                className={styles.nextBtn}
-                onClick={() => setCurrentStep(6)}
-              >
-                <span>Continue to Review Summary</span>
-                <ArrowRight size={18} />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* ================= STEP 6: REVIEW BOOKING SUMMARY (Screens 23 & 24) ================= */}
-        {currentStep === 6 && (
-          <div className={styles.stepCard}>
-            <div className={styles.sectionHeader}>
-              <h2 className={styles.sectionTitle}>Review Booking Summary</h2>
-              <p className={styles.sectionSub}>Check your details before proceeding to payment</p>
-            </div>
-
-            <div className={styles.summaryList}>
-              {/* Route */}
-              <div className={styles.summaryItem}>
-                <span className={styles.summaryLabel}>Route Service</span>
-                <div className={styles.summaryVal}>
-                  <strong>{activeService.title}</strong> {isRoundTrip ? '(Round Trip)' : ''}
-                </div>
-              </div>
-
-              {/* Pickup */}
-              <div className={styles.summaryItem}>
-                <span className={styles.summaryLabel}>Pickup</span>
-                <div className={styles.summaryVal}>
-                  <div>{pickup.terminal} • Belt {pickup.luggageBelt}</div>
-                  <div className={styles.summarySub}>Flight {pickup.flightNumber} • PNR {pickup.pnr}</div>
-                  <div className={styles.summarySub}>{pickup.contactName} ({pickup.phoneNumber})</div>
-                </div>
-              </div>
-
-              {/* Delivery */}
-              <div className={styles.summaryItem}>
-                <span className={styles.summaryLabel}>Delivery Destination</span>
-                <div className={styles.summaryVal}>
-                  <div>{delivery.hotelName} {delivery.roomNumber ? `• Room ${delivery.roomNumber}` : ''}</div>
-                  <div className={styles.summarySub}>{delivery.addressLine1}, {delivery.city}</div>
-                  <div className={styles.summarySub}>Recipient: {delivery.contactName} ({delivery.phoneNumber})</div>
-                </div>
-              </div>
-
-              {/* Luggage */}
-              <div className={styles.summaryItem}>
-                <span className={styles.summaryLabel}>Luggage Consignment</span>
-                <div className={styles.summaryVal}>
-                  <strong>{totalBags} Bags (Total: {totalWeightKg} Kg)</strong>
-                  <div className={styles.summarySub}>
-                    {luggageList.map((b, i) => `Bag ${i+1}: ${b.type} (${b.weight}kg)`).join(', ')}
-                  </div>
-                </div>
-              </div>
-
-              {/* Schedule */}
-              <div className={styles.summaryItem}>
-                <span className={styles.summaryLabel}>Pickup Slot</span>
-                <div className={styles.summaryVal}>
-                  <div>{schedule.pickupDate} • {schedule.pickupSlot}</div>
-                  <div className={styles.summarySub}>Speed: {schedule.deliverySpeed} (Expected by 6:00 PM)</div>
-                </div>
-              </div>
-
-              {/* Tamper Seal Security */}
-              <div className={styles.summarySealBadge}>
-                <Lock size={16} />
-                <span>Assigned Tamper-Evident Seal: <strong>DLV-SEAL-88492</strong></span>
-              </div>
-            </div>
-
-            <div className={styles.nextBtnRow}>
-              <button
-                className={styles.nextBtn}
-                onClick={() => setCurrentStep(7)}
-              >
-                <span>Proceed to Payment</span>
-                <ArrowRight size={18} />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* ================= PAYMENT & FARE BREAKDOWN (Screens 25 & 26) ================= */}
-        {currentStep === 7 && (
-          <div className={styles.paymentContainer}>
-            {/* Fare Breakdown Card matching Screen 26 */}
-            <div className={styles.fareBreakdownCard}>
-              <h3 className={styles.fareCardTitle}>Fare Summary (Screen 26 Breakdown)</h3>
-
-              <div className={styles.fareLines}>
-                <div className={styles.fareLine}>
-                  <span>Base Route Fare</span>
-                  <span>₹{fareBreakdown.baseFare.toFixed(2)}</span>
-                </div>
-                <div className={styles.fareLine}>
-                  <span>Distance Charge (18 km)</span>
-                  <span>₹{fareBreakdown.distanceFee.toFixed(2)}</span>
-                </div>
-                <div className={styles.fareLine}>
-                  <span>Luggage Handling Fee ({totalBags} Bags)</span>
-                  <span>₹{fareBreakdown.luggageFee.toFixed(2)}</span>
-                </div>
-                <div className={styles.fareLine}>
-                  <span>Airport Terminal Fee</span>
-                  <span>₹{fareBreakdown.airportFee.toFixed(2)}</span>
-                </div>
-                <div className={styles.fareLine}>
-                  <span>Add-on Services Total</span>
-                  <span>₹{fareBreakdown.addonsFee.toFixed(2)}</span>
-                </div>
-                <div className={styles.fareLine}>
-                  <span>Express Delivery Speed</span>
-                  <span>₹{fareBreakdown.speedFee.toFixed(2)}</span>
-                </div>
-                <div className={styles.fareLine}>
-                  <span>GST (18%)</span>
-                  <span>₹{fareBreakdown.gst.toFixed(2)}</span>
-                </div>
-
-                {promoApplied && (
-                  <div className={`${styles.fareLine} ${styles.discountLine}`}>
-                    <span>Promo Discount ({promoCode})</span>
-                    <span>-₹{fareBreakdown.discount.toFixed(2)}</span>
-                  </div>
-                )}
-
-                <div className={styles.fareDivider}></div>
-
-                <div className={styles.totalLine}>
-                  <span>Total Payable Amount</span>
-                  <span>₹{fareBreakdown.total.toFixed(2)}</span>
-                </div>
-              </div>
-
-              {/* Promo Code Box */}
-              <div className={styles.promoBox}>
-                <input
-                  type="text"
-                  placeholder="Enter promo code"
-                  value={promoCode}
-                  onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                />
-                <button
-                  type="button"
-                  className={styles.applyBtn}
-                  onClick={() => setPromoApplied(true)}
-                >
-                  {promoApplied ? 'APPLIED ✓' : 'APPLY'}
-                </button>
-              </div>
-            </div>
-
-            {/* Payment Method Selector (Screen 25) */}
-            <div className={styles.paymentMethodsCard}>
-              <h3 className={styles.fareCardTitle}>Select Payment Method</h3>
-
-              <div className={styles.paymentOptions}>
-                {[
-                  { id: 'UPI', label: 'UPI (Google Pay, PhonePe, Paytm, BHIM)', icon: Sparkles },
-                  { id: 'CARD', label: 'Credit / Debit Card (Visa, Mastercard)', icon: CreditCard },
-                  { id: 'WALLET', label: 'DelivEz Wallet (Balance ₹5,400)', icon: Wallet },
-                  { id: 'PAY_ON_DELIVERY', label: 'Pay on Delivery / Cash', icon: Truck },
-                ].map((m) => (
-                  <label
-                    key={m.id}
-                    className={`${styles.payOption} ${paymentMethod === m.id ? styles.payOptionActive : ''}`}
-                  >
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value={m.id}
-                      checked={paymentMethod === m.id}
-                      onChange={() => setPaymentMethod(m.id)}
-                    />
-                    <m.icon size={20} className={styles.payIcon} />
-                    <span className={styles.payLabel}>{m.label}</span>
-                  </label>
-                ))}
-              </div>
-
-              <div className={styles.trustBadgeRow}>
-                <ShieldCheck size={18} />
-                <span>256-Bit SSL Encrypted • 100% Secure Checkout Guarantee</span>
-              </div>
-
-              <button
-                className={styles.payBtn}
-                onClick={handleConfirmAndPay}
-                disabled={submitting}
-              >
-                {submitting ? (
-                  <span>Creating Booking & Processing...</span>
-                ) : (
-                  <>
-                    <span>Pay ₹{fareBreakdown.total.toFixed(2)} & Confirm Booking</span>
-                    <ArrowRight size={18} />
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* ================= STEP 8: BOOKING CONFIRMED (Screen 27) ================= */}
-        {currentStep === 8 && (
-          <div className={styles.confirmedCard}>
-            <div className={styles.confirmedIconBox}>
-              <CheckCircle2 size={48} />
-            </div>
-
-            <h2 className={styles.confirmedHeading}>Booking Confirmed Successfully!</h2>
-            <p className={styles.confirmedSub}>
-              Your luggage delivery has been scheduled and dispatched to our airport courier team.
-            </p>
-
-            {/* Consignment ID Banner */}
-            <div className={styles.consignmentBox}>
-              <span className={styles.consignmentLabel}>Consignment Booking ID</span>
-              <div className={styles.consignmentRow}>
-                <span className={styles.consignmentNumber}>
-                  {confirmedBooking?.bookingNumber || 'DLVZ2505128947'}
-                </span>
-                <button
-                  className={styles.copyIdBtn}
-                  onClick={() => {
-                    navigator.clipboard.writeText(confirmedBooking?.bookingNumber || 'DLVZ2505128947')
-                    setCopiedId(true)
-                    setTimeout(() => setCopiedId(false), 2000)
-                  }}
-                >
-                  {copiedId ? <Check size={16} /> : <Copy size={16} />}
-                </button>
-              </div>
-            </div>
-
-            {/* Delivery Meta Grid */}
-            <div className={styles.metaGrid}>
-              <div className={styles.metaCol}>
-                <span className={styles.metaTitle}>Expected Delivery</span>
-                <span className={styles.metaVal}>{schedule.estimatedDelivery || '12 May 2025 by 06:00 PM'}</span>
-              </div>
-              <div className={styles.metaCol}>
-                <span className={styles.metaTitle}>Tamper Seal Number</span>
-                <span className={styles.metaVal}>{confirmedBooking?.sealNumber || 'DLV-SEAL-88492'}</span>
-              </div>
-              <div className={styles.metaCol}>
-                <span className={styles.metaTitle}>Assigned Agent</span>
-                <span className={styles.metaVal}>Ravi Kumar (DL 1Z 4589)</span>
-              </div>
-            </div>
-
-            {/* Actions matching APK Screen 27 */}
-            <div className={styles.confirmedActions}>
-              <button
-                className={styles.trackLiveBtn}
-                onClick={() => setTrackingViewBookingId(confirmedBooking?.bookingNumber || 'DLVZ2505128947')}
-              >
-                <span>Track Live Consignment</span>
-                <ArrowRight size={18} />
-              </button>
-
-              <button
-                className={styles.secondaryPodBtn}
-                onClick={() => setPodViewBookingId(confirmedBooking?.bookingNumber || 'DLVZ2505128947')}
-              >
-                <span>View Proof of Delivery (POD)</span>
-                <ExternalLink size={16} />
-              </button>
-
-              <button
-                className={styles.newBookingBtn}
+                type="button"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  padding: '6px 12px',
+                  borderRadius: 6,
+                  border: '1px solid #CBD5E1',
+                  background: '#F8FAFC',
+                  fontSize: '0.78rem',
+                  fontWeight: 750,
+                  cursor: 'pointer'
+                }}
                 onClick={() => {
-                  setConfirmedBooking(null)
-                  setCurrentStep(0)
+                  navigator.clipboard.writeText(booking.bookingId)
+                  alert('Booking ID copied to clipboard: ' + booking.bookingId)
                 }}
               >
-                <span>Book Another Courier</span>
+                <Copy size={13} /> Copy
+              </button>
+            </div>
+
+            {/* Amount Paid & ETA summary */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, margin: '14px 0' }}>
+              <div style={{ background: '#F0FDF4', border: '1px solid #DCFCE7', borderRadius: 10, padding: 12 }}>
+                <small style={{ color: '#166534', fontWeight: 700, fontSize: '0.7rem' }}>AMOUNT PAID</small>
+                <strong style={{ display: 'block', fontSize: '1.2rem', color: '#15803D' }}>₹{pricing.total}.00</strong>
+                <span style={{ fontSize: '0.74rem', color: '#166534' }}>Paid via Delivez Money</span>
+              </div>
+
+              <div style={{ background: '#FFFDF5', border: '1px solid #FEF3C7', borderRadius: 10, padding: 12 }}>
+                <small style={{ color: '#D97706', fontWeight: 700, fontSize: '0.7rem' }}>ESTIMATED ARRIVAL</small>
+                <strong style={{ display: 'block', fontSize: '1.05rem', color: '#0F172A' }}>Tomorrow</strong>
+                <span style={{ fontSize: '0.74rem', color: '#64748B' }}>Before 06:00 PM</span>
+              </div>
+            </div>
+
+            {/* Assigned Fleet Partner notice */}
+            <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 10, padding: 12, marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Bike size={20} color="#E11D48" />
+                <div>
+                  <strong style={{ fontSize: '0.86rem', color: '#0F172A' }}>Courier Partner Assignment in Progress</strong>
+                  <p style={{ margin: 0, fontSize: '0.74rem', color: '#64748B' }}>
+                    Nearest delivery executive is being dispatched for pickup from {booking.pickupTitle}.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <button
+                type="button"
+                className={styles.primaryBtn}
+                style={{ width: '100%' }}
+                onClick={() => setActiveTrackingId(booking.bookingId)}
+              >
+                Track Shipment Now
+              </button>
+              <button
+                type="button"
+                className={styles.outlineBtn}
+                style={{ width: '100%' }}
+                onClick={() => navigateTo('/courier')}
+              >
+                Back to Courier Home
               </button>
             </div>
           </div>
         )}
-      </div>
+      </main>
+
+      {/* Sticky Bottom Action Bar (Steps 1 - 8) */}
+      {step < 9 && (
+        <div className={styles.stickyBottomBar}>
+          <div className={styles.stickyBarInner}>
+            {step > 1 && (
+              <button type="button" className={styles.outlineBtn} onClick={handleBack}>
+                Back
+              </button>
+            )}
+            <button type="button" className={styles.primaryBtn} onClick={handleNext}>
+              <span>{step === 7 ? 'Confirm & Pay' : step === 8 ? `Pay Securely • ₹${pricing.total}.00` : 'Continue'}</span>
+              <ArrowRight size={16} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ==================================================================== */}
+      {/* MODAL: Schedule Date & Time Slot Picker                              */}
+      {/* ==================================================================== */}
+      {showScheduleModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowScheduleModal(false)}>
+          <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHead}>
+              <h3 className={styles.modalTitle}>
+                {scheduleTarget === 'pickup' ? 'Select Pickup Date & Time' : 'Select Drop-off Date & Time'}
+              </h3>
+              <button type="button" className={styles.modalCloseBtn} onClick={() => setShowScheduleModal(false)}>
+                <X size={16} />
+              </button>
+            </div>
+
+            <p style={{ fontSize: '0.82rem', color: '#64748b', marginTop: 0 }}>
+              Choose your preferred date and convenient time window
+            </p>
+
+            {/* Dates selector */}
+            <strong style={{ display: 'block', fontSize: '0.84rem', color: '#0F172A', margin: '12px 0 6px' }}>Select Date</strong>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+              {['Today', 'Tomorrow', '14 Sep', '15 Sep'].map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  style={{
+                    padding: '8px 4px',
+                    borderRadius: 8,
+                    border: '1.5px solid #cbd5e1',
+                    background: booking[`${scheduleTarget}ScheduleDate`] === d ? '#FFF1F2' : '#ffffff',
+                    borderColor: booking[`${scheduleTarget}ScheduleDate`] === d ? '#E11D48' : '#cbd5e1',
+                    fontWeight: 750,
+                    fontSize: '0.8rem',
+                    color: booking[`${scheduleTarget}ScheduleDate`] === d ? '#E11D48' : '#334155',
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => setBooking({ ...booking, [`${scheduleTarget}ScheduleDate`]: d })}
+                >
+                  {d}
+                </button>
+              ))}
+            </div>
+
+            {/* Time slots selector */}
+            <strong style={{ display: 'block', fontSize: '0.84rem', color: '#0F172A', margin: '16px 0 6px' }}>Select Time Slot</strong>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              {[
+                { slot: '9:00 AM - 11:00 AM', tag: 'Fastest' },
+                { slot: '11:00 AM - 1:00 PM', tag: 'Most Preferred' },
+                { slot: '1:00 PM - 3:00 PM', tag: '' },
+                { slot: '3:00 PM - 5:00 PM', tag: '' },
+                { slot: '5:00 PM - 7:00 PM', tag: '' },
+                { slot: '7:00 PM - 9:00 PM', tag: '' }
+              ].map((item) => (
+                <button
+                  key={item.slot}
+                  type="button"
+                  style={{
+                    padding: '8px 10px',
+                    borderRadius: 8,
+                    border: '1.5px solid #cbd5e1',
+                    background: booking[`${scheduleTarget}ScheduleSlot`] === item.slot ? '#FFFDF5' : '#ffffff',
+                    borderColor: booking[`${scheduleTarget}ScheduleSlot`] === item.slot ? '#FFC107' : '#cbd5e1',
+                    textAlign: 'left',
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => setBooking({ ...booking, [`${scheduleTarget}ScheduleSlot`]: item.slot })}
+                >
+                  <strong style={{ display: 'block', fontSize: '0.78rem', color: '#0F172A' }}>{item.slot}</strong>
+                  {item.tag && <span style={{ fontSize: '0.68rem', color: '#16A34A', fontWeight: 800 }}>{item.tag}</span>}
+                </button>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              className={styles.primaryBtn}
+              style={{ width: '100%', marginTop: 20 }}
+              onClick={() => {
+                setBooking({
+                  ...booking,
+                  [`preferred${scheduleTarget === 'pickup' ? 'Pickup' : 'Drop'}Time`]: 'SCHEDULE'
+                })
+                setShowScheduleModal(false)
+              }}
+            >
+              Confirm Slot
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ==================================================================== */}
+      {/* MODAL: Why Is This Important Dialog                                  */}
+      {/* ==================================================================== */}
+      {showInfoModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowInfoModal(false)}>
+          <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHead}>
+              <h3 className={styles.modalTitle}>Why is declaring contents important?</h3>
+              <button type="button" className={styles.modalCloseBtn} onClick={() => setShowInfoModal(false)}>
+                <X size={16} />
+              </button>
+            </div>
+            <p style={{ fontSize: '0.88rem', color: '#475569', lineHeight: 1.45 }}>
+              Declaring your package contents helps us verify compliance with regional shipping regulations, evaluate flight/intercity transport restrictions, and apply the appropriate handling safeguards during transit.
+            </p>
+            <button
+              type="button"
+              className={styles.primaryBtn}
+              style={{ width: '100%', marginTop: 14 }}
+              onClick={() => setShowInfoModal(false)}
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ==================================================================== */}
+      {/* MODAL: Describe Package Dialog                                       */}
+      {/* ==================================================================== */}
+      {showDescModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowDescModal(false)}>
+          <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHead}>
+              <h3 className={styles.modalTitle}>Describe Package Contents</h3>
+              <button type="button" className={styles.modalCloseBtn} onClick={() => setShowDescModal(false)}>
+                <X size={16} />
+              </button>
+            </div>
+            <textarea
+              rows={4}
+              maxLength={150}
+              placeholder="E.g. 2 books, office hard drive, and contract documents"
+              value={booking.packageDescription}
+              onChange={(e) => setBooking({ ...booking, packageDescription: e.target.value })}
+              style={{
+                width: '100%',
+                padding: '10px',
+                borderRadius: 8,
+                border: '1px solid #cbd5e1',
+                fontSize: '0.88rem',
+                outline: 'none'
+              }}
+            />
+            <button
+              type="button"
+              className={styles.primaryBtn}
+              style={{ width: '100%', marginTop: 14 }}
+              onClick={() => setShowDescModal(false)}
+            >
+              Save Description
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ==================================================================== */}
+      {/* MODAL: Custom Box Assessment Dialog                                  */}
+      {/* ==================================================================== */}
+      {showCustomBoxModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowCustomBoxModal(false)}>
+          <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHead}>
+              <h3 className={styles.modalTitle}>Custom Packaging Assessment</h3>
+              <button type="button" className={styles.modalCloseBtn} onClick={() => setShowCustomBoxModal(false)}>
+                <X size={16} />
+              </button>
+            </div>
+            <p style={{ fontSize: '0.86rem', color: '#475569', lineHeight: 1.4 }}>
+              Our executive will bring custom corrugated material, bubble wrap, and strapping bands to securely box unusual dimensions at your doorstep during pickup.
+            </p>
+            <button
+              type="button"
+              className={styles.primaryBtn}
+              style={{ width: '100%', marginTop: 14 }}
+              onClick={() => {
+                setBooking({ ...booking, selectedBoxSize: 'Custom Assessment Box' })
+                setShowCustomBoxModal(false)
+              }}
+            >
+              Select Custom Box
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ==================================================================== */}
+      {/* MODAL: GST / Business Invoice Sheet                                  */}
+      {/* ==================================================================== */}
+      {showGstModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowGstModal(false)}>
+          <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHead}>
+              <h3 className={styles.modalTitle}>GST / Business Tax Invoice</h3>
+              <button type="button" className={styles.modalCloseBtn} onClick={() => setShowGstModal(false)}>
+                <X size={16} />
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: '0.84rem' }}>
+              <div>
+                <label style={{ display: 'block', fontWeight: 700, marginBottom: 2 }}>Company Name *</label>
+                <input
+                  type="text"
+                  value={booking.gstDetails.businessName}
+                  onChange={(e) => setBooking({ ...booking, gstDetails: { ...booking.gstDetails, businessName: e.target.value } })}
+                  style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid #cbd5e1' }}
+                />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                <div>
+                  <label style={{ display: 'block', fontWeight: 700, marginBottom: 2 }}>GSTIN *</label>
+                  <input
+                    type="text"
+                    value={booking.gstDetails.gstin}
+                    onChange={(e) => setBooking({ ...booking, gstDetails: { ...booking.gstDetails, gstin: e.target.value } })}
+                    style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid #cbd5e1' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontWeight: 700, marginBottom: 2 }}>State *</label>
+                  <input
+                    type="text"
+                    value={booking.gstDetails.state}
+                    onChange={(e) => setBooking({ ...booking, gstDetails: { ...booking.gstDetails, state: e.target.value } })}
+                    style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid #cbd5e1' }}
+                  />
+                </div>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontWeight: 700, marginBottom: 2 }}>Registered Address *</label>
+                <input
+                  type="text"
+                  value={booking.gstDetails.billingAddress}
+                  onChange={(e) => setBooking({ ...booking, gstDetails: { ...booking.gstDetails, billingAddress: e.target.value } })}
+                  style={{ width: '100%', padding: '8px 10px', borderRadius: 6, border: '1px solid #cbd5e1' }}
+                />
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className={styles.primaryBtn}
+              style={{ width: '100%', marginTop: 16 }}
+              onClick={() => {
+                setBooking({ ...booking, isGstEnabled: true })
+                setShowGstModal(false)
+              }}
+            >
+              Save GST Invoice Details
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

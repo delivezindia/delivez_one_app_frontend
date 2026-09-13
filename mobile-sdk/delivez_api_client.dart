@@ -279,6 +279,46 @@ class DelivezApiClient {
     );
     return _handleResponse(res);
   }
+
+  // ==========================================
+  // 9. UNIVERSAL ORDER STATUS OPERATIONS (BY ORDER ID)
+  // ==========================================
+  Future<Map<String, dynamic>> updateOrderStatus(String orderId, String status, [Map<String, dynamic>? metadata]) async {
+    final timestamp = metadata?['timestamp'] ?? DateTime.now().toUtc().toIso8601String();
+    final body = {
+      'status': status,
+      'timestamp': timestamp,
+      'statusChangedAt': timestamp,
+      'updatedAt': timestamp,
+      'statusTimestamps': metadata?['statusTimestamps'] ?? {status: timestamp},
+      if (metadata != null) ...metadata,
+    };
+
+    final res = await http.patch(
+      Uri.parse('$baseUrl/admin/orders/${Uri.encodeComponent(orderId)}/status'),
+      headers: _buildHeaders(),
+      body: jsonEncode(body),
+    );
+    return _handleResponse(res);
+  }
+
+  Future<Map<String, dynamic>> cancelOrder(String orderId, [String reason = 'Cancelled by User/Dispatcher', Map<String, dynamic>? metadata]) async {
+    final timestamp = metadata?['timestamp'] ?? DateTime.now().toUtc().toIso8601String();
+    final body = {
+      'reason': reason,
+      'timestamp': timestamp,
+      'cancelledAt': timestamp,
+      'status': 'CANCELLED',
+      if (metadata != null) ...metadata,
+    };
+
+    final res = await http.post(
+      Uri.parse('$baseUrl/admin/orders/${Uri.encodeComponent(orderId)}/cancel'),
+      headers: _buildHeaders(),
+      body: jsonEncode(body),
+    );
+    return _handleResponse(res);
+  }
 }
 
 class DelivezApiException implements Exception {

@@ -3,7 +3,7 @@ import { ShoppingBag, Search, RefreshCw, Eye, X, CheckCircle2, MapPin, Zap } fro
 import { fetchAdminForgotBookings, updateAdminForgotStatus } from '@/features/admin-management/services/adminManagementService.js'
 import styles from './AdminServiceViews.module.css'
 
-export default function AdminForgotSomethingView() {
+export default function AdminForgotSomethingView({ onViewOrderDetail }) {
   const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(false)
   const [search, setSearch] = useState('')
@@ -23,7 +23,18 @@ export default function AdminForgotSomethingView() {
 
   const handleStatus = async (id, st) => {
     try {
-      await updateAdminForgotStatus(id, st)
+      const nowIso = new Date().toISOString()
+      await updateAdminForgotStatus(id, st, { timestamp: nowIso })
+      try {
+        const stored = JSON.parse(localStorage.getItem(`dlvz_status_timings_${id}`) || '{}')
+        const updatedTimestamps = { ...(stored.timestamps || stored || {}), [st]: nowIso }
+        const updatedHistory = [
+          { status: st, timestamp: nowIso, actor: 'Retrieval Dispatcher', note: `Retrieval status updated to ${st}` },
+          ...(Array.isArray(stored.history) ? stored.history : []),
+        ]
+        localStorage.setItem(`dlvz_status_timings_${id}`, JSON.stringify({ ...updatedTimestamps, history: updatedHistory }))
+      } catch (_) {}
+
       setToast(`Retrieval status updated to ${st}`)
       setTimeout(() => setToast(''), 3500)
       loadData()
@@ -77,7 +88,15 @@ export default function AdminForgotSomethingView() {
             ) : (
               bookings.map(b => (
                 <tr key={b.id}>
-                  <td><strong className={styles.link} onClick={() => setSelected(b)}>{b.bookingNumber}</strong></td>
+                  <td>
+                    <strong
+                      className={styles.link}
+                      onClick={() => (onViewOrderDetail ? onViewOrderDetail(b, 'forgot-something') : setSelected(b))}
+                      title="Open Dedicated Order Page"
+                    >
+                      {b.bookingNumber}
+                    </strong>
+                  </td>
                   <td><span className={styles.badgePurple}>{b.itemCategory}</span><small>{b.itemDescription}</small></td>
                   <td><strong>{b.pickupContactName}</strong><small>{b.pickupCity} ({b.locationType})</small></td>
                   <td><strong>{b.dropoffRecipientName}</strong><small>{b.dropoffCity}</small></td>
@@ -92,7 +111,16 @@ export default function AdminForgotSomethingView() {
                       <option value="CANCELLED">CANCELLED</option>
                     </select>
                   </td>
-                  <td><button type="button" className={styles.iconBtn} onClick={() => setSelected(b)}><Eye size={15} /></button></td>
+                  <td>
+                    <button
+                      type="button"
+                      className={styles.iconBtn}
+                      onClick={() => (onViewOrderDetail ? onViewOrderDetail(b, 'forgot-something') : setSelected(b))}
+                      title="Open Dedicated Order Page"
+                    >
+                      <Eye size={15} />
+                    </button>
+                  </td>
                 </tr>
               ))
             )}

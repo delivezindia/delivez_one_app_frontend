@@ -70,6 +70,27 @@ export async function fetchAdminGiftOrder(orderId, { signal } = {}) {
 
 export async function updateAdminGiftOrderStatus(orderId, payload) {
   const accessToken = requireAdminToken()
+  const timestamp = (typeof payload === 'object' && payload?.timestamp) || new Date().toISOString()
+  const statusVal = typeof payload === 'string' ? payload : payload?.status
+  const finalPayload = typeof payload === 'object' ? payload : { status: statusVal }
+
+  const body = {
+    ...finalPayload,
+    status: statusVal,
+    timestamp,
+    statusChangedAt: timestamp,
+    updatedAt: timestamp,
+    statusTimestamps: finalPayload?.statusTimestamps || { [statusVal]: timestamp },
+    statusHistory: finalPayload?.statusHistory || [
+      {
+        status: statusVal,
+        timestamp,
+        actor: 'Admin Dispatcher',
+        note: finalPayload?.note || `Gift order status changed to ${statusVal}`,
+      },
+    ],
+  }
+
   try {
     const res = await apiRequest(`/admin/gift-delivery/orders/${orderId}/status`, {
       method: 'PATCH',
@@ -77,7 +98,7 @@ export async function updateAdminGiftOrderStatus(orderId, payload) {
         Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(body),
     })
     return res?.data?.order
   } catch (error) {
@@ -85,8 +106,9 @@ export async function updateAdminGiftOrderStatus(orderId, payload) {
   }
 }
 
-export async function cancelAdminGiftOrder(orderId, reason) {
+export async function cancelAdminGiftOrder(orderId, reason, metadata = {}) {
   const accessToken = requireAdminToken()
+  const timestamp = metadata?.timestamp || new Date().toISOString()
   try {
     const res = await apiRequest(`/admin/gift-delivery/orders/${orderId}/cancel`, {
       method: 'POST',
@@ -94,7 +116,15 @@ export async function cancelAdminGiftOrder(orderId, reason) {
         Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ reason }),
+      body: JSON.stringify({
+        reason,
+        timestamp,
+        cancelledAt: timestamp,
+        status: 'CANCELLED',
+        statusTimestamps: metadata?.statusTimestamps || { CANCELLED: timestamp },
+        statusHistory: metadata?.statusHistory,
+        ...metadata,
+      }),
     })
     return res?.data?.order
   } catch (error) {

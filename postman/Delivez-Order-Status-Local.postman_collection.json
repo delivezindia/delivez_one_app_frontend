@@ -1,0 +1,1346 @@
+{
+  "info": {
+    "_postman_id": "delivez-order-status-local-v1",
+    "name": "Delivez - Order Status API Suite (Localhost)",
+    "description": "Comprehensive Postman collection for changing and managing order statuses across all Delivez services.\\n\\nEnvironment: **Localhost**\\nBase URL: `http://localhost:4000/api/v1`\\n\\nIncludes:\\n- Authentication (Admin & Customer tokens)\\n- Direct Universal Status Update API\\n- Unified Order Status by Service Key\\n- Step-by-Step Lifecycle Status Transitions (CONFIRMED, AGENT_ASSIGNED, PICKED_UP, IN_TRANSIT, OUT_FOR_DELIVERY, DELIVERED, CANCELLED)\\n- Partner Assignment & Auto-Dispatch\\n- Service-Specific Status Handlers (Courier, Gift Delivery, Return Pickup, Forgot Something, Confidential Vault)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "0. Authentication",
+      "item": [
+        {
+          "name": "Admin Login (Sets adminAccessToken)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Logs in platform administrator and automatically sets {{adminAccessToken}} into collection and environment variables."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var res = pm.response.json();",
+                  "var token = (res.data && res.data.accessToken) || res.accessToken || (res.data && res.data.token) || res.token;",
+                  "if (token) {",
+                  "    pm.collectionVariables.set(\"adminAccessToken\", token);",
+                  "    pm.environment.set(\"adminAccessToken\", token);",
+                  "    console.log(\"adminAccessToken set successfully\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Customer Login (Sets accessToken)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mobile\": \"{{userMobile}}\",\n  \"password\": \"{{userPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Logs in customer user and automatically sets {{accessToken}}."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var res = pm.response.json();",
+                  "var token = (res.data && res.data.accessToken) || res.accessToken || (res.data && res.data.token) || res.token;",
+                  "if (token) {",
+                  "    pm.collectionVariables.set(\"accessToken\", token);",
+                  "    pm.environment.set(\"accessToken\", token);",
+                  "    console.log(\"accessToken set successfully\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "1. Universal Status Operations",
+      "item": [
+        {
+          "name": "1. Get Current Order Status & Timings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/orders/{{orderId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "orders",
+                "{{orderId}}",
+                "status"
+              ]
+            },
+            "description": "Fetches the current lifecycle status, timing timestamps, notes, and full status history for an order."
+          }
+        },
+        {
+          "name": "2. Track Order (Universal Track Endpoint)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/track/{{orderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "track",
+                "{{orderId}}"
+              ]
+            },
+            "description": "Universal tracking lookup resolving order status, current location coordinates, and service metadata."
+          }
+        },
+        {
+          "name": "3. Update Order Status (Direct Universal Status Endpoint)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"IN_TRANSIT\",\n  \"timestamp\": \"2026-09-12T07:37:14.939Z\",\n  \"statusChangedAt\": \"2026-09-12T07:37:14.940Z\",\n  \"updatedAt\": \"2026-09-12T07:37:14.940Z\",\n  \"actor\": \"Admin Operations Dispatcher\",\n  \"note\": \"Consignment departed sorting hub and is in transit\",\n  \"statusTimestamps\": {\n    \"IN_TRANSIT\": \"2026-09-12T07:37:14.940Z\"\n  },\n  \"statusHistory\": [\n    {\n      \"status\": \"IN_TRANSIT\",\n      \"timestamp\": \"2026-09-12T07:37:14.940Z\",\n      \"actor\": \"Admin Operations Dispatcher\",\n      \"note\": \"Consignment departed sorting hub and is in transit\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/orders/{{orderId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "orders",
+                "{{orderId}}",
+                "status"
+              ]
+            },
+            "description": "Primary universal status endpoint used by orderStatusApi.js to transition any order using only its orderId."
+          }
+        },
+        {
+          "name": "4. Update Order Status by Service Key (Unified)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"IN_TRANSIT\",\n  \"timestamp\": \"2026-09-12T07:37:14.940Z\",\n  \"statusChangedAt\": \"2026-09-12T07:37:14.940Z\",\n  \"updatedAt\": \"2026-09-12T07:37:14.940Z\",\n  \"actor\": \"Admin Dispatcher\",\n  \"note\": \"Transit updated via unified service key route\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/orders/{{serviceKey}}/{{orderId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "orders",
+                "{{serviceKey}}",
+                "{{orderId}}",
+                "status"
+              ]
+            },
+            "description": "Updates status via the unified service router (serviceKey can be courier, luggage-delivery, confidential, forgot, or return)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Lifecycle Status Transitions (One-Click Testing)",
+      "item": [
+        {
+          "name": "Step 1: Set Status -> CONFIRMED",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CONFIRMED\",\n  \"timestamp\": \"2026-09-12T07:37:14.940Z\",\n  \"statusChangedAt\": \"2026-09-12T07:37:14.940Z\",\n  \"updatedAt\": \"2026-09-12T07:37:14.940Z\",\n  \"actor\": \"Central Dispatch\",\n  \"note\": \"Booking verified and accepted by operational center\",\n  \"statusTimestamps\": {\n    \"CONFIRMED\": \"2026-09-12T07:37:14.940Z\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/orders/{{orderId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "orders",
+                "{{orderId}}",
+                "status"
+              ]
+            },
+            "description": "Transitions order lifecycle to CONFIRMED / BOOKING_CONFIRMED."
+          }
+        },
+        {
+          "name": "Step 2: Set Status -> AGENT_ASSIGNED",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"AGENT_ASSIGNED\",\n  \"partnerId\": \"{{partnerId}}\",\n  \"partnerName\": \"{{partnerName}}\",\n  \"assignedAt\": \"2026-09-12T07:37:14.940Z\",\n  \"timestamp\": \"2026-09-12T07:37:14.940Z\",\n  \"statusChangedAt\": \"2026-09-12T07:37:14.940Z\",\n  \"actor\": \"Fleet Manager\",\n  \"note\": \"Assigned to delivery rider {{partnerName}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/orders/{{orderId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "orders",
+                "{{orderId}}",
+                "status"
+              ]
+            },
+            "description": "Transitions order status to AGENT_ASSIGNED with delivery fleet metadata."
+          }
+        },
+        {
+          "name": "Step 3: Set Status -> PICKED_UP",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PICKED_UP\",\n  \"timestamp\": \"2026-09-12T07:37:14.940Z\",\n  \"statusChangedAt\": \"2026-09-12T07:37:14.940Z\",\n  \"actor\": \"Rider {{partnerName}}\",\n  \"note\": \"Package collected from pickup location. Security tamper seal intact.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/orders/{{orderId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "orders",
+                "{{orderId}}",
+                "status"
+              ]
+            },
+            "description": "Marks the item as successfully collected by the courier rider."
+          }
+        },
+        {
+          "name": "Step 4: Set Status -> IN_TRANSIT",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"IN_TRANSIT\",\n  \"timestamp\": \"2026-09-12T07:37:14.940Z\",\n  \"statusChangedAt\": \"2026-09-12T07:37:14.940Z\",\n  \"actor\": \"Logistics Hub\",\n  \"note\": \"Consignment in transit towards destination distribution node\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/orders/{{orderId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "orders",
+                "{{orderId}}",
+                "status"
+              ]
+            },
+            "description": "Marks the shipment as active in transit."
+          }
+        },
+        {
+          "name": "Step 5: Set Status -> OUT_FOR_DELIVERY",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"OUT_FOR_DELIVERY\",\n  \"timestamp\": \"2026-09-12T07:37:14.940Z\",\n  \"statusChangedAt\": \"2026-09-12T07:37:14.940Z\",\n  \"actor\": \"Fleet Dispatcher\",\n  \"note\": \"Rider is en-route to final delivery address. OTP verification active.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/orders/{{orderId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "orders",
+                "{{orderId}}",
+                "status"
+              ]
+            },
+            "description": "Marks the order as out for delivery on last-mile journey."
+          }
+        },
+        {
+          "name": "Step 6: Set Status -> DELIVERED (Proof of Delivery)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"DELIVERED\",\n  \"deliveredAt\": \"2026-09-12T07:37:14.940Z\",\n  \"timestamp\": \"2026-09-12T07:37:14.940Z\",\n  \"statusChangedAt\": \"2026-09-12T07:37:14.940Z\",\n  \"actor\": \"Delivery Rider\",\n  \"receivedBy\": \"Recipient\",\n  \"otpVerified\": true,\n  \"note\": \"Delivered to recipient. OTP PIN verified successfully.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/orders/{{orderId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "orders",
+                "{{orderId}}",
+                "status"
+              ]
+            },
+            "description": "Completes order delivery with POD & OTP verification."
+          }
+        },
+        {
+          "name": "Step 7: Set Status -> CANCELLED",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CANCELLED\",\n  \"reason\": \"Customer requested cancellation prior to pickup dispatch\",\n  \"timestamp\": \"2026-09-12T07:37:14.940Z\",\n  \"statusChangedAt\": \"2026-09-12T07:37:14.940Z\",\n  \"cancelledAt\": \"2026-09-12T07:37:14.940Z\",\n  \"actor\": \"Admin Dispatcher\",\n  \"note\": \"Order cancelled by administrator\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/orders/{{orderId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "orders",
+                "{{orderId}}",
+                "status"
+              ]
+            },
+            "description": "Cancels order with explicit reason and audit log."
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Partner Assignment & Dispatch",
+      "item": [
+        {
+          "name": "1. Manual Assign Partner to Order",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partnerId\": \"{{partnerId}}\",\n  \"partnerName\": \"{{partnerName}}\",\n  \"phone\": \"+91 98765 43210\",\n  \"vehicleType\": \"Two Wheeler\",\n  \"vehicleNumber\": \"DL 01 AB 1234\",\n  \"assignedAt\": \"2026-09-12T07:37:14.940Z\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/orders/{{serviceKey}}/{{orderId}}/assign-partner",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "orders",
+                "{{serviceKey}}",
+                "{{orderId}}",
+                "assign-partner"
+              ]
+            },
+            "description": "Assigns driver/fleet partner and automatically updates status to AGENT_ASSIGNED."
+          }
+        },
+        {
+          "name": "2. Auto-Assign Nearby Fleet Partner",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"searchRadiusKm\": 10,\n  \"vehicleClass\": \"MOTORCYCLE\",\n  \"priority\": \"HIGH\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/orders/{{serviceKey}}/{{orderId}}/auto-assign",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "orders",
+                "{{serviceKey}}",
+                "{{orderId}}",
+                "auto-assign"
+              ]
+            },
+            "description": "Uses logistics radar algorithm to automatically match and assign the best available driver."
+          }
+        },
+        {
+          "name": "3. Admin Cancel Unified Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Customer requested order cancellation\",\n  \"refundInitiated\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/orders/{{serviceKey}}/{{orderId}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "orders",
+                "{{serviceKey}}",
+                "{{orderId}}",
+                "cancel"
+              ]
+            },
+            "description": "Admin cancellation endpoint via unified router."
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Service-Specific Status Endpoints",
+      "item": [
+        {
+          "name": "Personal Courier",
+          "item": [
+            {
+              "name": "Admin Courier Status Update",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminAccessToken}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"OUT_FOR_DELIVERY\",\n  \"note\": \"Courier is out for delivery with parcel\",\n  \"timestamp\": \"2026-09-12T07:37:14.940Z\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/admin/courier/bookings/{{courierBookingId}}/status",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "courier",
+                    "bookings",
+                    "{{courierBookingId}}",
+                    "status"
+                  ]
+                },
+                "description": "Service-specific courier booking status update."
+              }
+            },
+            {
+              "name": "Customer Track Courier",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/courier-delivery/bookings/{{courierBookingId}}/track",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "courier-delivery",
+                    "bookings",
+                    "{{courierBookingId}}",
+                    "track"
+                  ]
+                },
+                "description": "Fetches real-time milestone events and status for courier booking."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Gift Delivery",
+          "item": [
+            {
+              "name": "Admin Gift Order Status Update",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminAccessToken}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"OUT_FOR_DELIVERY\",\n  \"note\": \"Gift parcel dispatched for surprise delivery\",\n  \"timestamp\": \"2026-09-12T07:37:14.940Z\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/admin/gift-delivery/orders/{{giftOrderId}}/status",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "gift-delivery",
+                    "orders",
+                    "{{giftOrderId}}",
+                    "status"
+                  ]
+                },
+                "description": "Updates status of a gift surprise delivery order."
+              }
+            },
+            {
+              "name": "Admin Cancel Gift Order",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminAccessToken}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"reason\": \"Recipient unavailable / cancelled by dispatcher\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/admin/gift-delivery/orders/{{giftOrderId}}/cancel",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "gift-delivery",
+                    "orders",
+                    "{{giftOrderId}}",
+                    "cancel"
+                  ]
+                },
+                "description": "Admin cancellation endpoint for gift delivery."
+              }
+            },
+            {
+              "name": "Public / Tracking Milestone Status Update",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"DELIVERED\",\n  \"hubLocation\": \"Indiranagar Hub\",\n  \"timestamp\": \"2026-09-12T07:37:14.940Z\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/gift-delivery/track/{{giftOrderId}}/status",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "gift-delivery",
+                    "track",
+                    "{{giftOrderId}}",
+                    "status"
+                  ]
+                },
+                "description": "Direct tracking status update endpoint for gift delivery."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Return Pickup",
+          "item": [
+            {
+              "name": "Admin Return Pickup Status Update",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminAccessToken}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"PICKED_UP\",\n  \"note\": \"Return package picked up from customer and verified\",\n  \"timestamp\": \"2026-09-12T07:37:14.940Z\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/admin/return/bookings/{{returnBookingId}}/status",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "return",
+                    "bookings",
+                    "{{returnBookingId}}",
+                    "status"
+                  ]
+                },
+                "description": "Admin status update endpoint for return pickup bookings."
+              }
+            },
+            {
+              "name": "Public Milestone Status Update",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"DELIVERED\",\n  \"hubLocation\": \"Return Depot North\",\n  \"timestamp\": \"2026-09-12T07:37:14.940Z\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/return-pickup/track/{{returnBookingId}}/status",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "return-pickup",
+                    "track",
+                    "{{returnBookingId}}",
+                    "status"
+                  ]
+                },
+                "description": "Tracking status update for return pickup."
+              }
+            },
+            {
+              "name": "Customer Cancel Return Pickup",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"reason\": \"Item no longer needs to be returned\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/return-pickup/{{returnBookingId}}/cancel",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "return-pickup",
+                    "{{returnBookingId}}",
+                    "cancel"
+                  ]
+                },
+                "description": "Customer-facing cancellation endpoint."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Forgot Something (Item Retrieval)",
+          "item": [
+            {
+              "name": "Admin Forgot Something Status Update",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminAccessToken}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"IN_TRANSIT\",\n  \"note\": \"Retrieved item is with runner and heading to dropoff location\",\n  \"timestamp\": \"2026-09-12T07:37:14.940Z\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/admin/forgot/bookings/{{forgotBookingId}}/status",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "forgot",
+                    "bookings",
+                    "{{forgotBookingId}}",
+                    "status"
+                  ]
+                },
+                "description": "Admin status update endpoint for item retrieval bookings."
+              }
+            },
+            {
+              "name": "Public Milestone Status Update",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"DELIVERED\",\n  \"timestamp\": \"2026-09-12T07:37:14.940Z\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/forgot-something/track/{{forgotBookingId}}/status",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "forgot-something",
+                    "track",
+                    "{{forgotBookingId}}",
+                    "status"
+                  ]
+                },
+                "description": "Public/runner tracking status update endpoint."
+              }
+            },
+            {
+              "name": "Customer Cancel Forgot Something Booking",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"reason\": \"Found item myself / cancellation requested\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/forgot-something/bookings/{{forgotBookingId}}/cancel",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "forgot-something",
+                    "bookings",
+                    "{{forgotBookingId}}",
+                    "cancel"
+                  ]
+                },
+                "description": "Customer-facing cancellation for retrieval service."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Confidential Delivery (Vault)",
+          "item": [
+            {
+              "name": "Admin Confidential Vault Status Update",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminAccessToken}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": \"IN_TRANSIT\",\n  \"securitySealIntact\": true,\n  \"escortOfficer\": \"Officer J. Roy\",\n  \"timestamp\": \"2026-09-12T07:37:14.940Z\",\n  \"note\": \"Vault package in secured transit with armed escort\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/admin/confidential/bookings/{{vaultBookingId}}/status",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "admin",
+                    "confidential",
+                    "bookings",
+                    "{{vaultBookingId}}",
+                    "status"
+                  ]
+                },
+                "description": "Admin status update endpoint for high-security confidential vault shipments."
+              }
+            },
+            {
+              "name": "Cancel Confidential Booking",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"reason\": \"Cancelled by customer prior to armed pickup\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/confidential-delivery/bookings/{{vaultBookingId}}/cancel",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "confidential-delivery",
+                    "bookings",
+                    "{{vaultBookingId}}",
+                    "cancel"
+                  ]
+                },
+                "description": "Cancellation endpoint for confidential vault delivery."
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "adminEmail",
+      "value": "admin@delevez.com",
+      "type": "string"
+    },
+    {
+      "key": "adminPassword",
+      "value": "Password123!",
+      "type": "string"
+    },
+    {
+      "key": "adminAccessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userMobile",
+      "value": "9876543210",
+      "type": "string"
+    },
+    {
+      "key": "userPassword",
+      "value": "Password123!",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "orderId",
+      "value": "DLVZ2505128947",
+      "type": "string"
+    },
+    {
+      "key": "serviceKey",
+      "value": "courier",
+      "type": "string"
+    },
+    {
+      "key": "courierBookingId",
+      "value": "DLVZ2505128947",
+      "type": "string"
+    },
+    {
+      "key": "giftOrderId",
+      "value": "DLZ-GFT-9021",
+      "type": "string"
+    },
+    {
+      "key": "returnBookingId",
+      "value": "DLZ-RET-4810",
+      "type": "string"
+    },
+    {
+      "key": "forgotBookingId",
+      "value": "DLZ-FGT-3319",
+      "type": "string"
+    },
+    {
+      "key": "vaultBookingId",
+      "value": "DLZ-VLT-7721",
+      "type": "string"
+    },
+    {
+      "key": "partnerId",
+      "value": "prt_del_091",
+      "type": "string"
+    },
+    {
+      "key": "partnerName",
+      "value": "Rahul Kumar (Delivez Fleet)",
+      "type": "string"
+    }
+  ]
+}

@@ -13,6 +13,20 @@
 | **`Delivez.Mobile.Production.postman_environment.json`** | **Production Live Server** | `http://40.81.244.167:3012/api/v1` |
 | **`Delivez.Mobile.Local.postman_environment.json`** | **Localhost Development** | `http://localhost:4000/api/v1` |
 
+## 🔄 Order Status Management Collections (Local & Production)
+
+| Collection File | Target Environment | Base URL (`{{baseUrl}}`) | Highlights |
+|---|---|---|---|
+| **`Delivez-Order-Status-Local.postman_collection.json`** | **Localhost Development** | `http://localhost:4000/api/v1` | Ready-to-run against local dev backend with pre-configured tokens, step-by-step lifecycle transitions, partner assignment, and service-specific handlers. |
+| **`Delivez-Order-Status-Production.postman_collection.json`** | **Production Live Server** | `http://40.81.244.167:3012/api/v1` | Production testing collection for live order status operations, audit logging, and partner dispatches. |
+
+## 🛵 Personal Courier Delivery Collections (Flutter-Parity)
+
+| Collection File | Target Environment | Base URL (`{{baseUrl}}`) | Highlights |
+|---|---|---|---|
+| **`Delivez-Courier-Delivery-Local.postman_collection.json`** | **Localhost Development** | `http://localhost:4000/api/v1` | Complete 8-step flow collection (Auth, Options, Address Book, Quote Calculator, 8-Step Booking Payload, Live Tracking, POD, Payment Sandbox, Cancellation). |
+| **`Delivez-Courier-Delivery-Production.postman_collection.json`** | **Production Live Server** | `http://40.81.244.167:3012/api/v1` | Production testing collection for the Personal Courier Delivery module. |
+
 ---
 
 ## 📦 Core 4 Services Postman Collection (Web & Backend Full Suite)

@@ -61,7 +61,11 @@ function App() {
     return <AdminLoginPage />
   }
 
-  if (pathname === '/admin' || pathname === '/admin/dashboard' || pathname === '/admin-dashboard') {
+  if (
+    pathname === '/admin' ||
+    pathname === '/admin-dashboard' ||
+    pathname.startsWith('/admin/')
+  ) {
     return (
       <AdminAuthGuard>
         <DashboardPage />
@@ -167,7 +171,7 @@ function App() {
   }
 
   // Vault / Universal Live Tracking Route
-  const trackingRoute = pathname.match(/^\/(vault\/track|track)\/(.+)\/?$/)
+  const trackingRoute = pathname.match(/^\/(vault\/track|confidential-delivery\/track|confidential-courier\/track|track)\/(.+)\/?$/)
   if (trackingRoute) {
     const trackId = trackingRoute[2]
     // Any courier / luggage tracking number: DLZC, PC, CC, DLVZ (with length >= 13 or DLVZ2505128947)
@@ -197,11 +201,25 @@ function App() {
     return <VaultTrackingPage vaultId={trackId} />
   }
 
-  // Courier & Luggage Module (Screens 01 - 33: Landing, Service Detail Modals, 8-Step Booking, Confirmed Screen, Tracking, POD)
-  if (/^\/(courier|courier-delivery|courier-home|personal-courier|luggage-delivery|book\/(personal-courier|courier-delivery|courier|luggage-delivery|airport-luggage))\/?$/.test(pathname)) {
+  // Courier Booking Flow (8 Steps)
+  if (/^\/book\/(personal-courier|courier-delivery|courier|airport-luggage)\/?$/.test(pathname)) {
     return (
       <UserAuthGuard>
-        <PersonalCourierBookingPage serviceSlug={pathname.includes('luggage') ? 'luggage-delivery' : 'personal-courier'} />
+        <PersonalCourierBookingPage serviceSlug="personal-courier" />
+      </UserAuthGuard>
+    )
+  }
+
+  // Courier Home & Dashboard
+  if (/^\/(courier|courier-delivery|courier-home|personal-courier)\/?$/.test(pathname)) {
+    return <CourierHomePage />
+  }
+
+  // Luggage Delivery Booking Flow
+  if (/^\/(luggage-delivery|book\/luggage-delivery)\/?$/.test(pathname)) {
+    return (
+      <UserAuthGuard>
+        <PersonalCourierBookingPage serviceSlug="luggage-delivery" />
       </UserAuthGuard>
     )
   }

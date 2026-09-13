@@ -1,0 +1,729 @@
+{
+  "info": {
+    "_postman_id": "delivez-courier-delivery-local-v1",
+    "name": "Delivez - Courier Delivery API Suite (Localhost)",
+    "description": "Complete, production-ready Postman collection for Personal Courier Delivery matching the Flutter mobile application flow.\\n\\nEnvironment: **Localhost**\\nBase URL: `http://localhost:4000/api/v1`\\n\\nFlow Coverage:\\n1. Authentication (Customer Login & Admin Dispatcher)\\n2. Service Options & Address Book (Saved Addresses & Add New)\\n3. Dynamic Quote Calculator (Weight, Dimensions, Boxes, Handling, Insurance)\\n4. Create Courier Booking (Complete 8-step payload with auto-storing `courierBookingId`)\\n5. Booking Details & Status Management\\n6. Real-time GPS Tracking & Milestones\\n7. Proof of Delivery (POD) & OTP Verification\\n8. Payment Sandbox Simulation & Order Cancellation",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "0. Authentication",
+      "item": [
+        {
+          "name": "1. Customer Login (Sets accessToken)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mobile\": \"{{userMobile}}\",\n  \"password\": \"{{userPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticates customer and stores {{accessToken}} automatically into active Postman collection and environment."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var res = pm.response.json();",
+                  "var token = (res.data && res.data.accessToken) || res.accessToken || (res.data && res.data.token) || res.token;",
+                  "if (token) {",
+                  "    pm.collectionVariables.set(\"accessToken\", token);",
+                  "    pm.environment.set(\"accessToken\", token);",
+                  "    console.log(\"accessToken set successfully\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Admin Login (Sets adminAccessToken)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Authenticates platform administrator/dispatcher and stores {{adminAccessToken}}."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var res = pm.response.json();",
+                  "var token = (res.data && res.data.accessToken) || res.accessToken || (res.data && res.data.token) || res.token;",
+                  "if (token) {",
+                  "    pm.collectionVariables.set(\"adminAccessToken\", token);",
+                  "    pm.environment.set(\"adminAccessToken\", token);",
+                  "    console.log(\"adminAccessToken set successfully\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "3. Get Current User Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Returns profile details of the authenticated customer."
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. Options & Address Book (Step 1 & 2)",
+      "item": [
+        {
+          "name": "1. Get Courier Options & Service Catalog",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/courier-delivery/options",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courier-delivery",
+                "options"
+              ]
+            },
+            "description": "Fetches all 6 courier service categories (Local, Intercity, Documents, Parcel, Same Day, Express), vehicle types, and packaging box tiers."
+          }
+        },
+        {
+          "name": "2. Get Saved Addresses",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/addresses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "addresses"
+              ]
+            },
+            "description": "Retrieves customer saved pickup and drop-off addresses (Home, Office, Warehouse)."
+          }
+        },
+        {
+          "name": "3. Save New Address",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Office Cyber City\",\n  \"addressLine\": \"DLF Cyber City, Tower A, 6th Floor, Gurugram, Haryana 122002\",\n  \"city\": \"Gurugram\",\n  \"state\": \"Haryana\",\n  \"pincode\": \"122002\",\n  \"contactPerson\": \"Rohit Mehra\",\n  \"phone\": \"+91 98765 43211\",\n  \"instructions\": \"Please call reception upon arrival\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/addresses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "addresses"
+              ]
+            },
+            "description": "Saves a new pickup or drop-off address into the customer address book."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Price Quote Calculator",
+      "item": [
+        {
+          "name": "1. Calculate Courier Quote",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceName\": \"Local Delivery\",\n  \"speed\": \"Bike Priority Delivery\",\n  \"pickup\": {\n    \"address\": \"B-1204, Lodha Park, Ghatkopar East, Mumbai 400077\",\n    \"pincode\": \"400077\",\n    \"preferredTime\": \"ASAP\"\n  },\n  \"dropoff\": {\n    \"address\": \"DLF Cyber City, Tower A, 6th Floor, Gurugram 122002\",\n    \"pincode\": \"122002\"\n  },\n  \"package\": {\n    \"category\": \"Documents\",\n    \"boxRequired\": true,\n    \"boxSize\": \"Small Box\",\n    \"weightCapacity\": \"10 Kg\",\n    \"actualWeightKg\": 2.5,\n    \"dimensions\": {\n      \"length\": 30,\n      \"width\": 20,\n      \"height\": 20\n    }\n  },\n  \"safeguards\": {\n    \"isFragile\": false,\n    \"isSecure\": true\n  },\n  \"insurance\": {\n    \"option\": \"FULL_COVERAGE\",\n    \"declaredValue\": 25000\n  },\n  \"promoCode\": \"DELIVEZ10\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/courier-delivery/quote",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courier-delivery",
+                "quote"
+              ]
+            },
+            "description": "Calculates dynamic pricing with base delivery charge, box fees, handling safeguards, transit insurance, promo discount, and GST."
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Booking Creation & Management",
+      "item": [
+        {
+          "name": "1. Create Courier Booking (Full 8-Step Payload)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "idemp-courier-{{$timestamp}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceType\": \"Local Delivery\",\n  \"deliverySpeed\": \"Bike Priority Delivery\",\n  \"pickup\": {\n    \"title\": \"Home\",\n    \"addressLine\": \"B-1204, Lodha Park, Near Shreyas Cinema, Ghatkopar East, Mumbai 400077\",\n    \"contactPerson\": \"Rahul Sharma\",\n    \"phone\": \"+91 98765 43210\",\n    \"preferredTime\": \"ASAP\"\n  },\n  \"dropoff\": {\n    \"title\": \"Office\",\n    \"addressLine\": \"DLF Cyber City, Tower A, 6th Floor, Gurugram, Haryana 122002\",\n    \"contactPerson\": \"Rohit Mehra\",\n    \"phone\": \"+91 98765 43211\",\n    \"instructions\": \"Please call before arriving\"\n  },\n  \"package\": {\n    \"category\": \"Documents\",\n    \"description\": \"2 books and official legal documents\",\n    \"boxRequired\": \"yes\",\n    \"boxSize\": \"Small Box\",\n    \"weightCapacity\": \"10 Kg\",\n    \"actualWeight\": 2.5,\n    \"dimensions\": {\n      \"length\": 30,\n      \"width\": 20,\n      \"height\": 20\n    },\n    \"isFragile\": false,\n    \"isSecure\": true\n  },\n  \"insurance\": {\n    \"option\": \"FULL_COVERAGE\",\n    \"declaredValue\": 25000,\n    \"premium\": 188\n  },\n  \"pricing\": {\n    \"baseFare\": 120,\n    \"boxFee\": 30,\n    \"handlingFee\": 35,\n    \"insuranceFee\": 188,\n    \"discount\": 50,\n    \"tax\": 58,\n    \"totalPayable\": 381\n  },\n  \"payment\": {\n    \"method\": \"Delivez Money (Wallet)\",\n    \"isGstEnabled\": false\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/courier-delivery/bookings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courier-delivery",
+                "bookings"
+              ]
+            },
+            "description": "Creates a new courier consignment booking and automatically stores {{courierBookingId}}."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201 or 200\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});",
+                  "var res = pm.response.json();",
+                  "var id = (res.data && (res.data.bookingId || res.data.id || (res.data.booking && res.data.booking.id))) || res.bookingId || res.id;",
+                  "if (id) {",
+                  "    pm.collectionVariables.set(\"courierBookingId\", id);",
+                  "    pm.environment.set(\"courierBookingId\", id);",
+                  "    console.log(\"courierBookingId set: \" + id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Get All Courier Bookings (Paginated)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/courier-delivery/bookings?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courier-delivery",
+                "bookings"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Returns customer paginated courier bookings list."
+          }
+        },
+        {
+          "name": "3. Get Single Courier Booking Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/courier-delivery/bookings/{{courierBookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courier-delivery",
+                "bookings",
+                "{{courierBookingId}}"
+              ]
+            },
+            "description": "Fetches detailed info for a single courier booking by ID."
+          }
+        },
+        {
+          "name": "4. Update Courier Booking Instructions",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dropInstructions\": \"Leave with security guard if recipient is in a meeting\",\n  \"alternatePhone\": \"+91 98111 22334\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/courier-delivery/bookings/{{courierBookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courier-delivery",
+                "bookings",
+                "{{courierBookingId}}"
+              ]
+            },
+            "description": "Customer updates special handling or drop-off notes."
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Live Tracking & Proof of Delivery (POD)",
+      "item": [
+        {
+          "name": "1. Get Real-Time Courier Tracking & Milestones",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/courier-delivery/bookings/{{courierBookingId}}/track",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courier-delivery",
+                "bookings",
+                "{{courierBookingId}}",
+                "track"
+              ]
+            },
+            "description": "Retrieves current shipment status, live rider GPS coordinates, and historical milestone timestamps."
+          }
+        },
+        {
+          "name": "2. Get Proof of Delivery (POD)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/courier-delivery/bookings/{{courierBookingId}}/pod",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courier-delivery",
+                "bookings",
+                "{{courierBookingId}}",
+                "pod"
+              ]
+            },
+            "description": "Retrieves digital recipient signature, photo proof, OTP validation record, and delivery completion timestamp."
+          }
+        },
+        {
+          "name": "3. Universal Consignment Tracking",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/track/{{courierBookingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "track",
+                "{{courierBookingId}}"
+              ]
+            },
+            "description": "Public tracking URL accessed by customers or recipients via SMS/Email notifications."
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Payments, Cancellation & Dispatch Status",
+      "item": [
+        {
+          "name": "1. Complete Sandbox Payment Simulation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paymentMethod\": \"WALLET\",\n  \"amount\": 381,\n  \"currency\": \"INR\",\n  \"transactionReference\": \"TXN-DELIVEZ-{{$timestamp}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/courier-delivery/bookings/{{courierBookingId}}/payments/sandbox",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courier-delivery",
+                "bookings",
+                "{{courierBookingId}}",
+                "payments",
+                "sandbox"
+              ]
+            },
+            "description": "Simulates successful payment completion in development sandbox."
+          }
+        },
+        {
+          "name": "2. Customer Cancel Booking",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Change of plans / cancellation requested by user\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/courier-delivery/bookings/{{courierBookingId}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "courier-delivery",
+                "bookings",
+                "{{courierBookingId}}",
+                "cancel"
+              ]
+            },
+            "description": "Customer cancellation endpoint prior to rider pickup dispatch."
+          }
+        },
+        {
+          "name": "3. Admin Dispatcher Transition Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"OUT_FOR_DELIVERY\",\n  \"timestamp\": \"2026-09-12T09:59:39.423Z\",\n  \"actor\": \"Central Fleet Dispatch\",\n  \"note\": \"Package assigned to rider and en-route to destination address\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/courier/bookings/{{courierBookingId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "courier",
+                "bookings",
+                "{{courierBookingId}}",
+                "status"
+              ]
+            },
+            "description": "Admin operational endpoint to update courier status milestones."
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "userMobile",
+      "value": "9876543210",
+      "type": "string"
+    },
+    {
+      "key": "userPassword",
+      "value": "Password123!",
+      "type": "string"
+    },
+    {
+      "key": "adminEmail",
+      "value": "admin@delevez.com",
+      "type": "string"
+    },
+    {
+      "key": "adminPassword",
+      "value": "Password123!",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "adminAccessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "courierBookingId",
+      "value": "DLVZ2505128947",
+      "type": "string"
+    }
+  ]
+}

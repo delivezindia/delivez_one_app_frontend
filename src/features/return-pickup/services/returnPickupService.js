@@ -387,10 +387,19 @@ export async function submitReturnPickupFeedback(id, { rating, reviewText }) {
   return response.data
 }
 
-export async function updateReturnPickupStatus(id, { status, hubLocation }) {
+export async function updateReturnPickupStatus(id, { status, hubLocation, timestamp, ...metadata } = {}) {
+  const ts = timestamp || new Date().toISOString()
   const response = await apiRequest(`/return-pickup/track/${id}/status`, {
     method: 'PATCH',
-    body: JSON.stringify({ status, hubLocation }),
+    body: JSON.stringify({
+      status,
+      hubLocation,
+      timestamp: ts,
+      statusChangedAt: ts,
+      updatedAt: ts,
+      statusTimestamps: metadata?.statusTimestamps || { [status]: ts },
+      ...metadata,
+    }),
   })
   return response.data
 }
