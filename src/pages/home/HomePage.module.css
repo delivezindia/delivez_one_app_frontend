@@ -1,122 +1,662 @@
-/* -------------------------------------------------------------
-   1. Location Bar (Matching Mobile Screenshot 2)
-   ------------------------------------------------------------- */
+.pageWrapper {
+  background: #f8f9fa;
+  min-height: 100vh;
+  padding-bottom: 60px;
+}
+
+/* ========================================================= */
+/* MAIN 3-COLUMN HERO SECTION (MATCHING ref_02.jpeg) */
+/* ========================================================= */
+.mainHomeGridSection {
+  width: 100%;
+  padding: 32px 0 24px;
+}
+
+.mainHomeGrid {
+  display: grid;
+  grid-template-columns: 350px 1fr 370px;
+  gap: 32px;
+  width: min(100% - 48px, 1536px);
+  margin-inline: auto;
+  align-items: start;
+}
+
+/* ----------------- COLUMN 1: LEFT HERO & STATS & RIDER ----------------- */
+.heroColumnLeft {
+  display: flex;
+  flex-direction: column;
+}
+
+.heroTextGroup {
+  margin-bottom: 24px;
+}
+
+.heroHeading {
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 2.85rem;
+  font-weight: 850;
+  line-height: 1.12;
+  letter-spacing: -0.04em;
+  color: #111827;
+  margin: 0 0 14px;
+}
+
+.heroSubheading {
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: #4b5563;
+  margin: 0;
+}
+
+.statsRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 28px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.statBox {
+  display: flex;
+  flex-direction: column;
+}
+
+.statNumber {
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 1.55rem;
+  font-weight: 850;
+  color: #111827;
+  letter-spacing: -0.02em;
+}
+
+.statLabel {
+  font-size: 0.78rem;
+  color: #6b7280;
+  margin-top: 2px;
+  line-height: 1.2;
+}
+
+.riderCard {
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  background: #000;
+}
+
+.riderImg {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+}
+
+.riderBottomPill {
+  position: absolute;
+  bottom: 12px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background: rgba(13, 15, 18, 0.92);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  padding: 10px 6px;
+  color: #ffffff;
+}
+
+.riderPillItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #f3f4f6;
+}
+
+.pillIcon {
+  color: #ffffff;
+}
+
+/* ----------------- COLUMN 2: SERVICES & WHY CHOOSE DELVEZ ----------------- */
+.centerColumn {
+  display: flex;
+  flex-direction: column;
+}
+
+.servicesHeaderRow {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.sectionTitle {
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #111827;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.sectionSubtitle {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin: 4px 0 0;
+}
+
+.viewAllServicesLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #2563eb;
+  font-size: 0.88rem;
+  font-weight: 600;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  transition: gap 150ms ease;
+}
+
+.viewAllServicesLink:hover {
+  gap: 8px;
+}
+
+.servicesGridTwoCol {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 36px;
+}
+
+/* Why Choose Delvez One */
+.whyChooseSection {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.whyChooseTitle {
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #111827;
+  margin: 0 0 20px;
+  letter-spacing: -0.02em;
+}
+
+.whyChooseGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px 16px;
+}
+
+.whyChooseCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.whyChooseIconBadge {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #111827;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.whyChooseContent {
+  display: flex;
+  flex-direction: column;
+}
+
+.whyChooseItemTitle {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.25;
+  margin-bottom: 2px;
+}
+
+.whyChooseItemText {
+  font-size: 0.74rem;
+  color: #6b7280;
+  line-height: 1.35;
+}
+
+/* ----------------- COLUMN 3: AUTH CARD & BADGES ----------------- */
+.authColumnRight {
+  display: flex;
+  flex-direction: column;
+}
+
+.authCardSticky {
+  position: sticky;
+  top: 90px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.05);
+}
+
+/* Stepper */
+.authStepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.stepperItemActive,
+.stepperItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.stepCircleActive {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #fab800;
+  color: #111827;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.stepTextActive {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.stepCircle {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #6b7280;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.stepText {
+  font-size: 0.68rem;
+  color: #6b7280;
+  line-height: 1.1;
+}
+
+.stepperLine {
+  flex: 1;
+  height: 2px;
+  background: #e5e7eb;
+  margin: 0 6px 16px;
+}
+
+.authCardTitle {
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #111827;
+  text-align: center;
+  margin: 0 0 6px;
+  letter-spacing: -0.02em;
+}
+
+.authCardSubtitle {
+  font-size: 0.85rem;
+  color: #6b7280;
+  text-align: center;
+  margin: 0 0 20px;
+}
+
+.quickAuthForm {
+  display: flex;
+  flex-direction: column;
+}
+
+.mobileInputLabel {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+.phoneInputGroup {
+  display: flex;
+  align-items: center;
+  height: 46px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: #ffffff;
+  margin-bottom: 14px;
+  overflow: hidden;
+  transition: border-color 150ms ease;
+}
+
+.phoneInputGroup:focus-within {
+  border-color: #fab800;
+  box-shadow: 0 0 0 3px rgba(250, 184, 0, 0.18);
+}
+
+.flagPicker {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 12px;
+  border-right: 1px solid #e5e7eb;
+  color: #374151;
+  font-size: 0.88rem;
+  font-weight: 600;
+  background: #f9fafb;
+  height: 100%;
+}
+
+.countryCode {
+  margin: 0 2px;
+}
+
+.phoneInputBox {
+  flex: 1;
+  height: 100%;
+  border: 0;
+  outline: none;
+  padding: 0 12px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #111827;
+}
+
+.quickAuthError {
+  margin: -6px 0 10px;
+  color: #ef4444;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.sendOtpBtn {
+  width: 100%;
+  height: 46px;
+  border: 0;
+  border-radius: 10px;
+  background: #fab800;
+  color: #111827;
+  font-size: 0.95rem;
+  font-weight: 750;
+  cursor: pointer;
+  transition: background 150ms ease, transform 150ms ease;
+}
+
+.sendOtpBtn:hover {
+  background: #e5a700;
+  transform: translateY(-1px);
+}
+
+.authTermsText {
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: #6b7280;
+  text-align: center;
+  margin: 12px 0;
+}
+
+.authTermsText a {
+  color: #111827;
+  text-decoration: underline;
+}
+
+.orDivider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 0.75rem;
+  margin: 14px 0;
+}
+
+.orDivider::before,
+.orDivider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.orDivider span {
+  padding: 0 10px;
+}
+
+.googleAuthBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  height: 44px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #374151;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.googleAuthBtn:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+/* Logged In View */
+.userActiveCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  padding: 12px 0;
+}
+
+.userActiveAvatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #111827;
+  color: #fab800;
+  font-size: 1.35rem;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+}
+
+.userActiveGreeting {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #111827;
+}
+
+.userActiveSub {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+/* Trust Badges at bottom of auth */
+.authTrustBlock {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #f3f4f6;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.authTrustItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  flex: 1;
+}
+
+.authTrustIcon {
+  color: #fab800;
+}
+
+.authTrustItem strong {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.2;
+}
+
+.authTrustItem small {
+  display: block;
+  font-size: 0.65rem;
+  color: #6b7280;
+  line-height: 1.2;
+}
+
+.authCardBrandFooter {
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid #f3f4f6;
+  text-align: center;
+}
+
+.authBrandLogo {
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 1.15rem;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: -0.04em;
+  color: #111827;
+}
+
+.authBrandSlogan {
+  margin: 4px 0 0;
+  font-size: 0.72rem;
+  color: #6b7280;
+}
+
+/* ========================================================= */
+/* 2. TOP LOCATION BAR */
+/* ========================================================= */
 .locationBarSection {
   width: 100%;
-  background: #fbfbfb;
-  border-bottom: 1px solid #f0f0f0;
-  padding: 12px 0;
+  margin-bottom: 24px;
 }
 
 .locationBarInner {
   position: relative;
-  width: min(100% - 32px, 1280px);
-  margin: 0 auto;
+  width: min(100% - 48px, 1536px);
+  margin-inline: auto;
 }
 
 .locationBarCard {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
+  padding: 14px 20px;
   background: #ffffff;
   border: 1px solid #e5e7eb;
-  border-radius: 18px;
-  padding: 10px 18px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .locationIconBadge {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
   width: 40px;
   height: 40px;
-  border-radius: 50%;
-  background: #fef3c7;
-  color: #d97706;
-  flex-shrink: 0;
+  border-radius: 10px;
+  background: #fffdf0;
+  border: 1px solid #fde68a;
 }
 
 .pinIcon {
-  color: #d97706;
+  color: #fab800;
 }
 
 .locationTextGroup {
-  flex: 1;
-  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  flex: 1;
 }
 
 .locationLabelBtn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: none;
-  border: none;
+  background: transparent;
+  border: 0;
   padding: 0;
-  font-size: 0.92rem;
-  color: #1f2937;
+  font-size: 0.88rem;
+  color: #374151;
   cursor: pointer;
   text-align: left;
 }
 
-.locationLabelBtn span {
-  color: #6b7280;
-  font-weight: 500;
-}
-
 .locationLabelBtn strong {
-  font-weight: 700;
   color: #111827;
+  font-weight: 700;
 }
 
 .locationAddressText {
-  margin: 0;
-  font-size: 0.84rem;
-  color: #4b5563;
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+  color: #6b7280;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 600px;
 }
 
 .chooseLocationBtn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: none;
-  border: none;
+  padding: 8px 16px;
+  background: #f9fafb;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  color: #111827;
+  font-size: 0.85rem;
+  font-weight: 600;
   cursor: pointer;
-  padding: 4px 6px;
-  border-radius: 12px;
-  transition: background 0.15s ease;
+  transition: all 150ms ease;
 }
 
 .chooseLocationBtn:hover {
-  background: #fef9c3;
-}
-
-.chooseLocationBtn span {
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: #d97706;
+  background: #fffdf0;
+  border-color: #fab800;
 }
 
 .targetIconCircle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: #fbbf24;
-  color: #111827;
-  transition: transform 0.2s ease;
-}
-
-.chooseLocationBtn:hover .targetIconCircle {
-  transform: rotate(45deg);
+  display: grid;
+  place-items: center;
+  color: #fab800;
 }
 
 /* Presets Dropdown */
@@ -124,360 +664,172 @@
   position: absolute;
   top: calc(100% + 8px);
   left: 0;
-  width: min(100%, 420px);
+  z-index: 50;
+  width: 400px;
   background: #ffffff;
   border: 1px solid #e5e7eb;
-  border-radius: 16px;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.12);
-  z-index: 99;
+  border-radius: 14px;
   padding: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
 }
 
 .presetsHeader {
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
   margin-bottom: 12px;
-}
-
-.presetsHeader strong {
-  font-size: 0.95rem;
-  color: #111827;
-}
-
-.presetsHeader button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #9ca3af;
 }
 
 .detectGpsOption {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
-  padding: 10px 14px;
-  background: #fef3c7;
+  padding: 10px;
+  background: #fffdf0;
   border: 1px solid #fde68a;
-  border-radius: 10px;
-  color: #b45309;
+  border-radius: 8px;
+  color: #111827;
+  font-size: 0.82rem;
   font-weight: 600;
-  font-size: 0.86rem;
   cursor: pointer;
   margin-bottom: 12px;
-  transition: background 0.15s;
-}
-
-.detectGpsOption:hover {
-  background: #fde047;
 }
 
 .presetsList {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  max-height: 240px;
-  overflow-y: auto;
+  gap: 8px;
 }
 
 .presetItem {
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  padding: 9px 12px;
-  background: none;
-  border: none;
+  padding: 8px;
+  border: 0;
   border-radius: 8px;
-  text-align: left;
+  background: transparent;
   cursor: pointer;
-  transition: background 0.15s;
+  text-align: left;
 }
 
 .presetItem:hover {
   background: #f3f4f6;
 }
 
-.presetItem div strong {
+.presetItem strong {
   display: block;
-  font-size: 0.88rem;
-  color: #1f2937;
+  font-size: 0.82rem;
+  color: #111827;
 }
 
-.presetItem div small {
+.presetItem small {
   display: block;
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   color: #6b7280;
 }
 
-/* -------------------------------------------------------------
-   2. Dynamic Hero Section (Matching Mobile Screenshot 2)
-   ------------------------------------------------------------- */
-.dynamicHero {
-  position: relative;
-  background: linear-gradient(180deg, #fefce8 0%, #ffffff 70%);
-  padding: 36px 0 28px;
-  overflow: hidden;
+/* ========================================================= */
+/* 3. SECONDARY FEATURES: PROMPT, ACTIONS, BANNER */
+/* ========================================================= */
+.secondaryFeaturesSection {
+  width: 100%;
+  margin-bottom: 36px;
 }
 
-.dynamicHeroInner {
-  display: grid;
-  grid-template-columns: minmax(360px, 1.2fr) minmax(200px, 0.7fr) minmax(380px, 1fr);
-  align-items: center;
-  gap: clamp(20px, 3vw, 40px);
-  width: min(100% - 48px, 1360px);
-  margin: 0 auto;
-}
-
-.heroContentLeft {
+.secondaryFeaturesInner {
+  width: min(100% - 48px, 1536px);
+  margin-inline: auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-}
-
-.userGreeting {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #1f2937;
-}
-
-.dynamicHeroTitle {
-  margin: 0;
-  font-size: clamp(2.4rem, 3.4vw, 3.2rem);
-  line-height: 1.12;
-  font-weight: 850;
-  color: #111827;
-  letter-spacing: -0.04em;
-}
-
-.highlightText {
-  color: #f59e0b;
-  position: relative;
-  display: inline-block;
-}
-
-.dynamicHeroSubtitle {
-  margin: 0;
-  font-size: 1.1rem;
-  color: #4b5563;
-  font-weight: 500;
+  gap: 20px;
 }
 
 /* AI Prompt Card */
 .aiPromptCard {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
+  padding: 12px 18px;
   background: #ffffff;
-  border: 1.5px solid #fef08a;
-  border-radius: 20px;
-  padding: 12px 16px;
-  margin-top: 10px;
-  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.1);
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.aiPromptCard:focus-within {
-  border-color: #f59e0b;
-  box-shadow: 0 8px 28px rgba(245, 158, 11, 0.2);
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .sparkleBadge {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: #f59e0b;
-  color: #ffffff;
-  flex-shrink: 0;
-  border: none;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #fffdf0;
+  border: 1px solid #fde68a;
+  color: #fab800;
   cursor: pointer;
-  transition: transform 0.15s, background 0.15s;
+  flex-shrink: 0;
 }
 
-.sparkleBadge:hover {
-  background: #d97706;
-  transform: scale(1.05);
+.promptInputArea {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .promptLabelRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.promptLabel {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #374151;
 }
 
 .examplesTriggerBtn {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  background: #fef3c7;
-  color: #b45309;
-  border: 1px solid #fde68a;
-  border-radius: 999px;
-  padding: 3px 10px;
-  font-size: 0.74rem;
-  font-weight: 700;
+  gap: 4px;
+  background: transparent;
+  border: 0;
+  color: #fab800;
+  font-size: 0.75rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.examplesTriggerBtn:hover {
-  background: #fde68a;
-  color: #92400e;
-  transform: translateY(-1px);
-}
-
-.promptInputArea {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.promptLabel {
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: #111827;
-  cursor: text;
 }
 
 .promptInput {
-  border: none;
+  border: 0;
   outline: none;
+  font-size: 0.92rem;
+  color: #111827;
+  padding: 0;
   background: transparent;
-  font-size: 0.88rem;
-  color: #374151;
-  width: 100%;
-}
-
-.promptInput::placeholder {
-  color: #9ca3af;
 }
 
 .micBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: none;
-  border: none;
-  color: #d97706;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #f9fafb;
+  border: 1px solid #d1d5db;
+  color: #6b7280;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: all 150ms ease;
 }
 
 .micBtn:hover {
-  background: #fef3c7;
-}
-
-/* Hero Mascot */
-.heroMascotCol {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 240px;
-}
-
-.mascotGlow {
-  position: absolute;
-  width: 180px;
-  height: 180px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(251, 191, 36, 0.45) 0%, rgba(251, 191, 36, 0) 70%);
-  filter: blur(16px);
-}
-
-.mascotImg {
-  position: relative;
-  z-index: 2;
-  width: 170px;
-  height: 170px;
-  object-fit: contain;
-  filter: drop-shadow(0 14px 20px rgba(245, 158, 11, 0.3));
-  animation: floatMascot 4s ease-in-out infinite;
-}
-
-@keyframes floatMascot {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.desktopBookingCol {
-  width: 100%;
-}
-
-/* -------------------------------------------------------------
-   3. Services Section
-   ------------------------------------------------------------- */
-.servicesSection {
-  width: min(100% - 48px, 1360px);
-  margin: 32px auto 0;
-}
-
-.sectionHeadingHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 18px;
-}
-
-.sectionHeadingHeader h2 {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: 800;
   color: #111827;
-  letter-spacing: -0.02em;
+  border-color: #9ca3af;
 }
 
-.viewAllBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  background: none;
-  border: none;
-  color: #dc2626;
-  font-weight: 700;
-  font-size: 0.92rem;
-  cursor: pointer;
-  transition: gap 0.2s;
-}
-
-.viewAllBtn:hover {
-  gap: 8px;
-}
-
-.servicesGrid {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 16px;
-}
-
-.catalogNotice {
-  margin: 12px 0 0;
-  color: #8b6b00;
-  font-size: 0.76rem;
-  text-align: center;
-}
-
-/* -------------------------------------------------------------
-   4. Dynamic Quick Actions (Ship Now, Track Shipment, Find Pincode, Help & Support)
-   ------------------------------------------------------------- */
-.quickActionsSection {
-  width: min(100% - 48px, 1360px);
-  margin: 32px auto 0;
-}
-
+/* Quick Actions 4 Grid */
 .quickActionsGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -487,112 +839,84 @@
 .quickActionCard {
   position: relative;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  text-align: center;
+  gap: 14px;
+  padding: 16px 20px;
   background: #ffffff;
   border: 1px solid #e5e7eb;
-  border-radius: 20px;
-  padding: 24px 16px 20px;
+  border-radius: 14px;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  text-align: left;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .quickActionCard:hover {
-  transform: translateY(-4px);
-  border-color: #fbbf24;
-  box-shadow: 0 12px 24px rgba(245, 158, 11, 0.12);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+  border-color: #d1d5db;
 }
 
 .actionIconContainer {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 58px;
-  height: 58px;
-  border-radius: 50%;
-  background: #fef3c7;
-  color: #d97706;
-  margin-bottom: 12px;
-}
-
-.actionCustomImg {
-  width: 32px;
-  height: 32px;
-  object-fit: contain;
-}
-
-.actionCardTitle {
-  display: block;
-  font-size: 1.05rem;
-  font-weight: 800;
-  color: #111827;
-  margin-bottom: 4px;
-}
-
-.actionCardSubtitle {
-  display: block;
-  font-size: 0.82rem;
-  color: #6b7280;
-  line-height: 1.35;
-}
-
-.actionCardBadge {
-  position: absolute;
-  top: 12px;
-  right: 14px;
-  font-size: 0.68rem;
-  font-weight: 800;
-  color: #b45309;
-  background: #fde68a;
-  padding: 2px 8px;
-  border-radius: 999px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-/* -------------------------------------------------------------
-   5. Yellow Promo Banner (Matching Screenshot 1)
-   ------------------------------------------------------------- */
-.promoBannerSection {
-  width: min(100% - 48px, 1360px);
-  margin: 28px auto 0;
-}
-
-.promoBannerCard {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  background: #f59e0b;
-  border-radius: 20px;
-  padding: 20px 28px;
-  color: #111827;
-  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.25);
-}
-
-.bannerIconBlock {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.25);
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: #f9fafb;
   color: #111827;
   flex-shrink: 0;
 }
 
-.bannerBoxIcon {
+.actionCardContent {
+  display: flex;
+  flex-direction: column;
+}
+
+.actionCardTitle {
+  font-size: 0.92rem;
+  font-weight: 700;
   color: #111827;
 }
 
-.bannerCustomImage {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 14px;
+.actionCardSubtitle {
+  font-size: 0.78rem;
+  color: #6b7280;
+}
+
+.actionCardBadge {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #fffdf0;
+  color: #b45309;
+  border: 1px solid #fde68a;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+/* Promo Banner */
+.promoBannerCard {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px 24px;
+  background: #fffdf0;
+  border: 1px solid #fde68a;
+  border-radius: 16px;
+}
+
+.bannerIconBlock {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: #fab800;
+  color: #111827;
+  flex-shrink: 0;
 }
 
 .bannerTextBlock {
@@ -600,335 +924,302 @@
 }
 
 .bannerTextBlock h3 {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 850;
-  letter-spacing: -0.01em;
+  margin: 0 0 4px;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #111827;
 }
 
 .bannerTextBlock p {
-  margin: 4px 0 0;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: rgba(17, 24, 39, 0.85);
+  margin: 0;
+  font-size: 0.85rem;
+  color: #4b5563;
 }
 
 .bannerCtaBtn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  background: #ffffff;
-  color: #111827;
-  border: none;
+  gap: 6px;
   padding: 10px 20px;
-  border-radius: 999px;
-  font-weight: 700;
-  font-size: 0.9rem;
+  background: #111827;
+  color: #ffffff;
+  border: 0;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  transition: transform 0.15s, background 0.15s;
-  flex-shrink: 0;
+  transition: background 150ms ease;
 }
 
 .bannerCtaBtn:hover {
-  background: #fefce8;
-  transform: translateX(3px);
+  background: #000000;
 }
 
-/* -------------------------------------------------------------
-   6. Action Chips Row (Matching Screenshot 1)
-   ------------------------------------------------------------- */
-.actionChipsSection {
-  width: min(100% - 48px, 1360px);
-  margin: 20px auto 36px;
-}
-
-.chipsScrollRow {
+/* Action Chips */
+.actionChipsRow {
   display: flex;
   align-items: center;
   gap: 12px;
-  overflow-x: auto;
-  padding-bottom: 4px;
+  flex-wrap: wrap;
 }
 
 .chipPill {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  padding: 8px 16px;
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 999px;
-  padding: 8px 18px;
-  cursor: pointer;
-  white-space: nowrap;
-  font-size: 0.86rem;
-  font-weight: 650;
   color: #374151;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
-  transition: border-color 0.15s, background 0.15s;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 150ms ease;
 }
 
 .chipPill:hover {
-  border-color: #fbbf24;
-  background: #fefce8;
-}
-
-.chipIconDot {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: #fef3c7;
-  color: #d97706;
-}
-
-/* -------------------------------------------------------------
-   7. Trust Bar & Other Standard Sections
-   ------------------------------------------------------------- */
-.trustBar {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  width: min(100% - 48px, 1360px);
-  margin: 0 auto 54px;
-  padding: 24px;
-  border: 1px solid #e5e7eb;
-  border-radius: 18px;
-  background: #ffffff;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
-}
-
-.trustItem {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  min-width: 0;
-  padding: 0 20px;
-  border-right: 1px solid #e5e7eb;
-}
-
-.trustItem:last-child {
-  border-right: 0;
-}
-
-.trustItem > span {
-  display: grid;
-  flex: 0 0 auto;
-  width: 46px;
-  height: 46px;
-  border-radius: 12px;
-  color: #dc2626;
-  place-items: center;
-  background: #fee2e2;
-}
-
-.trustItem strong {
-  display: block;
-  font-size: 0.86rem;
+  border-color: #fab800;
+  background: #fffdf0;
   color: #111827;
 }
 
-.trustItem small {
-  display: block;
-  margin-top: 3px;
-  color: #6b7280;
-  font-size: 0.74rem;
-  line-height: 1.35;
+/* ========================================================= */
+/* 4. TRACK ORDER SECTION */
+/* ========================================================= */
+.trackSection {
+  width: 100%;
+  margin-bottom: 36px;
 }
 
-/* Tracking Section */
-.trackSection {
+.trackSectionInner {
+  width: min(100% - 48px, 1536px);
+  margin-inline: auto;
   display: grid;
-  grid-template-columns: minmax(0, 0.85fr) minmax(460px, 1.15fr);
+  grid-template-columns: 1fr 1.2fr;
+  gap: 36px;
   align-items: center;
-  gap: 50px;
-  width: min(100% - 48px, 1200px);
-  margin: 0 auto;
-  padding: 60px 0;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  padding: 36px;
 }
 
 .kicker {
-  margin: 0 0 8px;
-  color: #dc2626;
-  font-size: 0.76rem;
-  font-weight: 850;
-  letter-spacing: 0.12em;
+  color: #fab800;
+  font-weight: 700;
+  font-size: 0.82rem;
   text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 6px;
 }
 
-.trackCopy h2,
-.downloadSection h2 {
-  margin: 0;
-  font-size: clamp(2rem, 3.5vw, 3rem);
-  line-height: 1.08;
-  letter-spacing: -0.04em;
+.trackCopy h2 {
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #111827;
+  margin: 0 0 10px;
+  letter-spacing: -0.03em;
 }
 
-.trackCopy > p:last-child,
-.downloadSection div > p:last-child {
+.trackCopy p {
+  font-size: 0.9rem;
   color: #6b7280;
-  line-height: 1.6;
+  margin: 0;
+  line-height: 1.5;
 }
 
 .trackForm {
-  padding: 26px;
-  border: 1px solid #e5e7eb;
-  border-radius: 20px;
-  background: #fff;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.trackForm > label {
-  display: block;
-  margin-bottom: 8px;
-  font-size: 0.84rem;
-  font-weight: 750;
+.trackForm label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.trackInputRow {
+  display: flex;
+  align-items: center;
+  height: 48px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: #ffffff;
+  overflow: hidden;
+  padding-left: 14px;
+}
+
+.trackPinIcon {
+  color: #9ca3af;
+}
+
+.trackInputRow input {
+  flex: 1;
+  height: 100%;
+  border: 0;
+  outline: none;
+  padding: 0 12px;
+  font-size: 0.95rem;
   color: #111827;
 }
 
-.trackForm > div:first-of-type {
-  display: flex;
+.trackSubmitBtn {
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
-  min-height: 52px;
-  padding: 6px 6px 6px 14px;
-  border: 1px solid #d1d5db;
-  border-radius: 12px;
-}
-
-.trackForm input {
-  flex: 1;
-  min-width: 0;
+  gap: 6px;
+  height: 100%;
+  padding: 0 24px;
+  background: #fab800;
   border: 0;
-  outline: 0;
+  color: #111827;
   font-size: 0.92rem;
-}
-
-.trackForm button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 20px;
-  min-height: 42px;
-  border: 0;
-  border-radius: 8px;
-  color: #fff;
-  background: #dc2626;
   font-weight: 700;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background 150ms ease;
 }
 
-.trackForm button:hover {
-  background: #b91c1c;
+.trackSubmitBtn:hover {
+  background: #e5a700;
 }
 
-.trackResult {
-  display: grid;
-  gap: 4px;
-  margin-top: 14px;
-  padding: 14px 16px;
-  border-radius: 12px;
-  color: #15803d;
+.trackResultCard {
+  margin-top: 12px;
+  padding: 14px 18px;
   background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.trackResult span,
-.trackResult small {
-  font-size: 0.78rem;
+.trackResultCard strong {
+  font-size: 1rem;
+  color: #15803d;
 }
 
-/* Download App Section */
+.trackResultCard small {
+  color: #4b5563;
+}
+
+.trackResultError {
+  margin-top: 12px;
+  padding: 12px 16px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  color: #b91c1c;
+  font-size: 0.85rem;
+}
+
+/* ========================================================= */
+/* 5. DOWNLOAD APP SECTION */
+/* ========================================================= */
 .downloadSection {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
+  width: 100%;
+}
+
+.downloadInner {
+  width: min(100% - 48px, 1536px);
+  margin-inline: auto;
+  display: flex;
   align-items: center;
   gap: 28px;
-  width: min(100% - 48px, 1360px);
-  margin: 0 auto 72px;
-  padding: 40px 44px;
-  border-radius: 24px;
-  color: #fff;
-  background: linear-gradient(125deg, #ba0011 0%, #e00014 65%, #ee2436 100%);
-  box-shadow: 0 24px 60px rgba(180, 0, 16, 0.22);
-}
-
-.downloadSection .kicker {
-  color: #ffd95a;
-}
-
-.downloadSection div > p:last-child {
-  margin-bottom: 0;
-  color: #ffdfe2;
+  background: #111827;
+  color: #ffffff;
+  border-radius: 18px;
+  padding: 32px 36px;
 }
 
 .phoneBadge {
   display: grid;
-  width: 72px;
-  height: 72px;
-  border-radius: 20px;
-  color: #1a1a1a;
   place-items: center;
-  background: #f59e0b;
-  transform: rotate(-5deg);
+  width: 60px;
+  height: 60px;
+  border-radius: 14px;
+  background: #1f2937;
+  color: #fab800;
+  flex-shrink: 0;
+}
+
+.downloadCopy {
+  flex: 1;
+}
+
+.downloadCopy h2 {
+  font-size: 1.6rem;
+  font-weight: 800;
+  margin: 0 0 6px;
+  color: #ffffff;
+}
+
+.downloadCopy p {
+  margin: 0;
+  color: #9ca3af;
+  font-size: 0.9rem;
 }
 
 .storeButtons {
   display: flex;
-  gap: 10px;
+  gap: 12px;
 }
 
-.storeButtons a {
-  display: grid;
-  min-width: 145px;
-  padding: 9px 15px;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 11px;
-  background: #121212;
-  color: #fff;
+.storeBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 8px 18px;
+  background: #1f2937;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  color: #ffffff;
   text-decoration: none;
+  transition: background 150ms ease;
 }
 
-.storeButtons small {
-  font-size: 0.54rem;
-  letter-spacing: 0.08em;
+.storeBtn:hover {
+  background: #374151;
+}
+
+.storeBtn small {
+  font-size: 0.65rem;
   color: #9ca3af;
 }
 
-.storeButtons strong {
-  font-size: 0.94rem;
+.storeBtn strong {
+  font-size: 0.92rem;
 }
 
-/* -------------------------------------------------------------
-   8. Modals (Find Pincode, Help & Support, Know More)
-   ------------------------------------------------------------- */
+/* ========================================================= */
+/* MODALS */
+/* ========================================================= */
 .modalOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
-  z-index: 9999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
   padding: 16px;
-  animation: fadeIn 0.2s ease;
 }
 
 .modalCard {
+  width: min(100%, 480px);
   background: #ffffff;
-  border-radius: 24px;
-  width: min(100%, 540px);
-  padding: 28px;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.2);
-  animation: slideUp 0.25s ease;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
 }
 
 .modalHeader {
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
   margin-bottom: 12px;
 }
 
@@ -938,45 +1229,29 @@
   gap: 10px;
 }
 
-.modalHeaderIcon {
-  color: #d97706;
-}
-
 .modalHeaderTitle h3 {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   font-weight: 800;
   color: #111827;
 }
 
-.closeBtn {
-  background: #f3f4f6;
-  border: none;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #6b7280;
-  cursor: pointer;
-  transition: background 0.15s;
+.modalHeaderIcon {
+  color: #fab800;
 }
 
-.closeBtn:hover {
-  background: #e5e7eb;
+.closeBtn {
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  color: #6b7280;
 }
 
 .modalIntro {
-  margin: 0 0 20px;
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   color: #6b7280;
+  margin: 0 0 16px;
   line-height: 1.45;
-}
-
-/* Pincode Form in Modal */
-.pincodeForm {
-  margin-bottom: 18px;
 }
 
 .pincodeInputRow {
@@ -986,93 +1261,46 @@
 
 .pincodeInputBox {
   flex: 1;
-  padding: 12px 16px;
-  border: 1.5px solid #d1d5db;
-  border-radius: 12px;
-  font-size: 1rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  outline: none;
-}
-
-.pincodeInputBox:focus {
-  border-color: #f59e0b;
+  height: 44px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 0 14px;
+  font-size: 0.95rem;
 }
 
 .pincodeCheckBtn {
-  padding: 0 24px;
-  background: #f59e0b;
-  color: #111827;
-  border: none;
-  border-radius: 12px;
-  font-weight: 750;
+  padding: 0 20px;
+  background: #fab800;
+  border: 0;
+  border-radius: 10px;
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.15s;
-}
-
-.pincodeCheckBtn:hover:not(:disabled) {
-  background: #d97706;
-  color: #fff;
-}
-
-.pincodeCheckBtn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 .pincodeResultCard {
+  margin-top: 16px;
+  padding: 14px;
   background: #f0fdf4;
   border: 1px solid #bbf7d0;
-  border-radius: 16px;
-  padding: 18px;
-  margin-top: 14px;
+  border-radius: 12px;
 }
 
 .pincodeResultTop {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 14px;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
 }
 
 .successIcon {
   color: #16a34a;
-  flex-shrink: 0;
-}
-
-.pincodeResultTop strong {
-  display: block;
-  font-size: 0.95rem;
-  color: #15803d;
-}
-
-.pincodeResultTop p {
-  margin: 2px 0 0;
-  font-size: 0.84rem;
-  color: #4b5563;
 }
 
 .pincodeResultGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
-  padding: 10px 0;
-  border-top: 1px dashed #d1d5db;
-  border-bottom: 1px dashed #d1d5db;
   margin-bottom: 14px;
-}
-
-.pincodeResultGrid small {
-  display: block;
-  font-size: 0.72rem;
-  color: #6b7280;
-  text-transform: uppercase;
-  font-weight: 700;
-}
-
-.pincodeResultGrid strong {
-  font-size: 0.88rem;
-  color: #1f2937;
 }
 
 .bookNowBtn {
@@ -1081,136 +1309,91 @@
   justify-content: center;
   gap: 8px;
   width: 100%;
-  padding: 12px;
+  height: 42px;
   background: #111827;
-  color: #fff;
-  border: none;
-  border-radius: 12px;
+  color: #ffffff;
+  border: 0;
+  border-radius: 10px;
   font-weight: 700;
-  font-size: 0.92rem;
   cursor: pointer;
-  transition: background 0.15s;
 }
 
-.bookNowBtn:hover {
-  background: #000;
-}
-
-/* Support Modal */
 .supportChannelsGrid {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-bottom: 22px;
+  margin-bottom: 18px;
 }
 
 .supportChannelCard {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 12px 16px;
+  padding: 12px 14px;
   background: #f9fafb;
   border: 1px solid #e5e7eb;
-  border-radius: 14px;
-  text-decoration: none;
-  color: #1f2937;
-  transition: border-color 0.15s, background 0.15s;
-}
-
-.supportChannelCard:hover {
-  border-color: #f59e0b;
-  background: #fefce8;
-}
-
-.supportChannelCard svg {
-  color: #d97706;
-}
-
-.supportChannelCard small {
-  display: block;
-  font-size: 0.75rem;
-  color: #6b7280;
-}
-
-.supportChannelCard strong {
-  display: block;
-  font-size: 0.92rem;
+  border-radius: 10px;
   color: #111827;
+  text-decoration: none;
 }
 
 .supportForm {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding-top: 14px;
-  border-top: 1px solid #f3f4f6;
-}
-
-.supportForm h4 {
-  margin: 0;
-  font-size: 0.9rem;
-  color: #374151;
 }
 
 .supportForm input,
 .supportForm textarea {
-  padding: 10px 14px;
   border: 1px solid #d1d5db;
-  border-radius: 10px;
+  border-radius: 8px;
+  padding: 10px 12px;
   font-size: 0.88rem;
-  outline: none;
-}
-
-.supportForm input:focus,
-.supportForm textarea:focus {
-  border-color: #f59e0b;
 }
 
 .supportSubmitBtn {
-  padding: 12px;
-  background: #dc2626;
-  color: #fff;
-  border: none;
-  border-radius: 10px;
+  height: 42px;
+  background: #fab800;
+  border: 0;
+  border-radius: 8px;
   font-weight: 700;
-  font-size: 0.9rem;
   cursor: pointer;
-  transition: background 0.15s;
 }
 
-.supportSubmitBtn:hover:not(:disabled) {
-  background: #b91c1c;
+.knowMoreList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
-.supportSuccessCard {
-  text-align: center;
+.knowMoreItem {
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 10px;
+}
+
+.knowMoreItem strong {
+  display: block;
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+}
+
+.knowMoreItem p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.examplesModalCard {
+  width: min(100%, 540px);
+  background: #ffffff;
+  border-radius: 18px;
   padding: 24px;
 }
 
-.supportSuccessCard h4 {
-  margin: 8px 0 4px;
-  font-size: 1.15rem;
-  color: #15803d;
-}
-
-/* -------------------------------------------------------------
-   Try These Examples Modal (Matching Mobile Screenshot)
-   ------------------------------------------------------------- */
-.examplesModalCard {
-  background: #ffffff;
-  border-radius: 28px;
-  width: min(100%, 460px);
-  padding: 24px 22px 20px;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
-  animation: slideUp 0.25s ease;
-  position: relative;
-}
-
 .examplesModalHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .examplesModalTitleGroup {
@@ -1219,241 +1402,109 @@
   gap: 10px;
 }
 
-.examplesSparkleIcon {
-  color: #f59e0b;
-}
-
 .examplesModalTitleGroup h3 {
   margin: 0;
-  font-size: 1.25rem;
-  font-weight: 750;
-  color: #1e293b;
-  letter-spacing: -0.01em;
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.examplesSparkleIcon {
+  color: #fab800;
 }
 
 .examplesGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
 }
 
 .exampleCard {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: #ffffff;
-  border: 1.5px solid #fde047;
-  border-radius: 18px;
-  padding: 14px 14px;
+  padding: 12px 14px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
   text-align: left;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  min-height: 84px;
+  font-size: 0.88rem;
+  color: #374151;
 }
 
 .exampleCard:hover {
-  background: #fffbeb;
-  border-color: #f59e0b;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(245, 158, 11, 0.14);
-}
-
-.exampleIconBox {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  flex-shrink: 0;
-}
-
-.exampleCardCustomImage {
-  width: 30px;
-  height: 30px;
-  object-fit: contain;
-  border-radius: 6px;
-}
-
-.exampleCardText {
-  font-size: 0.82rem;
-  font-weight: 550;
-  color: #334155;
-  line-height: 1.35;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  background: #fffdf0;
+  border-color: #fab800;
+  color: #111827;
 }
 
 .examplesModalFooter {
   display: flex;
   justify-content: flex-end;
-  padding-top: 6px;
 }
 
 .examplesCloseBtn {
-  background: none;
-  border: none;
-  color: #d97706;
-  font-size: 1rem;
-  font-weight: 750;
-  cursor: pointer;
-  padding: 6px 14px;
+  padding: 8px 18px;
+  background: #f3f4f6;
+  border: 0;
   border-radius: 8px;
-  transition: background 0.15s, color 0.15s;
+  cursor: pointer;
+  font-weight: 600;
 }
 
-.examplesCloseBtn:hover {
-  background: #fef3c7;
-  color: #b45309;
-}
-
-.supportSuccessCard p {
-  margin: 0;
-  font-size: 0.88rem;
-  color: #4b5563;
-}
-
-/* Know More Modal */
-.knowMoreList {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 22px;
-}
-
-.knowMoreItem {
-  padding: 14px;
-  background: #f9fafb;
-  border-radius: 12px;
-}
-
-.knowMoreItem strong {
-  display: block;
-  font-size: 0.92rem;
-  color: #111827;
-  margin-bottom: 4px;
-}
-
-.knowMoreItem p {
-  margin: 0;
-  font-size: 0.82rem;
-  color: #6b7280;
-  line-height: 1.4;
-}
-
-/* Keyframes */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes slideUp {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-
-/* -------------------------------------------------------------
-   Responsive Breakpoints
-   ------------------------------------------------------------- */
+/* ========================================================= */
+/* RESPONSIVE */
+/* ========================================================= */
 @media (max-width: 1280px) {
-  .dynamicHeroInner {
-    grid-template-columns: 1fr 1fr;
+  .mainHomeGrid {
+    grid-template-columns: 320px 1fr 340px;
+    gap: 24px;
   }
-  .desktopBookingCol {
-    grid-column: 1 / -1;
-    max-width: 720px;
-    margin: 0 auto;
+}
+
+@media (max-width: 1080px) {
+  .mainHomeGrid {
+    grid-template-columns: 1fr;
   }
-  .servicesGrid {
-    grid-template-columns: repeat(3, 1fr);
+
+  .authCardSticky {
+    position: static;
   }
+
   .quickActionsGrid {
     grid-template-columns: repeat(2, 1fr);
   }
-  .trustBar {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
 
-@media (max-width: 900px) {
-  .dynamicHeroInner {
+  .trackSectionInner {
     grid-template-columns: 1fr;
-    text-align: center;
   }
-  .heroContentLeft {
-    align-items: center;
-  }
-  .heroMascotCol {
-    order: -1;
-    min-height: 180px;
-  }
-  .mascotImg {
-    width: 130px;
-    height: 130px;
-  }
-  .aiPromptCard {
-    width: 100%;
-    max-width: 480px;
-  }
-  .trackSection {
-    grid-template-columns: 1fr;
-    gap: 30px;
-  }
-  .downloadSection {
-    grid-template-columns: auto 1fr;
-  }
-  .storeButtons {
-    grid-column: 1 / -1;
-  }
-  .promoBannerCard {
+
+  .downloadInner {
     flex-direction: column;
     text-align: center;
   }
-  .bannerCtaBtn {
-    align-self: center;
+
+  .storeButtons {
+    justify-content: center;
   }
 }
 
-@media (max-width: 640px) {
-  .locationBarCard {
-    flex-wrap: wrap;
-    gap: 8px;
-    padding: 8px 12px;
-  }
-  .locationTextGroup {
-    order: 2;
-    width: 100%;
-  }
-  .chooseLocationBtn {
-    margin-left: auto;
-  }
-  .servicesGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .quickActionsGrid {
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-  .quickActionCard {
-    padding: 16px 10px 14px;
-  }
-  .actionCardTitle {
-    font-size: 0.95rem;
-  }
-  .actionCardSubtitle {
-    font-size: 0.74rem;
-  }
-  .trustBar {
+@media (max-width: 680px) {
+  .servicesGridTwoCol {
     grid-template-columns: 1fr;
   }
-  .trustItem {
-    border-right: none;
-    border-bottom: 1px solid #e5e7eb;
-    padding: 12px 0;
+
+  .whyChooseGrid {
+    grid-template-columns: 1fr;
   }
-  .trustItem:last-child {
-    border-bottom: none;
+
+  .quickActionsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .statsRow {
+    gap: 16px;
+  }
+
+  .heroHeading {
+    font-size: 2.2rem;
   }
 }

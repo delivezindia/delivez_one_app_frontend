@@ -79,8 +79,8 @@ const SERVICE_META = {
   'forgot-something': { label: 'Forgot Something Retrieval', icon: ShoppingBag, color: '#7c3aed', bg: '#f5f3ff' },
   'return-pickup': { label: 'Return & Exchange Pickup', icon: RotateCcw, color: '#059669', bg: '#ecfdf5' },
   'personal-return-pickup': { label: 'Return & Exchange Pickup', icon: RotateCcw, color: '#059669', bg: '#ecfdf5' },
-  'gift-delivery': { label: 'Gift & Surprise Delivery', icon: Gift, color: '#e11d48', bg: '#fff1f2' },
-  'gift-and-surprise': { label: 'Gift & Surprise Delivery', icon: Gift, color: '#e11d48', bg: '#fff1f2' },
+  'gift-delivery': { label: 'Gift & Surprise Delivery', icon: Gift, color: '#ef4444', bg: '#fef2f2' },
+  'gift-and-surprise': { label: 'Gift & Surprise Delivery', icon: Gift, color: '#ef4444', bg: '#fef2f2' },
 }
 
 const LIFECYCLE_STEPS = [

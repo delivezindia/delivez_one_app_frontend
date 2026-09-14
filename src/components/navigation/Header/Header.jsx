@@ -1,21 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
 import {
+  Bell,
   ChevronDown,
   CircleHelp,
-  FileText,
+  Globe2,
+  Headphones,
   Luggage,
+  MapPin,
+  Menu,
+  RotateCcw,
   Shield,
   ShieldCheck,
   ShoppingBag,
   Truck,
-  Gift,
-  Globe2,
-  Headphones,
-  Menu,
-  Package,
-  Plane,
-  RotateCcw,
-  Search,
   UserRound,
   X,
 } from 'lucide-react'
@@ -46,7 +43,7 @@ function Dropdown({ items, onClose }) {
           key={label}
           type="button"
           className={styles.dropdownLink}
-          style={highlight ? { color: '#ca8a04', fontWeight: '800' } : {}}
+          style={highlight ? { color: '#fab800', fontWeight: '800' } : {}}
           onClick={() => {
             onClose()
             if (href.startsWith('/')) {
@@ -120,13 +117,26 @@ function Header() {
     }
   }
 
+  const userInitials = currentUser?.fullName
+    ? currentUser.fullName.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
+    : 'RV'
+
   return (
     <>
       <header className={styles.header} ref={headerRef}>
         <div className={styles.inner}>
-          <a className={styles.logo} href="/" onClick={(e) => { e.preventDefault(); closeNavigation(); navigateTo('/'); }} aria-label="Delivez One home">
-            <span>Delivez</span>
-            <b>ONE</b>
+          {/* Delvez One Logo matching reference */}
+          <a
+            className={styles.logo}
+            href="/"
+            onClick={(e) => { e.preventDefault(); closeNavigation(); navigateTo('/'); }}
+            aria-label="Delivez One home"
+          >
+            <span className={styles.logoText}>
+              DELVE<span className={styles.logoZ}>Z</span>
+            </span>
+            <span className={styles.logoDivider}>|</span>
+            <span className={styles.logoOne}>ONE</span>
           </a>
 
           <button
@@ -136,59 +146,120 @@ function Header() {
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((open) => !open)}
           >
-            {menuOpen ? <X /> : <Menu />}
+            {menuOpen ? <X size={24} color="#fff" /> : <Menu size={24} color="#fff" />}
           </button>
 
           <nav className={`${styles.nav} ${menuOpen ? styles.navOpen : ''}`} aria-label="Primary navigation">
-            <a className={styles.activeLink} href="/" onClick={(e) => { e.preventDefault(); closeNavigation(); navigateTo('/'); }}>Home</a>
-
             <div className={styles.navGroup}>
-              <button type="button" onClick={() => toggleDropdown('services')} aria-expanded={openDropdown === 'services'}>
-                Services <ChevronDown size={16} />
+              <button
+                type="button"
+                className={styles.navLinkBtn}
+                onClick={() => toggleDropdown('services')}
+                aria-expanded={openDropdown === 'services'}
+              >
+                Services <ChevronDown size={15} />
               </button>
               {openDropdown === 'services' && <Dropdown items={services} onClose={closeNavigation} />}
             </div>
 
-            <button
-              type="button"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                background: 'rgba(234, 179, 8, 0.15)',
-                color: '#ca8a04',
-                border: '1px solid rgba(234, 179, 8, 0.4)',
-                borderRadius: '8px',
-                padding: '6px 12px',
-                fontWeight: '800',
-                fontSize: '0.82rem',
-                cursor: 'pointer',
-              }}
-              onClick={() => { closeNavigation(); navigateTo('/book/confidential-delivery'); }}
+            <a
+              className={styles.navLink}
+              href="#why-choose-us"
+              onClick={closeNavigation}
             >
-              <Shield size={15} /> Delivez Vault
-            </button>
+              Features
+            </a>
 
-            <a href="#track-order" onClick={closeNavigation}>Track Order</a>
+            <a
+              className={styles.navLink}
+              href="#how-it-works"
+              onClick={closeNavigation}
+            >
+              How It Works
+            </a>
 
             <div className={styles.navGroup}>
-              <button type="button" onClick={() => toggleDropdown('support')} aria-expanded={openDropdown === 'support'}>
-                Support <ChevronDown size={16} />
+              <button
+                type="button"
+                className={styles.navLinkBtn}
+                onClick={() => toggleDropdown('support')}
+                aria-expanded={openDropdown === 'support'}
+              >
+                Support <ChevronDown size={15} />
               </button>
               {openDropdown === 'support' && <Dropdown items={supportLinks} onClose={closeNavigation} />}
             </div>
 
+            {/* Mobile Actions */}
             <div className={styles.mobileActions}>
-              <button className={styles.loginButton} type="button" onClick={openAccount}>
-                <UserRound size={19} /> {currentUser ? 'My Dashboard' : 'Login / Signup'}
-              </button>
+              <div className={styles.langSelector}>
+                <Globe2 size={16} />
+                <span>English</span>
+                <ChevronDown size={13} />
+              </div>
+
+              {currentUser ? (
+                <button className={styles.outlineLoginBtn} type="button" onClick={openAccount}>
+                  <UserRound size={17} /> {currentUser.fullName || 'My Dashboard'}
+                </button>
+              ) : (
+                <div className={styles.loginActionGroup}>
+                  <span className={styles.alreadyAccountText}>Already have an account?</span>
+                  <button className={styles.outlineLoginBtn} type="button" onClick={openAccount}>
+                    Login
+                  </button>
+                </div>
+              )}
             </div>
           </nav>
 
+          {/* Desktop Right Controls (Language & Auth) */}
           <div className={styles.desktopActions}>
-            <button className={styles.loginButton} type="button" onClick={openAccount}>
-              <UserRound size={19} /> {currentUser ? 'My Dashboard' : 'Login / Signup'}
-            </button>
+            <div className={styles.langSelector}>
+              <Globe2 size={16} />
+              <span>English</span>
+              <ChevronDown size={13} />
+            </div>
+
+            {currentUser ? (
+              <div className={styles.userProfileGroup}>
+                <div className={styles.cityBadge}>
+                  <MapPin size={14} className={styles.cityPinIcon} />
+                  <span>Bengaluru</span>
+                  <ChevronDown size={12} />
+                </div>
+
+                <button
+                  type="button"
+                  className={styles.notifBtn}
+                  onClick={() => navigateTo('/user/dashboard')}
+                  title="Notifications"
+                >
+                  <Bell size={18} />
+                  <span className={styles.notifBadge}>3</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={styles.userAccountBtn}
+                  onClick={openAccount}
+                >
+                  <div className={styles.avatarCircle}>{userInitials}</div>
+                  <div className={styles.userAccountText}>
+                    <span className={styles.userName}>{currentUser.fullName?.split(' ')[0] || 'Remo'}</span>
+                    <small className={styles.userRole}>Personal Account</small>
+                  </div>
+                  <ChevronDown size={13} className={styles.avatarChevron} />
+                </button>
+              </div>
+            ) : (
+              <div className={styles.loginActionGroup}>
+                <span className={styles.alreadyAccountText}>Already have an account?</span>
+                <button className={styles.outlineLoginBtn} type="button" onClick={openAccount}>
+                  Login
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </header>

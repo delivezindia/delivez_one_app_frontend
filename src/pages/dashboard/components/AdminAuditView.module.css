@@ -114,23 +114,23 @@
 }
 
 .exportBtn {
-  background: #0F172A;
-  color: #FFFFFF;
+  background: #FAB800;
+  color: #0D0F12;
   border: none;
   border-radius: 10px;
   padding: 9px 16px;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
   display: inline-flex;
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 2px 8px rgba(250, 184, 0, 0.25);
+  transition: all 0.15s ease;
 }
 
 .exportBtn:hover {
-  background: #1E293B;
+  background: #E5A700;
   transform: translateY(-1px);
 }
 
@@ -268,9 +268,10 @@
 }
 
 .tfBtnActive {
-  background: #FFFFFF;
-  color: #0F172A;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  background: #FAB800;
+  color: #0D0F12;
+  font-weight: 800;
+  box-shadow: 0 1px 3px rgba(250, 184, 0, 0.25);
 }
 
 .filterRowBottom {
@@ -316,9 +317,10 @@
 }
 
 .pillActive {
-  background: #0F172A;
-  border-color: #0F172A;
-  color: #FFFFFF;
+  background: #FAB800;
+  border-color: #FAB800;
+  color: #0D0F12;
+  font-weight: 800;
 }
 
 .severityGroup {

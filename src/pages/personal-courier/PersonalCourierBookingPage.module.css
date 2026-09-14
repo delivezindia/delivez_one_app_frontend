@@ -77,9 +77,9 @@
   align-items: center;
   gap: 4px;
   padding: 4px 10px;
-  background: #fff1f2;
-  border: 1px solid #fecdd3;
-  color: #e11d48;
+  background: rgba(250, 184, 0, 0.15);
+  border: 1px solid rgba(250, 184, 0, 0.35);
+  color: #0f172a;
   font-size: 0.74rem;
   font-weight: 800;
   border-radius: 999px;
@@ -129,16 +129,16 @@
 }
 
 .stepCircleActive {
-  background: #e11d48;
-  color: #ffffff;
-  border-color: #e11d48;
-  box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.15);
+  background: #fab800;
+  color: #0d0f12;
+  border-color: #fab800;
+  box-shadow: 0 0 0 3px rgba(250, 184, 0, 0.25);
 }
 
 .stepCircleCompleted {
-  background: #ffc107;
-  color: #0f172a;
-  border-color: #ffc107;
+  background: #10b981;
+  color: #ffffff;
+  border-color: #10b981;
 }
 
 .stepLabel {
@@ -149,7 +149,7 @@
 }
 
 .stepLabelActive {
-  color: #e11d48;
+  color: #0f172a;
   font-weight: 850;
 }
 
@@ -162,7 +162,7 @@
 }
 
 .stepLineCompleted {
-  background: #ffc107;
+  background: #10b981;
 }
 
 /* Main Container */
@@ -277,9 +277,9 @@
 }
 
 .addressItemSelected {
-  border-color: #ffc107;
-  background: #fffdf5;
-  box-shadow: 0 0 0 1px #ffc107;
+  border-color: #fab800;
+  background: rgba(250, 184, 0, 0.05);
+  box-shadow: 0 0 0 1px #fab800;
 }
 
 .addressIconWrap {
@@ -331,14 +331,14 @@
 }
 
 .radioCircleActive {
-  border-color: #d97706;
+  border-color: #fab800;
 }
 
 .radioInnerDot {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #d97706;
+  background: #fab800;
 }
 
 /* Map Preview Box */
@@ -382,8 +382,8 @@
 }
 
 .mapPinCenter {
-  color: #e11d48;
-  filter: drop-shadow(0 4px 8px rgba(225, 29, 72, 0.4));
+  color: #fab800;
+  filter: drop-shadow(0 4px 8px rgba(250, 184, 0, 0.4));
   animation: bouncePin 1.5s infinite alternate;
 }
 
@@ -429,8 +429,9 @@
 }
 
 .timingCardSelected {
-  border-color: #ffc107;
-  background: #fffdf5;
+  border-color: #fab800;
+  background: rgba(250, 184, 0, 0.05);
+  box-shadow: 0 0 0 1px #fab800;
 }
 
 .timingLeft {
@@ -502,9 +503,9 @@
 }
 
 .catTileSelected {
-  border-color: #ffc107;
-  box-shadow: 0 0 0 1px #ffc107;
-  background: #fffdf5;
+  border-color: #fab800;
+  box-shadow: 0 0 0 1px #fab800;
+  background: rgba(250, 184, 0, 0.05);
 }
 
 .catIconBox {
@@ -611,8 +612,8 @@
 }
 
 .boxOptionCardSelected {
-  border-color: #e11d48;
-  background: #fff1f2;
+  border-color: #fab800;
+  background: rgba(250, 184, 0, 0.05);
 }
 
 /* Weight Capacity Tabs */
@@ -637,9 +638,9 @@
 }
 
 .capTabActive {
-  background: #fff1f2;
-  border-color: #e11d48;
-  color: #e11d48;
+  background: rgba(250, 184, 0, 0.1);
+  border-color: #fab800;
+  color: #0f172a;
 }
 
 /* Box Size Cards */
@@ -662,8 +663,8 @@
 }
 
 .boxCardItemSelected {
-  border-color: #e11d48;
-  background: #fffdf5;
+  border-color: #fab800;
+  background: rgba(250, 184, 0, 0.05);
 }
 
 .boxCardLeft {
@@ -745,9 +746,9 @@
 }
 
 .handlingBtnActive {
-  background: #fff1f2;
-  border-color: #e11d48;
-  color: #e11d48;
+  background: rgba(250, 184, 0, 0.1);
+  border-color: #fab800;
+  color: #0f172a;
 }
 
 .handlingBtnDisabled {
@@ -775,9 +776,9 @@
 }
 
 .serviceCardSelected {
-  border-color: #ffc107;
-  background: #fffdf5;
-  box-shadow: 0 0 0 1px #ffc107;
+  border-color: #fab800;
+  background: rgba(250, 184, 0, 0.05);
+  box-shadow: 0 0 0 1px #fab800;
 }
 
 .serviceTop {
@@ -882,8 +883,8 @@
 }
 
 .insuranceOptionCardSelected {
-  border-color: #ffc107;
-  background: #fffdf5;
+  border-color: #fab800;
+  background: rgba(250, 184, 0, 0.05);
 }
 
 .declaredValueBox {
@@ -930,7 +931,7 @@
 .editBtn {
   background: transparent;
   border: none;
-  color: #e11d48;
+  color: #0284c7;
   font-size: 0.8rem;
   font-weight: 800;
   cursor: pointer;
@@ -1060,8 +1061,8 @@
 .primaryBtn {
   flex: 2;
   height: 48px;
-  background: #ffc107;
-  color: #0f172a;
+  background: #fab800;
+  color: #0d0f12;
   border: none;
   border-radius: 10px;
   font-size: 1rem;
@@ -1075,7 +1076,7 @@
 }
 
 .primaryBtn:hover {
-  background: #ffb300;
+  background: #e5a700;
 }
 
 .outlineBtn {

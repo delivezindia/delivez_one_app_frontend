@@ -68,18 +68,19 @@
   padding: 10px 20px;
   border-radius: 10px;
   border: none;
-  background: linear-gradient(135deg, #e00014 0%, #b80010 100%);
-  color: #ffffff;
+  background: #FAB800;
+  color: #0D0F12;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 800;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(224, 0, 20, 0.25);
+  box-shadow: 0 4px 12px rgba(250, 184, 0, 0.25);
   transition: all 0.2s ease;
 }
 
 .addBtn:hover {
+  background: #E5A700;
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(224, 0, 20, 0.35);
+  box-shadow: 0 6px 16px rgba(250, 184, 0, 0.35);
 }
 
 /* Metrics Bar */
@@ -217,7 +218,8 @@
 }
 
 .searchInput:focus {
-  border-color: #e00014;
+  border-color: #FAB800;
+  box-shadow: 0 0 0 3px rgba(250, 184, 0, 0.15);
 }
 
 /* Cards Grid */
@@ -372,7 +374,7 @@
 }
 
 .activeThumb {
-  border-color: #e00014;
+  border-color: #FAB800;
 }
 
 .thumbImg {
@@ -631,7 +633,8 @@
 }
 
 .inputField:focus {
-  border-color: #e00014;
+  border-color: #FAB800;
+  box-shadow: 0 0 0 3px rgba(250, 184, 0, 0.15);
 }
 
 .textareaField {
@@ -647,7 +650,8 @@
 }
 
 .textareaField:focus {
-  border-color: #e00014;
+  border-color: #FAB800;
+  box-shadow: 0 0 0 3px rgba(250, 184, 0, 0.15);
 }
 
 .formRow {
@@ -817,11 +821,17 @@
   padding: 10px 22px;
   border-radius: 10px;
   border: none;
-  background: #e00014;
-  color: #ffffff;
+  background: #FAB800;
+  color: #0D0F12;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 800;
   cursor: pointer;
+  box-shadow: 0 2px 8px rgba(250, 184, 0, 0.25);
+  transition: all 0.15s ease;
+}
+
+.saveBtn:hover {
+  background: #E5A700;
 }
 
 .saveBtn:disabled {
@@ -904,18 +914,18 @@
   padding: 7px 16px;
   border-radius: 8px;
   border: none;
-  background: #e00014;
-  color: #ffffff;
+  background: #FAB800;
+  color: #0D0F12;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 800;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 6px rgba(224, 0, 20, 0.2);
+  box-shadow: 0 2px 6px rgba(250, 184, 0, 0.2);
 }
 
 .topSaveBtn:hover {
-  background: #b80010;
-  box-shadow: 0 4px 10px rgba(224, 0, 20, 0.3);
+  background: #E5A700;
+  box-shadow: 0 4px 10px rgba(250, 184, 0, 0.3);
 }
 
 .topSaveBtn:disabled {

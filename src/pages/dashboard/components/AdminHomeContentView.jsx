@@ -458,11 +458,11 @@ export default function AdminHomeContentView() {
       case 'map-pin':
         return <MapPin size={size} color="#15803d" />
       case 'headphones':
-        return <Headphones size={size} color="#e00014" />
+        return <Headphones size={size} color="#fab800" />
       case 'truck':
         return <Truck size={size} color="#087fc1" />
       case 'shield-check':
-        return <ShieldCheck size={size} color="#e00014" />
+        return <ShieldCheck size={size} color="#fab800" />
       case 'rotate-ccw':
         return <RotateCcw size={size} color="#ee5a08" />
       default:

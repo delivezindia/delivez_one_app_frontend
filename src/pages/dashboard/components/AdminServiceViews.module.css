@@ -49,7 +49,7 @@
 .iconGold { color: #D97706; }
 .iconPurple { color: #7C3AED; }
 .iconGreen { color: #059669; }
-.iconRed { color: #E11D48; }
+.iconRed { color: #EF4444; }
 
 .refreshBtn {
   background: #FFFFFF;
@@ -63,6 +63,12 @@
   align-items: center;
   gap: 6px;
   cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.refreshBtn:hover {
+  background: #F8FAFC;
+  border-color: #CBD5E1;
 }
 
 .filterBar {
@@ -147,7 +153,8 @@
 }
 
 .link:hover {
-  color: #2563EB;
+  color: #D97706;
+  text-decoration: underline;
 }
 
 .badgeBlue { background: #EFF6FF; color: #2563EB; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; }
@@ -299,17 +306,18 @@
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: #EFF6FF;
-  color: #2563EB;
-  border: 1px solid #BFDBFE;
+  background: rgba(250, 184, 0, 0.12);
+  color: #0D0F12;
+  border: 1.5px solid #FAB800;
   border-radius: 8px;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 750;
   cursor: pointer;
+  transition: all 0.15s ease;
 }
 
 .editHeaderBtn:hover {
-  background: #DBEAFE;
+  background: #FAB800;
 }
 
 .drawerScrollBody {
@@ -390,16 +398,18 @@
   padding: 12px;
   border-radius: 10px;
   border: none;
-  background: #059669;
-  color: #FFFFFF;
+  background: #FAB800;
+  color: #0D0F12;
   font-size: 13px;
-  font-weight: 750;
+  font-weight: 800;
   cursor: pointer;
+  box-shadow: 0 2px 8px rgba(250, 184, 0, 0.25);
   transition: all 0.15s ease;
 }
 
 .drawerPrimaryBtn:hover {
-  background: #047857;
+  background: #E5A700;
+  transform: translateY(-1px);
 }
 
 .drawerEditBtn {
@@ -410,9 +420,9 @@
   gap: 8px;
   padding: 12px;
   border-radius: 10px;
-  border: 1.5px solid #2563EB;
-  background: #EFF6FF;
-  color: #2563EB;
+  border: 1.5px solid #CBD5E1;
+  background: #FFFFFF;
+  color: #0F172A;
   font-size: 13px;
   font-weight: 750;
   cursor: pointer;
@@ -420,7 +430,8 @@
 }
 
 .drawerEditBtn:hover {
-  background: #DBEAFE;
+  background: #F8FAFC;
+  border-color: #94A3B8;
 }
 
 /* Edit Consignment Modal */
@@ -577,16 +588,17 @@
   padding: 10px 22px;
   border: none;
   border-radius: 8px;
-  background: #2563EB;
-  color: #FFFFFF;
+  background: #FAB800;
+  color: #0D0F12;
   font-size: 13px;
-  font-weight: 750;
+  font-weight: 800;
   cursor: pointer;
+  box-shadow: 0 2px 8px rgba(250, 184, 0, 0.25);
   transition: all 0.15s ease;
 }
 
 .saveSubmitBtn:hover {
-  background: #1D4ED8;
+  background: #E5A700;
 }
 
 .saveSubmitBtn:disabled {

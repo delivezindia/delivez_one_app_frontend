@@ -31,22 +31,23 @@
 }
 
 .saveBtn {
-  background: #0F172A;
-  color: #FFFFFF;
+  background: #FAB800;
+  color: #0D0F12;
   border: none;
   border-radius: 10px;
   padding: 10px 18px;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
   display: inline-flex;
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(250, 184, 0, 0.25);
+  transition: all 0.15s ease;
 }
 
 .saveBtn:hover {
-  background: #1E293B;
+  background: #E5A700;
   transform: translateY(-1px);
 }
 
@@ -162,7 +163,7 @@
 }
 
 input:checked + .slider {
-  background-color: #2563EB;
+  background-color: #FAB800;
 }
 
 input:checked + .sliderDanger {
@@ -196,7 +197,8 @@ input:checked + .slider:before {
 }
 
 .inputGroup input:focus, .inputGroup textarea:focus {
-  border-color: #2563EB;
+  border-color: #FAB800;
+  box-shadow: 0 0 0 3px rgba(250, 184, 0, 0.15);
 }
 
 .surgeControl {
@@ -208,7 +210,7 @@ input:checked + .slider:before {
 .surgeValue {
   font-size: 18px;
   font-weight: 800;
-  color: #2563EB;
+  color: #D97706;
   min-width: 50px;
 }
 

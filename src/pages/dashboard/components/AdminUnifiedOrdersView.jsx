@@ -34,7 +34,7 @@ import {
 import styles from './AdminUnifiedOrdersView.module.css'
 
 const SERVICE_CONFIG = {
-  'gift-delivery': { label: 'Gift & Surprise', icon: Gift, color: '#E11D48', bg: '#FFF1F2' },
+  'gift-delivery': { label: 'Gift & Surprise', icon: Gift, color: '#EF4444', bg: '#FEF2F2' },
   'personal-courier': { label: 'Personal Courier', icon: Truck, color: '#2563EB', bg: '#EFF6FF' },
   'confidential-courier': { label: 'Confidential / Luggage', icon: ShieldCheck, color: '#D97706', bg: '#FEF3C7' },
   'forgot-something': { label: 'Forgot Something', icon: ShoppingBag, color: '#7C3AED', bg: '#F5F3FF' },

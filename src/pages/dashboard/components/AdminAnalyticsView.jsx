@@ -30,7 +30,7 @@ export default function AdminAnalyticsView() {
           <div><small>Avg Delivery Duration</small><strong>{data?.avgDeliveryTimeMins || 42} mins</strong></div>
         </div>
         <div className={styles.insightCard}>
-          <div className={styles.iconCircle} style={{ background: '#FFF1F2', color: '#E11D48' }}><ThumbsUp size={20} /></div>
+          <div className={styles.iconCircle} style={{ background: 'rgba(250, 184, 0, 0.15)', color: '#D97706' }}><ThumbsUp size={20} /></div>
           <div><small>Customer Satisfaction (CSAT)</small><strong>{data?.customerSatisfactionScore || 4.88} / 5.0</strong></div>
         </div>
       </div>

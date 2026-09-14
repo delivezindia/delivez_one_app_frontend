@@ -127,8 +127,15 @@
 }
 
 .orderLink {
-  color: #E11D48;
+  color: #0F172A;
+  font-weight: 750;
   cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.orderLink:hover {
+  color: #D97706;
+  text-decoration: underline;
 }
 
 .metaSub {
@@ -418,19 +425,20 @@
 }
 
 .assignBtn {
-  background: #2563EB;
-  color: #FFFFFF;
+  background: #FAB800;
+  color: #0D0F12;
   border: none;
   border-radius: 8px;
   padding: 8px 12px;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
-  transition: background 0.15s;
+  box-shadow: 0 2px 8px rgba(250, 184, 0, 0.25);
+  transition: all 0.15s ease;
 }
 
 .assignBtn:hover {
-  background: #1D4ED8;
+  background: #E5A700;
 }
 
 .assignBtn:disabled {

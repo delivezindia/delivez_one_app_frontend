@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
   ArrowRight,
-  BriefcaseBusiness,
   Calculator,
   Calendar,
   CheckCircle2,
@@ -11,10 +10,13 @@ import {
   FileText,
   Gift,
   Headphones,
+  HeartHandshake,
   IndianRupee,
   Info,
   Key,
   Laptop,
+  Leaf,
+  Lock,
   Luggage,
   Mail,
   MapPin,
@@ -26,14 +28,18 @@ import {
   PhoneCall,
   RotateCcw,
   Search,
+  Shield,
   ShieldCheck,
   ShoppingBag,
   Smartphone,
   Sparkles,
   Tag,
+  ThumbsUp,
   Truck,
+  Users,
   Wallet,
   X,
+  Zap,
 } from 'lucide-react'
 import ServiceCard from '@/components/cards/ServiceCard/ServiceCard.jsx'
 import BookingForm from '@/features/booking/components/BookingForm.jsx'
@@ -50,7 +56,7 @@ import {
   fetchPromptExamples,
   submitSupportHelpRequest,
 } from '@/features/home-content/services/homeContentService.js'
-import { getStoredUser } from '@/features/auth/services/userAuthService.js'
+import { getStoredUser, registerUser, verifyUserOtp, getDeviceId } from '@/features/auth/services/userAuthService.js'
 
 const DEFAULT_PROMPT_EXAMPLES = [
   {
@@ -109,7 +115,6 @@ const DEFAULT_PROMPT_EXAMPLES = [
   },
 ]
 
-
 const servicePresentation = {
   'courier-delivery': { icon: Truck, tint: '#eef7ff', accent: '#087bc1' },
   'personal-courier': { icon: Truck, tint: '#eef7ff', accent: '#087bc1' },
@@ -121,6 +126,7 @@ const servicePresentation = {
   'return-pickup': { icon: RotateCcw, tint: '#fff4e8', accent: '#ed5b08' },
   'personal-return-pickup': { icon: RotateCcw, tint: '#fff4e8', accent: '#ed5b08' },
   'know-more': { icon: Info, tint: '#f5f3ff', accent: '#7c3aed' },
+  'special-delivery': { icon: Package, tint: '#f5f3ff', accent: '#7c3aed' },
 }
 
 const trustItems = [
@@ -129,6 +135,19 @@ const trustItems = [
   { title: 'Affordable Pricing', text: 'Best rates for every delivery', icon: IndianRupee },
   { title: '24/7 Support', text: 'We are here to help anytime', icon: Headphones },
   { title: 'Real-time Tracking', text: 'Follow your order every step', icon: MapPinned },
+]
+
+// 9 Feature items matching reference ref_02.jpeg exactly
+const whyChooseDelvezOne = [
+  { icon: MapPin, title: 'Pan India Network', text: 'Reach across India' },
+  { icon: Truck, title: 'Real-Time Tracking', text: 'Know where your shipment is' },
+  { icon: ShieldCheck, title: 'Secure & Trusted', text: 'For your valuable items' },
+  { icon: Calendar, title: 'Flexible Scheduling', text: 'Pickup at your convenience' },
+  { icon: Wallet, title: 'Multiple Payment Options', text: 'UPI, Card, Net Banking or Delvez Money' },
+  { icon: Headphones, title: 'Dedicated Support', text: 'Help when you need it' },
+  { icon: Leaf, title: 'Eco-Friendly Fleet', text: 'Cleaner deliveries for a greener tomorrow' },
+  { icon: IndianRupee, title: 'Transparent Pricing', text: 'No hidden charges' },
+  { icon: Shield, title: 'Insured Deliveries', text: 'Added protection for peace of mind' },
 ]
 
 const chipIconMap = {
@@ -164,6 +183,12 @@ function HomePage() {
   const [locationPickerOpen, setLocationPickerOpen] = useState(false)
   const [detectingGps, setDetectingGps] = useState(false)
 
+  // Quick Auth Card State
+  const [quickPhone, setQuickPhone] = useState('')
+  const [quickAuthStep, setQuickAuthStep] = useState(1)
+  const [quickAuthLoading, setQuickAuthLoading] = useState(false)
+  const [quickAuthError, setQuickAuthError] = useState('')
+
   // Modals for Quick Actions
   const [pincodeModalOpen, setPincodeModalOpen] = useState(false)
   const [pincodeInput, setPincodeInput] = useState('')
@@ -188,12 +213,10 @@ function HomePage() {
   useEffect(() => {
     let active = true
 
-    // 1. Fetch live services
     fetchPublicServices()
       .then((items) => active && setServiceCatalog({ items: mergeServiceCatalog(items), error: '' }))
       .catch(() => active && setServiceCatalog({ items: SERVICE_CATALOG, error: 'Live service catalog fallback.' }))
 
-    // 2. Fetch master home data (Location, Hero, Quick Actions, Banner, Chips, Support, Prompt Examples)
     fetchHomeAll().then((data) => {
       if (!active || !data) return
       setHomeData(data)
@@ -208,14 +231,12 @@ function HomePage() {
       }
     })
 
-    // Fallback/Direct prompt examples fetch
     fetchPromptExamples().then((items) => {
       if (active && items && items.length > 0) {
         setPromptExamples(items)
       }
     })
 
-    // 3. Proactively get high-accuracy current location from device GPS
     if (typeof navigator !== 'undefined' && navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         async (pos) => {
@@ -225,9 +246,7 @@ function HomePage() {
             setCurrentLocation(detected)
           }
         },
-        () => {
-          // Keep network IP-detected location if GPS permission not granted
-        },
+        () => {},
         { enableHighAccuracy: true, timeout: 6000, maximumAge: 120000 },
       )
     }
@@ -237,21 +256,19 @@ function HomePage() {
     }
   }, [])
 
-  const services = useMemo(
-    () =>
-      serviceCatalog.items.map((service, index) => ({
-        number: String(index + 1).padStart(2, '0'),
-        title: service.name,
-        description: service.shortDescription,
-        imageUrl: service.imageUrl,
-        slug: service.slug,
-        available: true,
-        icon: servicePresentation[service.slug]?.icon ?? PackageCheck,
-        tint: servicePresentation[service.slug]?.tint ?? '#f5f7f9',
-        accent: servicePresentation[service.slug]?.accent ?? '#52606d',
-      })),
-    [serviceCatalog.items],
-  )
+  const services = useMemo(() => {
+    return serviceCatalog.items.map((service, index) => ({
+      number: String(index + 1).padStart(2, '0'),
+      title: service.name,
+      description: service.shortDescription,
+      imageUrl: service.imageUrl,
+      slug: service.slug,
+      available: true,
+      icon: servicePresentation[service.slug]?.icon ?? PackageCheck,
+      tint: servicePresentation[service.slug]?.tint ?? '#f5f7f9',
+      accent: servicePresentation[service.slug]?.accent ?? '#52606d',
+    }))
+  }, [serviceCatalog.items])
 
   const bookService = (service) => {
     if (service.slug === 'confidential-delivery' || service.slug === 'confidential-courier') {
@@ -283,7 +300,6 @@ function HomePage() {
           }
         },
         async () => {
-          // Fallback to IP detected current location
           const loc = await fetchCurrentLocation()
           setDetectingGps(false)
           if (loc) {
@@ -369,38 +385,6 @@ function HomePage() {
     }
   }
 
-  const renderExampleIcon = (item) => {
-    if (item.hasCustomImage && item.imageUrl) {
-      return <img src={item.imageUrl} alt={item.title} className={styles.exampleCardCustomImage} />
-    }
-    const color = item.iconColor || '#d97706'
-    switch (item.icon?.toLowerCase()) {
-      case 'laptop':
-        return <Laptop size={22} style={{ color }} />
-      case 'luggage':
-      case 'suitcase':
-        return <Luggage size={22} style={{ color }} />
-      case 'file-text':
-      case 'document':
-      case 'documents':
-        return <FileText size={22} style={{ color }} />
-      case 'gift':
-        return <Gift size={22} style={{ color }} />
-      case 'hanger':
-      case 'clothing':
-        return (
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 2a3 3 0 0 0-3 3c0 1.3.8 2.4 2 2.8V9L3.5 16A2 2 0 0 0 5 19h14a2 2 0 0 0 1.5-3L13 9V7.8A3 3 0 0 0 12 2z"/>
-          </svg>
-        )
-      case 'key':
-      case 'keys':
-        return <Key size={22} style={{ color }} />
-      default:
-        return <Sparkles size={20} style={{ color }} />
-    }
-  }
-
   const handleSelectExample = (item) => {
     setPromptText(item.promptText || item.title)
     setExamplesModalOpen(false)
@@ -418,6 +402,16 @@ function HomePage() {
     }
   }
 
+  const handleQuickSendOtp = (e) => {
+    e.preventDefault()
+    const cleanPhone = quickPhone.replace(/\D/g, '')
+    if (cleanPhone.length < 10) {
+      setQuickAuthError('Please enter a valid 10-digit mobile number.')
+      return
+    }
+    setQuickAuthError('')
+    navigateTo(`/login?mode=signup&phone=${encodeURIComponent(cleanPhone)}`)
+  }
 
   const trackOrder = async (event) => {
     event.preventDefault()
@@ -451,10 +445,6 @@ function HomePage() {
       navigateTo(`/track/forgot-something/${trackingId}`)
       return
     }
-    if (trackingId.startsWith('DV-') || trackingId.includes('VAULT')) {
-      navigateTo(`/vault/track/${trackingId}`)
-      return
-    }
 
     setTrackingLoading(true)
     try {
@@ -481,18 +471,6 @@ function HomePage() {
     }
   }
 
-  const hero = homeData?.hero || {
-    greetingPrefix: 'Hi',
-    defaultName: 'Arjun',
-    greetingEmoji: '👋',
-    headline: 'What do you need delivered today?',
-    highlightWord: 'delivered',
-    subtitle: 'AI will take care of the rest.',
-    searchTitle: 'Tell us in your own words... ?',
-    searchPlaceholder: 'Example: Pick up my laptop from office and deliver home by 8 PM.',
-    sideImageUrl: 'http://localhost:4000/api/v1/home/hero/image',
-  }
-
   const quickActions = homeData?.quickActions || [
     { id: 'ship-now', title: 'Ship Now', subtitle: 'Book a new shipment', icon: 'box', actionTarget: '/courier', badge: 'Fast' },
     { id: 'track-shipment', title: 'Track Shipment', subtitle: 'Track your shipments', icon: 'truck', actionTarget: '#track-order', badge: 'Live' },
@@ -514,25 +492,279 @@ function HomePage() {
     { id: 'best-offers', label: 'Best Offers', icon: 'tag', target: '#services' },
   ]
 
-  // Render hero headline with highlighted word
-  const renderHeadline = () => {
-    const text = hero.headline || 'What do you need delivered today?'
-    const highlight = hero.highlightWord || 'delivered'
-    const parts = text.split(new RegExp(`(${highlight})`, 'gi'))
-    return parts.map((part, i) =>
-      part.toLowerCase() === highlight.toLowerCase() ? (
-        <span key={i} className={styles.highlightText}>
-          {part}
-        </span>
-      ) : (
-        part
-      ),
-    )
-  }
-
   return (
-    <>
-      {/* 1. Top Dynamic Location Bar (Matching Mobile Screenshot 2) */}
+    <div className={styles.pageWrapper}>
+      {/* ========================================================= */}
+      {/* MAIN 3-COLUMN HERO SECTION (MATCHING ref_02.jpeg) */}
+      {/* ========================================================= */}
+      <section className={styles.mainHomeGridSection}>
+        <div className={styles.mainHomeGrid}>
+          {/* ----------------- COLUMN 1: LEFT HERO & STATS & RIDER ----------------- */}
+          <div className={styles.heroColumnLeft}>
+            <div className={styles.heroTextGroup}>
+              <h1 className={styles.heroHeading}>
+                Personal<br />
+                Logistics.<br />
+                One App.<br />
+                Every Need.
+              </h1>
+              <p className={styles.heroSubheading}>
+                Send. Move. Return. Anytime. Anywhere in India.
+              </p>
+            </div>
+
+            {/* 3 Metric Stats */}
+            <div className={styles.statsRow}>
+              <div className={styles.statBox}>
+                <strong className={styles.statNumber}>25+</strong>
+                <span className={styles.statLabel}>Cities</span>
+              </div>
+              <div className={styles.statBox}>
+                <strong className={styles.statNumber}>1000+</strong>
+                <span className={styles.statLabel}>Service Locations</span>
+              </div>
+              <div className={styles.statBox}>
+                <strong className={styles.statNumber}>1M+</strong>
+                <span className={styles.statLabel}>Happy Customers</span>
+              </div>
+            </div>
+
+            {/* Courier Rider Card with Bottom Floating Pill */}
+            <div className={styles.riderCard}>
+              <img
+                src="/assets/images/rider_hero_landing.jpg"
+                alt="Delivez Courier Delivery Partner"
+                className={styles.riderImg}
+              />
+              <div className={styles.riderBottomPill}>
+                <div className={styles.riderPillItem}>
+                  <ShieldCheck size={18} className={styles.pillIcon} />
+                  <span>Safe</span>
+                </div>
+                <div className={styles.riderPillItem}>
+                  <ThumbsUp size={18} className={styles.pillIcon} />
+                  <span>Reliable</span>
+                </div>
+                <div className={styles.riderPillItem}>
+                  <Zap size={18} className={styles.pillIcon} />
+                  <span>On-Time</span>
+                </div>
+                <div className={styles.riderPillItem}>
+                  <Users size={18} className={styles.pillIcon} />
+                  <span>Customer First</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ----------------- COLUMN 2: SERVICES & WHY CHOOSE DELVEZ ----------------- */}
+          <div className={styles.centerColumn}>
+            {/* Services Section */}
+            <div className={styles.servicesHeaderRow}>
+              <div>
+                <h2 className={styles.sectionTitle}>Our Services</h2>
+                <p className={styles.sectionSubtitle}>One app for all your personal logistics needs.</p>
+              </div>
+              <button
+                type="button"
+                className={styles.viewAllServicesLink}
+                onClick={() => {
+                  const el = document.getElementById('services-grid-anchor')
+                  if (el) el.scrollIntoView({ behavior: 'smooth' })
+                }}
+              >
+                View All <ArrowRight size={15} />
+              </button>
+            </div>
+
+            {/* 2-Column Grid of 6 Services */}
+            <div id="services-grid-anchor" className={styles.servicesGridTwoCol}>
+              {services.slice(0, 6).map((service) => (
+                <ServiceCard key={service.title} service={service} onBook={bookService} />
+              ))}
+            </div>
+
+            {/* Why Choose Delvez One */}
+            <div id="why-choose-us" className={styles.whyChooseSection}>
+              <h2 className={styles.whyChooseTitle}>Why Choose Delvez One</h2>
+              <div className={styles.whyChooseGrid}>
+                {whyChooseDelvezOne.map((item) => {
+                  const ItemIcon = item.icon
+                  return (
+                    <div key={item.title} className={styles.whyChooseCard}>
+                      <div className={styles.whyChooseIconBadge}>
+                        <ItemIcon size={18} />
+                      </div>
+                      <div className={styles.whyChooseContent}>
+                        <strong className={styles.whyChooseItemTitle}>{item.title}</strong>
+                        <span className={styles.whyChooseItemText}>{item.text}</span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* ----------------- COLUMN 3: AUTH CARD & BADGES ----------------- */}
+          <div className={styles.authColumnRight}>
+            <div className={styles.authCardSticky}>
+              {user ? (
+                /* Already Logged In Quick View */
+                <div className={styles.userActiveCard}>
+                  <div className={styles.userActiveAvatar}>
+                    {user.fullName ? user.fullName[0].toUpperCase() : 'U'}
+                  </div>
+                  <h3 className={styles.userActiveGreeting}>Welcome, {user.fullName?.split(' ')[0] || 'Member'}!</h3>
+                  <p className={styles.userActiveSub}>Your personal logistics dashboard is ready.</p>
+                  <button
+                    type="button"
+                    className={styles.sendOtpBtn}
+                    onClick={() => navigateTo('/user/dashboard')}
+                  >
+                    Go to Dashboard <ArrowRight size={18} />
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.googleAuthBtn}
+                    onClick={() => navigateTo('/courier')}
+                  >
+                    <Truck size={18} /> Book a Delivery
+                  </button>
+                </div>
+              ) : (
+                /* Guest Sign-up Form matching ref_02.jpeg */
+                <>
+                  {/* Stepper (1 Verify Mobile, 2 Basic Details, 3 Account Ready) */}
+                  <div className={styles.authStepper}>
+                    <div className={styles.stepperItemActive}>
+                      <div className={styles.stepCircleActive}>1</div>
+                      <span className={styles.stepTextActive}>Verify Mobile</span>
+                    </div>
+                    <div className={styles.stepperLine} />
+                    <div className={styles.stepperItem}>
+                      <div className={styles.stepCircle}>2</div>
+                      <span className={styles.stepText}>Basic Details<br /><small>(Optional)</small></span>
+                    </div>
+                    <div className={styles.stepperLine} />
+                    <div className={styles.stepperItem}>
+                      <div className={styles.stepCircle}>3</div>
+                      <span className={styles.stepText}>Account Ready</span>
+                    </div>
+                  </div>
+
+                  <h3 className={styles.authCardTitle}>Create your account</h3>
+                  <p className={styles.authCardSubtitle}>Enter your mobile number to get started.</p>
+
+                  <form onSubmit={handleQuickSendOtp} className={styles.quickAuthForm}>
+                    <label htmlFor="quick-mobile-input" className={styles.mobileInputLabel}>
+                      Mobile Number
+                    </label>
+                    <div className={styles.phoneInputGroup}>
+                      <div className={styles.flagPicker}>
+                        <span className={styles.indiaFlag}>🇮🇳</span>
+                        <span className={styles.countryCode}>+91</span>
+                        <ChevronDown size={14} />
+                      </div>
+                      <input
+                        id="quick-mobile-input"
+                        type="tel"
+                        maxLength={10}
+                        placeholder="98765 43210"
+                        value={quickPhone}
+                        onChange={(e) => setQuickPhone(e.target.value.replace(/\D/g, ''))}
+                        className={styles.phoneInputBox}
+                        required
+                      />
+                    </div>
+
+                    {quickAuthError && (
+                      <p className={styles.quickAuthError}>{quickAuthError}</p>
+                    )}
+
+                    <button type="submit" className={styles.sendOtpBtn}>
+                      Send OTP
+                    </button>
+
+                    <p className={styles.authTermsText}>
+                      By continuing, you agree to our{' '}
+                      <a href="#terms">Terms & Conditions</a> and{' '}
+                      <a href="#privacy">Privacy Policy</a>.
+                    </p>
+
+                    <div className={styles.orDivider}>
+                      <span>Or continue with</span>
+                    </div>
+
+                    <button
+                      type="button"
+                      className={styles.googleAuthBtn}
+                      onClick={() => navigateTo('/login')}
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24">
+                        <path
+                          fill="#4285F4"
+                          d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"
+                        />
+                        <path
+                          fill="#34A853"
+                          d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.36 24 12 24z"
+                        />
+                        <path
+                          fill="#FBBC05"
+                          d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.17 0 9.97 0 12s.45 3.83 1.25 5.42l4.03-3.15z"
+                        />
+                        <path
+                          fill="#EA4335"
+                          d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.36 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+                        />
+                      </svg>
+                      <span>Continue with Google</span>
+                    </button>
+                  </form>
+                </>
+              )}
+
+              {/* 3 Bottom Trust Highlights */}
+              <div className={styles.authTrustBlock}>
+                <div className={styles.authTrustItem}>
+                  <Zap size={22} className={styles.authTrustIcon} />
+                  <div>
+                    <strong>Quick Sign Up</strong>
+                    <small>Get started in seconds</small>
+                  </div>
+                </div>
+                <div className={styles.authTrustItem}>
+                  <Lock size={22} className={styles.authTrustIcon} />
+                  <div>
+                    <strong>Your Data is Safe</strong>
+                    <small>We respect your privacy</small>
+                  </div>
+                </div>
+                <div className={styles.authTrustItem}>
+                  <Users size={22} className={styles.authTrustIcon} />
+                  <div>
+                    <strong>Trusted by</strong>
+                    <small>1M+ customers</small>
+                  </div>
+                </div>
+              </div>
+
+              {/* Delvez One Bottom Logo */}
+              <div className={styles.authCardBrandFooter}>
+                <div className={styles.authBrandLogo}>
+                  DELVE<span style={{ color: '#ef4444' }}>Z</span> | ONE
+                </div>
+                <p className={styles.authBrandSlogan}>Personal Logistics. One App. Every Need.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ========================================================= */}
+      {/* 2. TOP DYNAMIC LOCATION BAR */}
+      {/* ========================================================= */}
       <section className={styles.locationBarSection} aria-label="Current Delivery Location">
         <div className={styles.locationBarInner}>
           <div className={styles.locationBarCard}>
@@ -602,296 +834,207 @@ function HomePage() {
         </div>
       </section>
 
-      {/* 2. Dynamic Hero Section (Matching Mobile Screenshot 2) */}
-      <section id="home" className={styles.dynamicHero}>
-        <div className={styles.dynamicHeroInner}>
-          <div className={styles.heroContentLeft}>
-            <div className={styles.userGreeting}>
-              {hero.greetingPrefix || 'Hi'}, {user?.fullName?.split(' ')[0] || hero.defaultName || 'Arjun'}{' '}
-              {hero.greetingEmoji || '👋'}
-            </div>
-
-            <h1 className={styles.dynamicHeroTitle}>{renderHeadline()}</h1>
-
-            <p className={styles.dynamicHeroSubtitle}>{hero.subtitle}</p>
-
-            {/* AI Natural Language Prompt Input Bar */}
-            <form className={styles.aiPromptCard} onSubmit={handlePromptSubmit}>
-              <button
-                type="button"
-                className={styles.sparkleBadge}
-                onClick={() => setExamplesModalOpen(true)}
-                title="Try these prompt examples"
-              >
-                <Sparkles size={20} />
-              </button>
-              <div className={styles.promptInputArea}>
-                <div className={styles.promptLabelRow}>
-                  <label htmlFor="ai-prompt-input" className={styles.promptLabel}>
-                    {hero.searchTitle || 'Tell us in your own words...'}
-                  </label>
-                  <button
-                    type="button"
-                    className={styles.examplesTriggerBtn}
-                    onClick={() => setExamplesModalOpen(true)}
-                    title="View prompt examples"
-                  >
-                    <Sparkles size={12} />
-                    <span>Try examples</span>
-                  </button>
-                </div>
-                <input
-                  id="ai-prompt-input"
-                  type="text"
-                  value={promptText}
-                  onChange={(e) => setPromptText(e.target.value)}
-                  placeholder={hero.searchPlaceholder || 'Example: Pick up my laptop from office and deliver home by 8 PM.'}
-                  className={styles.promptInput}
-                />
-              </div>
-
-              <button
-                type="button"
-                className={styles.micBtn}
-                title="Voice prompt"
-                onClick={() => alert('Listening for your voice instructions... (speak now)')}
-              >
-                <Mic size={20} />
-              </button>
-            </form>
-          </div>
-
-          {/* Side Image / Golden Mascot (from Backend /api/v1/home/hero/image) */}
-          <div className={styles.heroMascotCol}>
-            <div className={styles.mascotGlow} />
-            <img
-              src={hero.sideImageUrl || 'http://localhost:4000/api/v1/home/hero/image'}
-              alt="Delivez AI Delivery Mascot"
-              className={styles.mascotImg}
-              onError={(e) => {
-                e.currentTarget.src = 'http://localhost:4000/api/v1/home/hero/image'
-              }}
-            />
-          </div>
-
-          {/* Desktop Booking Calculator / Direct Form */}
-          <div className={styles.desktopBookingCol}>
-            <BookingForm />
-          </div>
-        </div>
-      </section>
-
-      {/* 3. Our Services Section with "View All ->" */}
-      <section id="services" className={styles.servicesSection}>
-        <div className={styles.sectionHeadingHeader}>
-          <h2>Our Services</h2>
-          <button
-            type="button"
-            className={styles.viewAllBtn}
-            onClick={() => {
-              const grid = document.querySelector(`.${styles.servicesGrid}`)
-              if (grid) grid.scrollIntoView({ behavior: 'smooth' })
-            }}
-          >
-            View All <ArrowRight size={15} />
-          </button>
-        </div>
-        <div className={styles.servicesGrid}>
-          {services.map((service) => (
-            <ServiceCard key={service.title} service={service} onBook={bookService} />
-          ))}
-        </div>
-        {serviceCatalog.error && (
-          <p className={styles.catalogNotice} role="status">
-            {serviceCatalog.error} Showing the latest known service catalog.
-          </p>
-        )}
-      </section>
-
-      {/* 4. Dynamic 4 Quick Action Cards (Ship Now, Track Shipment, Find Pincode, Help & Support - Screenshot 1) */}
-      <section className={styles.quickActionsSection} aria-label="Quick Actions">
-        <div className={styles.quickActionsGrid}>
-          {quickActions.map((action) => {
-            const IconComponent = actionIconMap[action.icon] || Package
-            return (
-              <button
-                key={action.id}
-                type="button"
-                className={styles.quickActionCard}
-                onClick={() => handleQuickActionClick(action)}
-              >
-                <div className={styles.actionIconContainer}>
-                  {action.imageUrl ? (
-                    <img src={action.imageUrl} alt={action.title} className={styles.actionCustomImg} />
-                  ) : (
-                    <IconComponent size={24} />
-                  )}
-                </div>
-                <strong className={styles.actionCardTitle}>{action.title}</strong>
-                <span className={styles.actionCardSubtitle}>{action.subtitle}</span>
-                {action.badge && <span className={styles.actionCardBadge}>{action.badge}</span>}
-              </button>
-            )
-          })}
-        </div>
-      </section>
-
-      {/* 5. Yellow Promo Banner (Matching Mobile Screenshot 1) */}
-      {promoBanner.isActive !== false && (
-        <section className={styles.promoBannerSection}>
-          <div
-            className={styles.promoBannerCard}
-            style={{
-              ...(promoBanner.backgroundColor ? { background: promoBanner.backgroundColor } : {}),
-              ...(promoBanner.textColor ? { color: promoBanner.textColor } : {}),
-            }}
-          >
-            <div className={styles.bannerIconBlock}>
-              {promoBanner.imageUrl ? (
-                <img
-                  src={promoBanner.imageUrl}
-                  alt={promoBanner.title || 'Promo'}
-                  className={styles.bannerCustomImage}
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none'
-                  }}
-                />
-              ) : (
-                <Package size={34} className={styles.bannerBoxIcon} />
-              )}
-            </div>
-            <div className={styles.bannerTextBlock}>
-              <h3 style={promoBanner.textColor ? { color: promoBanner.textColor } : {}}>
-                {promoBanner.title}
-              </h3>
-              <p style={promoBanner.textColor ? { color: promoBanner.textColor, opacity: 0.9 } : {}}>
-                {promoBanner.subtitle}
-              </p>
-            </div>
+      {/* ========================================================= */}
+      {/* 3. AI PROMPT & QUICK ACTIONS */}
+      {/* ========================================================= */}
+      <section className={styles.secondaryFeaturesSection}>
+        <div className={styles.secondaryFeaturesInner}>
+          {/* AI Natural Language Prompt Input Bar */}
+          <form className={styles.aiPromptCard} onSubmit={handlePromptSubmit}>
             <button
               type="button"
-              className={styles.bannerCtaBtn}
-              onClick={() => {
-                if (promoBanner.buttonLink?.startsWith('/')) {
-                  navigateTo(promoBanner.buttonLink)
-                } else {
-                  setKnowMoreOpen(true)
-                }
-              }}
+              className={styles.sparkleBadge}
+              onClick={() => setExamplesModalOpen(true)}
+              title="Try these prompt examples"
             >
-              <span>{promoBanner.buttonText || 'Know More'}</span>
-              <ArrowRight size={16} />
+              <Sparkles size={20} />
             </button>
-          </div>
-        </section>
-      )}
+            <div className={styles.promptInputArea}>
+              <div className={styles.promptLabelRow}>
+                <label htmlFor="ai-prompt-input" className={styles.promptLabel}>
+                  Tell us in your own words...
+                </label>
+                <button
+                  type="button"
+                  className={styles.examplesTriggerBtn}
+                  onClick={() => setExamplesModalOpen(true)}
+                  title="View prompt examples"
+                >
+                  <Sparkles size={12} />
+                  <span>Try examples</span>
+                </button>
+              </div>
+              <input
+                id="ai-prompt-input"
+                type="text"
+                value={promptText}
+                onChange={(e) => setPromptText(e.target.value)}
+                placeholder="Example: Pick up my laptop from office and deliver home by 8 PM."
+                className={styles.promptInput}
+              />
+            </div>
 
-      {/* 6. Secondary Quick Action Chips (Matching Mobile Screenshot 1) */}
-      <section className={styles.actionChipsSection}>
-        <div className={styles.chipsScrollRow}>
-          {actionChips.map((chip) => {
-            const Icon = chipIconMap[chip.icon] || Tag
-            return (
+            <button
+              type="button"
+              className={styles.micBtn}
+              title="Voice prompt"
+              onClick={() => alert('Listening for your voice instructions... (speak now)')}
+            >
+              <Mic size={20} />
+            </button>
+          </form>
+
+          {/* Quick Actions 4 Cards */}
+          <div className={styles.quickActionsGrid}>
+            {quickActions.map((action) => {
+              const IconComponent = actionIconMap[action.icon] || Package
+              return (
+                <button
+                  key={action.id}
+                  type="button"
+                  className={styles.quickActionCard}
+                  onClick={() => handleQuickActionClick(action)}
+                >
+                  <div className={styles.actionIconContainer}>
+                    <IconComponent size={22} />
+                  </div>
+                  <div className={styles.actionCardContent}>
+                    <strong className={styles.actionCardTitle}>{action.title}</strong>
+                    <span className={styles.actionCardSubtitle}>{action.subtitle}</span>
+                  </div>
+                  {action.badge && <span className={styles.actionCardBadge}>{action.badge}</span>}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Yellow Promo Banner */}
+          {promoBanner.isActive !== false && (
+            <div className={styles.promoBannerCard}>
+              <div className={styles.bannerIconBlock}>
+                <Package size={32} className={styles.bannerBoxIcon} />
+              </div>
+              <div className={styles.bannerTextBlock}>
+                <h3>{promoBanner.title}</h3>
+                <p>{promoBanner.subtitle}</p>
+              </div>
               <button
-                key={chip.id}
                 type="button"
-                className={styles.chipPill}
+                className={styles.bannerCtaBtn}
                 onClick={() => {
-                  if (chip.target?.startsWith('/')) {
-                    navigateTo(chip.target)
+                  if (promoBanner.buttonLink?.startsWith('/')) {
+                    navigateTo(promoBanner.buttonLink)
                   } else {
-                    window.location.hash = chip.target
+                    setKnowMoreOpen(true)
                   }
                 }}
               >
-                <div className={styles.chipIconDot}>
-                  <Icon size={16} />
-                </div>
-                <span>{chip.label}</span>
+                <span>{promoBanner.buttonText || 'Know More'}</span>
+                <ArrowRight size={16} />
               </button>
-            )
-          })}
+            </div>
+          )}
+
+          {/* Action Chips */}
+          <div className={styles.actionChipsRow}>
+            {actionChips.map((chip) => {
+              const Icon = chipIconMap[chip.icon] || Tag
+              return (
+                <button
+                  key={chip.id}
+                  type="button"
+                  className={styles.chipPill}
+                  onClick={() => {
+                    if (chip.target?.startsWith('/')) {
+                      navigateTo(chip.target)
+                    } else {
+                      window.location.hash = chip.target
+                    }
+                  }}
+                >
+                  <Icon size={15} />
+                  <span>{chip.label}</span>
+                </button>
+              )
+            })}
+          </div>
         </div>
       </section>
 
-      {/* 7. Trust Bar */}
-      <section className={styles.trustBar} aria-label="Why choose Delivez One">
-        {trustItems.map(({ title, text, icon: Icon }) => (
-          <div key={title} className={styles.trustItem}>
-            <span>
-              <Icon size={29} />
-            </span>
-            <div>
-              <strong>{title}</strong>
-              <small>{text}</small>
-            </div>
-          </div>
-        ))}
-      </section>
-
-      {/* 8. Live Tracking Section */}
+      {/* ========================================================= */}
+      {/* 4. LIVE TRACKING SECTION */}
+      {/* ========================================================= */}
       <section id="track-order" className={styles.trackSection}>
-        <div className={styles.trackCopy}>
-          <p className={styles.kicker}>Live delivery updates</p>
-          <h2>Know exactly where your delivery is.</h2>
-          <p>Enter your tracking ID to see the latest status, GPS telemetry, and estimated arrival time.</p>
-        </div>
-        <form className={styles.trackForm} onSubmit={trackOrder}>
-          <label htmlFor="tracking-id">Tracking ID / Vault ID</label>
-          <div>
-            <MapPinned size={21} />
-            <input id="tracking-id" name="trackingId" placeholder="e.g. DV-250811-8F7X or DLVZ2505128947" required />
-            <button type="submit" disabled={trackingLoading}>
-              {trackingLoading ? 'Searching…' : 'Track'} <ArrowRight size={18} />
-            </button>
+        <div className={styles.trackSectionInner}>
+          <div className={styles.trackCopy}>
+            <p className={styles.kicker}>Live delivery updates</p>
+            <h2>Know exactly where your delivery is.</h2>
+            <p>Enter your tracking ID to see the latest status, GPS telemetry, and estimated arrival time.</p>
           </div>
-          {trackingError && (
-            <div className={styles.trackResult} style={{ background: '#fef2f2', color: '#b91c1c' }} role="alert">
-              <strong>{trackingError}</strong>
+          <form className={styles.trackForm} onSubmit={trackOrder}>
+            <label htmlFor="tracking-id">Tracking ID / Vault ID</label>
+            <div className={styles.trackInputRow}>
+              <MapPinned size={20} className={styles.trackPinIcon} />
+              <input
+                id="tracking-id"
+                name="trackingId"
+                placeholder="e.g. DZ789456123 or DLVZ2505128947"
+                required
+              />
+              <button type="submit" disabled={trackingLoading} className={styles.trackSubmitBtn}>
+                {trackingLoading ? 'Searching…' : 'Track'} <ArrowRight size={17} />
+              </button>
             </div>
-          )}
-          {trackingStatus && (
-            <div className={styles.trackResult} role="status">
-              <span>
-                Order {trackingStatus.trackingId} • {trackingStatus.serviceName}
-              </span>
-              <strong>{trackingStatus.step}</strong>
-              <small>
-                Estimated arrival: {trackingStatus.eta}{' '}
-                {trackingStatus.partnerName ? `• Courier: ${trackingStatus.partnerName}` : ''}
-              </small>
-            </div>
-          )}
-        </form>
+            {trackingError && (
+              <div className={styles.trackResultError} role="alert">
+                <strong>{trackingError}</strong>
+              </div>
+            )}
+            {trackingStatus && (
+              <div className={styles.trackResultCard} role="status">
+                <span>
+                  Order {trackingStatus.trackingId} • {trackingStatus.serviceName}
+                </span>
+                <strong>{trackingStatus.step}</strong>
+                <small>
+                  Estimated arrival: {trackingStatus.eta}{' '}
+                  {trackingStatus.partnerName ? `• Courier: ${trackingStatus.partnerName}` : ''}
+                </small>
+              </div>
+            )}
+          </form>
+        </div>
       </section>
 
-      {/* 9. Download App Section */}
+      {/* ========================================================= */}
+      {/* 5. DOWNLOAD APP SECTION */}
+      {/* ========================================================= */}
       <section id="download-app" className={styles.downloadSection}>
-        <div className={styles.phoneBadge}>
-          <Smartphone size={36} />
-        </div>
-        <div>
-          <p className={styles.kicker}>Deliveries in your pocket</p>
-          <h2>Download the Delivez One app</h2>
-          <p>Book, pay, and track deliveries from anywhere.</p>
-        </div>
-        <div className={styles.storeButtons}>
-          <a href="https://play.google.com" target="_blank" rel="noreferrer">
-            <small>GET IT ON</small>
-            <strong>Google Play</strong>
-          </a>
-          <a href="https://www.apple.com/app-store/" target="_blank" rel="noreferrer">
-            <small>DOWNLOAD ON THE</small>
-            <strong>App Store</strong>
-          </a>
+        <div className={styles.downloadInner}>
+          <div className={styles.phoneBadge}>
+            <Smartphone size={36} />
+          </div>
+          <div className={styles.downloadCopy}>
+            <p className={styles.kicker}>Deliveries in your pocket</p>
+            <h2>Download the Delivez One app</h2>
+            <p>Book, pay, and track deliveries from anywhere across India.</p>
+          </div>
+          <div className={styles.storeButtons}>
+            <a href="https://play.google.com" target="_blank" rel="noreferrer" className={styles.storeBtn}>
+              <small>GET IT ON</small>
+              <strong>Google Play</strong>
+            </a>
+            <a href="https://www.apple.com/app-store/" target="_blank" rel="noreferrer" className={styles.storeBtn}>
+              <small>DOWNLOAD ON THE</small>
+              <strong>App Store</strong>
+            </a>
+          </div>
         </div>
       </section>
 
       {/* ========================================================= */}
-      {/* MODALS */}
+      {/* MODALS (Pincode, Support, Know More, Examples) */}
       {/* ========================================================= */}
-
-      {/* Modal 1: Find Pincode Serviceability */}
       {pincodeModalOpen && (
         <div className={styles.modalOverlay} onClick={() => setPincodeModalOpen(false)}>
           <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
@@ -904,11 +1047,9 @@ function HomePage() {
                 <X size={20} />
               </button>
             </div>
-
             <p className={styles.modalIntro}>
               Enter your 6-digit postal code to check instant delivery availability and turnaround time.
             </p>
-
             <form onSubmit={handleCheckPincodeSubmit} className={styles.pincodeForm}>
               <div className={styles.pincodeInputRow}>
                 <input
@@ -925,7 +1066,6 @@ function HomePage() {
                 </button>
               </div>
             </form>
-
             {pincodeResult && (
               <div className={styles.pincodeResultCard}>
                 <div className={styles.pincodeResultTop}>
@@ -961,7 +1101,6 @@ function HomePage() {
         </div>
       )}
 
-      {/* Modal 2: 24/7 Help & Support */}
       {supportModalOpen && (
         <div className={styles.modalOverlay} onClick={() => setSupportModalOpen(false)}>
           <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
@@ -974,13 +1113,12 @@ function HomePage() {
                 <X size={20} />
               </button>
             </div>
-
             <div className={styles.supportChannelsGrid}>
               <a href={`tel:${homeData?.support?.helpline || '+9118003354839'}`} className={styles.supportChannelCard}>
                 <PhoneCall size={22} />
                 <div>
                   <small>Toll Free Helpline</small>
-                  <strong>{homeData?.support?.helpline || '+91 1800-DELIVEZ-SOS'}</strong>
+                  <strong>{homeData?.support?.helpline || '+91 1800-DELVEZ-SOS'}</strong>
                 </div>
               </a>
               <a
@@ -1003,7 +1141,6 @@ function HomePage() {
                 </div>
               </a>
             </div>
-
             {supportInquirySent ? (
               <div className={styles.supportSuccessCard}>
                 <CheckCircle2 size={32} className={styles.successIcon} />
@@ -1025,7 +1162,6 @@ function HomePage() {
         </div>
       )}
 
-      {/* Modal 3: Know More Services Modal */}
       {knowMoreOpen && (
         <div className={styles.modalOverlay} onClick={() => setKnowMoreOpen(false)}>
           <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
@@ -1062,7 +1198,6 @@ function HomePage() {
         </div>
       )}
 
-      {/* Modal 4: Try These Examples Modal (Matching Mobile Screenshot) */}
       {examplesModalOpen && (
         <div className={styles.modalOverlay} onClick={() => setExamplesModalOpen(false)}>
           <div className={styles.examplesModalCard} onClick={(e) => e.stopPropagation()}>
@@ -1072,7 +1207,6 @@ function HomePage() {
                 <h3>Try these examples</h3>
               </div>
             </div>
-
             <div className={styles.examplesGrid}>
               {(promptExamples.length > 0 ? promptExamples : DEFAULT_PROMPT_EXAMPLES).map((item) => (
                 <button
@@ -1081,16 +1215,12 @@ function HomePage() {
                   className={styles.exampleCard}
                   onClick={() => handleSelectExample(item)}
                 >
-                  <div className={styles.exampleIconBox}>
-                    {renderExampleIcon(item)}
-                  </div>
                   <span className={styles.exampleCardText}>
                     {item.shortText || (item.title.length > 38 ? item.title.slice(0, 35) + '...' : item.title)}
                   </span>
                 </button>
               ))}
             </div>
-
             <div className={styles.examplesModalFooter}>
               <button
                 type="button"
@@ -1103,9 +1233,8 @@ function HomePage() {
           </div>
         </div>
       )}
-    </>
+    </div>
   )
 }
-
 
 export default HomePage

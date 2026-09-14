@@ -52,9 +52,10 @@
 }
 
 .cityTabActive {
-  background: #FFFFFF;
-  color: #0F172A;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background: #FAB800;
+  color: #0D0F12;
+  font-weight: 800;
+  box-shadow: 0 2px 6px rgba(250, 184, 0, 0.25);
 }
 
 .kpiStrip {
@@ -253,22 +254,24 @@
 }
 
 .actionBtn {
-  background: #0F172A;
-  color: #FFFFFF;
+  background: #FAB800;
+  color: #0D0F12;
   border: none;
   border-radius: 10px;
   padding: 10px;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 800;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
   cursor: pointer;
-  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(250, 184, 0, 0.25);
+  transition: all 0.15s ease;
   margin-top: auto;
 }
 
 .actionBtn:hover {
-  background: #1E293B;
+  background: #E5A700;
+  transform: translateY(-1px);
 }

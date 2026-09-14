@@ -1,32 +1,92 @@
-import { ArrowRight } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import styles from './ServiceCard.module.css'
+
+const serviceImageMap = {
+  'courier-delivery': '/assets/images/service_courier.jpg',
+  'personal-courier': '/assets/images/service_courier.jpg',
+  'confidential-delivery': '/assets/images/service_confidential.jpg',
+  'confidential-courier': '/assets/images/service_confidential.jpg',
+  'return-pickup': '/assets/images/service_return.jpg',
+  'personal-return-pickup': '/assets/images/service_return.jpg',
+  'forgot-something': '/assets/images/service_forgot.jpg',
+  'luggage-delivery': '/assets/images/service_airport.jpg',
+  'airport-luggage': '/assets/images/service_airport.jpg',
+  'gift-delivery': '/assets/images/service_special.jpg',
+  'special-delivery': '/assets/images/service_special.jpg',
+  'know-more': '/assets/images/service_special.jpg',
+}
+
+const serviceSubtitles = {
+  'courier-delivery': 'Local to Pan India',
+  'personal-courier': 'Local to Pan India',
+  'confidential-delivery': 'Secure & private',
+  'confidential-courier': 'Secure & private',
+  'return-pickup': 'Easy returns',
+  'personal-return-pickup': 'Easy returns',
+  'forgot-something': 'Instant retrieval',
+  'luggage-delivery': 'Door-to-airport convenience',
+  'airport-luggage': 'Door-to-airport convenience',
+  'gift-delivery': 'Custom delivery solutions',
+  'special-delivery': 'Custom delivery solutions',
+  'know-more': 'Custom delivery solutions',
+}
 
 function ServiceCard({ service, onBook }) {
   const Icon = service.icon
   const isKnowMore = service.slug === 'know-more' || service.title === 'Know More'
+  const imageSrc = service.imageUrl || serviceImageMap[service.slug] || '/assets/images/service_courier.jpg'
+  const subtitle = serviceSubtitles[service.slug] || (service.available ? 'Available across India' : 'Coming soon')
+
   return (
     <article
       className={styles.card}
-      style={{ '--card-tint': service.tint, '--card-accent': service.accent, cursor: service.available ? 'pointer' : 'default' }}
       onClick={() => service.available && onBook(service)}
+      role="button"
+      tabIndex={service.available ? 0 : -1}
+      onKeyDown={(e) => {
+        if ((e.key === 'Enter' || e.key === ' ') && service.available) {
+          e.preventDefault()
+          onBook(service)
+        }
+      }}
     >
-      <span className={styles.number}>{service.number}</span>
-      <span className={`${styles.availability} ${service.available ? styles.live : ''}`}>
-        {isKnowMore ? 'Explore' : service.available ? 'Available' : 'Coming soon'}
-      </span>
-      <div className={styles.artwork} aria-hidden="true"><span className={styles.artworkShadow} />{service.imageUrl ? <img src={service.imageUrl} alt="" /> : <Icon size={68} strokeWidth={1.65} />}</div>
-      <h3>{service.title}</h3>
-      <p>{service.description}</p>
-      <button
-        type="button"
-        disabled={!service.available}
-        onClick={(e) => {
-          e.stopPropagation();
-          onBook(service);
-        }}
-      >
-        {isKnowMore ? 'Know More' : service.available ? 'Start Booking' : 'Not Available Yet'} {service.available && <ArrowRight size={18} />}
-      </button>
+      <div className={styles.imageContainer}>
+        <img
+          src={imageSrc}
+          alt={service.title}
+          className={styles.cardImage}
+          onError={(e) => {
+            e.currentTarget.style.display = 'none'
+          }}
+        />
+        <div className={styles.iconFallback}>
+          {Icon && <Icon size={44} />}
+        </div>
+      </div>
+
+      <div className={styles.contentBody}>
+        <div className={styles.titleGroup}>
+          <h3 className={styles.title}>{service.title}</h3>
+          <p className={styles.subtitle}>{subtitle}</p>
+        </div>
+
+        <p className={styles.description}>{service.description}</p>
+
+        <div className={styles.cardFooter}>
+          <button
+            type="button"
+            className={styles.actionBtn}
+            disabled={!service.available}
+            aria-label={isKnowMore ? 'Know More' : 'Book ' + service.title}
+            onClick={(e) => {
+              e.stopPropagation()
+              onBook(service)
+            }}
+          >
+            <ChevronRight size={18} className={styles.arrowIcon} />
+          </button>
+        </div>
+      </div>
     </article>
   )
 }

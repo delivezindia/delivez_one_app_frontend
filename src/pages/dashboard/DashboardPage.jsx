@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Grid,
   ArrowRight,
@@ -9,6 +9,7 @@ import {
   ChartNoAxesCombined,
   CheckCircle2,
   ChevronRight,
+  CircleAlert,
   Clock3,
   CreditCard,
   Calculator,
@@ -135,15 +136,17 @@ const servicePresentation = {
   'personal-courier': { icon: Truck, color: '#087fc1', tint: '#e9f6ff' },
   'luggage-delivery': { icon: Luggage, color: '#e5a100', tint: '#fff7dd' },
   'airport-luggage': { icon: Luggage, color: '#e5a100', tint: '#fff7dd' },
-  'confidential-delivery': { icon: ShieldCheck, color: '#e00014', tint: '#ffeff0' },
-  'confidential-courier': { icon: ShieldCheck, color: '#e00014', tint: '#ffeff0' },
+  'confidential-delivery': { icon: ShieldCheck, color: '#fab800', tint: 'rgba(250, 184, 0, 0.12)' },
+  'confidential-courier': { icon: ShieldCheck, color: '#fab800', tint: 'rgba(250, 184, 0, 0.12)' },
   'forgot-something': { icon: ShoppingBag, color: '#159565', tint: '#e7f8f1' },
   'return-pickup': { icon: RotateCcw, color: '#ee5a08', tint: '#fff0e6' },
   'personal-return-pickup': { icon: RotateCcw, color: '#ee5a08', tint: '#fff0e6' },
   'gift-delivery': { icon: Gift, color: '#e63f65', tint: '#ffedf2' },
   'gift-and-surprise': { icon: Gift, color: '#e63f65', tint: '#ffedf2' },
+  'know-more': { icon: BookOpen, color: '#2563eb', tint: '#eff6ff' },
+  'more-services': { icon: Grid, color: '#7c3aed', tint: '#f5f3ff' },
 }
-const defaultServicePresentation = { icon: Package, color: '#59636e', tint: '#f0f2f4' }
+const defaultServicePresentation = { icon: Package, color: '#fab800', tint: 'rgba(250, 184, 0, 0.12)' }
 
 const activeDeliveries = [
   {
@@ -396,7 +399,13 @@ export default function DashboardPage() {
         if (error?.status === 401 || error?.status === 403) {
           clearAdminSession()
           navigateTo('/admin/login')
+          return
         }
+        setServicesState((state) => ({
+          ...state,
+          loading: false,
+          error: error?.message || 'Could not connect to PostgreSQL services database.',
+        }))
       })
     return () => controller.abort()
   }, [servicesRefreshKey])
@@ -508,7 +517,9 @@ export default function DashboardPage() {
       <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
         <div className={styles.brandRow}>
           <button className={styles.brand} type="button" onClick={() => navigateTo('/')}>
-            <span>Delivez</span><b>ONE</b>
+            <span className={styles.logoText}>DELVE<span className={styles.logoAccent}>Z</span></span>
+            <span className={styles.logoDivider}>|</span>
+            <b className={styles.logoBadge}>ONE</b>
           </button>
           <button className={styles.closeSidebar} type="button" onClick={() => setSidebarOpen(false)}><X /></button>
         </div>
@@ -665,32 +676,32 @@ export default function DashboardPage() {
                     value: liveStats?.totalOrders !== undefined ? String(liveStats.totalOrders) : '—',
                     detail: `${liveStats?.todayOrders ?? 0} placed today`,
                     icon: PackageCheck,
-                    color: '#e00014',
-                    tint: '#fff0f2'
+                    color: '#fab800',
+                    tint: 'rgba(250, 184, 0, 0.14)'
                   },
                   {
                     label: 'Active Deliveries',
                     value: liveStats?.activeDeliveries !== undefined ? String(liveStats.activeDeliveries) : '—',
                     detail: 'Live in progress',
                     icon: Bike,
-                    color: '#159565',
-                    tint: '#eaf9f3'
+                    color: '#10b981',
+                    tint: '#dcfce7'
                   },
                   {
                     label: 'Delivery Fleet',
                     value: liveStats?.totalDrivers !== undefined ? String(liveStats.totalDrivers) : '—',
                     detail: 'Registered drivers',
                     icon: UserCog,
-                    color: '#7450c4',
-                    tint: '#f2edff'
+                    color: '#6366f1',
+                    tint: '#eef2ff'
                   },
                   {
                     label: "Platform Revenue",
                     value: liveStats?.totalRevenue !== undefined ? `₹${Number(liveStats.totalRevenue).toLocaleString('en-IN')}` : '—',
                     detail: 'Gross bookings revenue',
                     icon: ReceiptIndianRupee,
-                    color: '#e89d00',
-                    tint: '#fff7df'
+                    color: '#0ea5e9',
+                    tint: '#e0f2fe'
                   },
                 ].map(({ label, value, detail, icon: Icon, color, tint }) => (
                   <article key={label} style={{ '--stat-color': color, '--stat-tint': tint }}>
@@ -917,72 +928,172 @@ export default function DashboardPage() {
           {activeNav === 'analytics' && <AdminAnalyticsView />}
 
           {/* ================================================================= */}
-          {/* VIEW 12: SERVICES CATALOGUE                                       */}
+          {/* VIEW 12: SERVICES CATALOGUE & DATABASE                            */}
           {/* ================================================================= */}
           {activeNav === 'services' && (
             <section className={styles.servicesManager} style={{ margin: 0 }}>
               <div className={styles.sectionTitle}>
-                <div><p>SERVICE CATALOGUE</p><h2>Services Database</h2></div>
-                <span>Stored in PostgreSQL · JPG, PNG or WebP · Max 5 MB</span>
+                <div>
+                  <p>SERVICE CATALOGUE</p>
+                  <h2>Services Database</h2>
+                </div>
+                <div className={styles.servicesHeaderRight}>
+                  <span>Stored in PostgreSQL · JPG, PNG or WebP · Max 5 MB</span>
+                  <button
+                    type="button"
+                    className={styles.servicesRefreshBtn}
+                    onClick={() => setServicesRefreshKey((k) => k + 1)}
+                    title="Reload services from PostgreSQL database"
+                  >
+                    <RefreshCw size={14} className={servicesState.loading ? styles.actionSpinner : ''} />
+                    <span>Refresh</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Service Database Metrics Strip */}
+              <div className={styles.servicesStatsStrip}>
+                <div className={styles.servicesStatCard}>
+                  <div className={styles.servicesStatIcon} style={{ background: '#fef3c7', color: '#d97706' }}>
+                    <Package size={20} />
+                  </div>
+                  <div>
+                    <strong className={styles.servicesStatValue}>{servicesState.services.length}</strong>
+                    <span className={styles.servicesStatLabel}>Total Services</span>
+                  </div>
+                </div>
+                <div className={styles.servicesStatCard}>
+                  <div className={styles.servicesStatIcon} style={{ background: '#dcfce7', color: '#15803d' }}>
+                    <CheckCircle2 size={20} />
+                  </div>
+                  <div>
+                    <strong className={styles.servicesStatValue}>
+                      {servicesState.services.filter((s) => s.hasImage).length}
+                    </strong>
+                    <span className={styles.servicesStatLabel}>Custom Images Active</span>
+                  </div>
+                </div>
+                <div className={styles.servicesStatCard}>
+                  <div className={styles.servicesStatIcon} style={{ background: '#eff6ff', color: '#2563eb' }}>
+                    <ShieldCheck size={20} />
+                  </div>
+                  <div>
+                    <strong className={styles.servicesStatValue}>PostgreSQL</strong>
+                    <span className={styles.servicesStatLabel}>Database Storage</span>
+                  </div>
+                </div>
               </div>
 
               {uploadMessage.text && (
-                <div className={`${styles.uploadMessage} ${uploadMessage.type === 'error' ? styles.uploadMessageError : ''}`}>
-                  {uploadMessage.text}
+                <div
+                  className={`${styles.uploadMessage} ${
+                    uploadMessage.type === 'error' ? styles.uploadMessageError : styles.uploadMessageSuccess
+                  }`}
+                >
+                  {uploadMessage.type === 'error' ? <CircleAlert size={18} /> : <CheckCircle2 size={18} />}
+                  <span>{uploadMessage.text}</span>
                 </div>
               )}
 
-              <div className={styles.dashboardServicesGrid}>
-                {servicesState.services.map((service) => {
-                  const presentation = servicePresentation[service.slug] ?? defaultServicePresentation
-                  const Icon = presentation.icon
-                  const isBusy = serviceAction.id === service.id
+              {servicesState.loading && servicesState.services.length === 0 ? (
+                <div className={styles.servicesLoadingState}>
+                  <LoaderCircle className={styles.actionSpinner} size={32} />
+                  <p>Loading services database...</p>
+                </div>
+              ) : servicesState.error && servicesState.services.length === 0 ? (
+                <div className={styles.servicesErrorState}>
+                  <CircleAlert size={32} />
+                  <h3>Failed to load services</h3>
+                  <p>{servicesState.error}</p>
+                  <button
+                    type="button"
+                    className={styles.servicesRetryBtn}
+                    onClick={() => setServicesRefreshKey((k) => k + 1)}
+                  >
+                    Retry Connection
+                  </button>
+                </div>
+              ) : servicesState.services.length === 0 ? (
+                <div className={styles.servicesEmptyState}>
+                  <Package size={48} />
+                  <h3>No services registered</h3>
+                  <p>No active services found in the database catalogue.</p>
+                </div>
+              ) : (
+                <div className={styles.dashboardServicesGrid}>
+                  {servicesState.services.map((service) => {
+                    const presentation = servicePresentation[service.slug] ?? defaultServicePresentation
+                    const Icon = presentation.icon
+                    const isBusy = serviceAction.id === service.id
 
-                  return (
-                    <article
-                      key={service.id}
-                      className={styles.dashboardServiceCard}
-                      style={{ '--service-color': presentation.color, '--service-tint': presentation.tint }}
-                    >
-                      <div className={styles.serviceImage}>
-                        {service.imageUrl ? (
-                          <img src={service.imageUrl} alt={service.name} />
-                        ) : (
-                          <div><Icon size={42} /><small>No image uploaded</small></div>
-                        )}
-                        {service.hasImage && <span className={styles.databaseBadge}>Saved in database</span>}
-                      </div>
-                      <h3>{service.name}</h3>
-                      <p>{service.shortDescription || service.description || 'No description provided.'}</p>
-                      <div className={styles.serviceActions}>
-                        <label className={`${styles.uploadButton} ${isBusy ? styles.serviceActionBusy : ''}`}>
-                          {isBusy ? <LoaderCircle className={styles.actionSpinner} size={16} /> : <Upload size={16} />}
-                          {service.hasImage ? 'Change image' : 'Upload image'}
-                          <input
-                            type="file"
-                            accept="image/jpeg,image/png,image/webp"
-                            disabled={isBusy}
-                            onChange={(e) => {
-                              handleServiceImage(service, e.target.files?.[0])
-                              e.target.value = ''
-                            }}
-                          />
-                        </label>
-                        {service.hasImage && (
-                          <button
-                            className={styles.removeImageButton}
-                            type="button"
-                            disabled={isBusy}
-                            onClick={() => handleRemoveServiceImage(service)}
-                          >
-                            <Trash2 size={15} /> Remove
-                          </button>
-                        )}
-                      </div>
-                    </article>
-                  )
-                })}
-              </div>
+                    return (
+                      <article
+                        key={service.id}
+                        className={styles.dashboardServiceCard}
+                        style={{ '--service-color': presentation.color, '--service-tint': presentation.tint }}
+                      >
+                        <div className={styles.serviceImage}>
+                          {service.imageUrl ? (
+                            <img src={service.imageUrl} alt={service.name} />
+                          ) : (
+                            <div className={styles.noImagePlaceholder}>
+                              <Icon size={44} />
+                              <small>No custom image uploaded</small>
+                            </div>
+                          )}
+                          {service.hasImage && (
+                            <span className={styles.databaseBadge}>
+                              <span className={styles.databaseDot} /> Saved in DB
+                            </span>
+                          )}
+                        </div>
+
+                        <div className={styles.serviceCardBody}>
+                          <div className={styles.serviceCardHeaderRow}>
+                            <h3>{service.name}</h3>
+                            <span className={styles.serviceSlugBadge}>{service.slug}</span>
+                          </div>
+
+                          <p>
+                            {service.shortDescription ||
+                              (typeof service.description === 'string' &&
+                              !service.description.startsWith('[') &&
+                              !service.description.startsWith('{')
+                                ? service.description
+                                : 'Core Delvez platform delivery service.')}
+                          </p>
+
+                          <div className={styles.serviceActions}>
+                            <label className={`${styles.uploadButton} ${isBusy ? styles.serviceActionBusy : ''}`}>
+                              {isBusy ? <LoaderCircle className={styles.actionSpinner} size={15} /> : <Upload size={15} />}
+                              <span>{service.hasImage ? 'Change Image' : 'Upload Image'}</span>
+                              <input
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp"
+                                disabled={isBusy}
+                                onChange={(e) => {
+                                  handleServiceImage(service, e.target.files?.[0])
+                                  e.target.value = ''
+                                }}
+                              />
+                            </label>
+                            {service.hasImage && (
+                              <button
+                                className={styles.removeImageButton}
+                                type="button"
+                                disabled={isBusy}
+                                onClick={() => handleRemoveServiceImage(service)}
+                              >
+                                <Trash2 size={15} /> <span>Remove</span>
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </article>
+                    )
+                  })}
+                </div>
+              )}
             </section>
           )}
 

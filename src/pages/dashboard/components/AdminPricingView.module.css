@@ -52,9 +52,10 @@
 }
 
 .serviceTabActive {
-  background: #FFFFFF;
-  color: #0F172A;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  background: #FAB800;
+  color: #0D0F12;
+  font-weight: 800;
+  box-shadow: 0 2px 6px rgba(250, 184, 0, 0.25);
 }
 
 .layout {
@@ -128,7 +129,8 @@
 }
 
 .inputGroup input:focus {
-  border-color: #2563EB;
+  border-color: #FAB800;
+  box-shadow: 0 0 0 3px rgba(250, 184, 0, 0.15);
 }
 
 .addonsSection {
@@ -148,24 +150,26 @@
 }
 
 .saveBtn {
-  background: #0F172A;
-  color: #FFFFFF;
+  background: #FAB800;
+  color: #0D0F12;
   border: none;
   border-radius: 10px;
   padding: 11px;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   cursor: pointer;
-  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(250, 184, 0, 0.25);
+  transition: all 0.15s ease;
   margin-top: 10px;
 }
 
 .saveBtn:hover {
-  background: #1E293B;
+  background: #E5A700;
+  transform: translateY(-1px);
 }
 
 .simulatorBox {

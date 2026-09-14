@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   ArrowLeft,
   ArrowRight,
@@ -97,8 +97,11 @@ function AdminLoginPage() {
   return (
     <main className={styles.page}>
       <section className={styles.brandPanel}>
+        <div className={styles.brandPanelOverlay} />
         <button className={styles.brand} type="button" onClick={() => navigateTo('/')}>
-          <span>Delivez</span><b>ONE</b>
+          <span className={styles.logoText}>DELVE<span className={styles.logoAccent}>Z</span></span>
+          <span className={styles.logoDivider}>|</span>
+          <b className={styles.logoBadge}>ONE</b>
         </button>
         <div className={styles.brandCopy}>
           <span className={styles.shield}><ShieldCheck size={31} /></span>
@@ -121,38 +124,18 @@ function AdminLoginPage() {
           <h2>Welcome back</h2>
           <p className={styles.intro}>Sign in with the administrator account provisioned by your server.</p>
 
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '18px' }}>
+          <div className={styles.methodSwitch}>
             <button
               type="button"
+              className={`${styles.methodBtn} ${loginMethod === 'phone' ? styles.methodBtnActive : ''}`}
               onClick={() => { setLoginMethod('phone'); setErrorMessage(''); }}
-              style={{
-                flex: 1,
-                padding: '8px 12px',
-                borderRadius: '8px',
-                border: loginMethod === 'phone' ? '2px solid var(--color-danger, #e00014)' : '1px solid #dce0e4',
-                background: loginMethod === 'phone' ? 'rgba(224, 0, 20, 0.06)' : '#fff',
-                fontWeight: loginMethod === 'phone' ? '700' : '500',
-                color: loginMethod === 'phone' ? 'var(--color-danger, #e00014)' : '#555',
-                cursor: 'pointer',
-                fontSize: '0.78rem',
-              }}
             >
               Mobile Number
             </button>
             <button
               type="button"
+              className={`${styles.methodBtn} ${loginMethod === 'email' ? styles.methodBtnActive : ''}`}
               onClick={() => { setLoginMethod('email'); setErrorMessage(''); }}
-              style={{
-                flex: 1,
-                padding: '8px 12px',
-                borderRadius: '8px',
-                border: loginMethod === 'email' ? '2px solid var(--color-danger, #e00014)' : '1px solid #dce0e4',
-                background: loginMethod === 'email' ? 'rgba(224, 0, 20, 0.06)' : '#fff',
-                fontWeight: loginMethod === 'email' ? '700' : '500',
-                color: loginMethod === 'email' ? 'var(--color-danger, #e00014)' : '#555',
-                cursor: 'pointer',
-                fontSize: '0.78rem',
-              }}
             >
               Email Address
             </button>

@@ -154,7 +154,7 @@ export default function AdminSupportView() {
       {/* Header */}
       <div className={styles.header}>
         <div>
-          <h2><Headphones size={22} style={{ color: '#E11D48' }} /> Operations Helpdesk & Incident Desk</h2>
+          <h2><Headphones size={22} style={{ color: '#FAB800' }} /> Operations Helpdesk & Incident Desk</h2>
           <p>Real-time delivery escalations, transit discrepancies, rider distress signals & customer care triage.</p>
         </div>
         <button type="button" className={styles.primaryBtn} onClick={() => setCreateModalOpen(true)}>
