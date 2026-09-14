@@ -2011,3 +2011,432 @@
 .invoiceBtn:hover {
   background: #f8fafc;
 }
+
+/* ========================================================= */
+/* REVIEW & CONFIRM (STEP 9 - MATCHING IMAGE 2) */
+/* ========================================================= */
+.reviewNoticeBanner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fffbeb;
+  border: 1px solid #fef3c7;
+  color: #92400e;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+.noticeShieldIcon {
+  color: #d97706;
+  flex-shrink: 0;
+}
+
+.reviewSectionsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.reviewItemCard {
+  position: relative;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.reviewItemCard:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06);
+}
+
+.reviewIndicatorGreen {
+  position: absolute;
+  left: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #22c55e;
+}
+
+.reviewCardBody {
+  width: 100%;
+}
+
+.reviewCardHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.reviewIconAndTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.reviewIconAndTitle strong {
+  font-size: 0.95rem;
+  color: #1e293b;
+  font-weight: 700;
+}
+
+.reviewIconBox {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.iconBoxOrange {
+  background: #fff7ed;
+  color: #ea580c;
+}
+
+.iconBoxPink {
+  background: #fdf2f8;
+  color: #db2777;
+}
+
+.iconBoxYellow {
+  background: #fefce8;
+  color: #ca8a04;
+}
+
+.iconBoxPurple {
+  background: #faf5ff;
+  color: #9333ea;
+}
+
+.iconBoxAmber {
+  background: #fffbeb;
+  color: #d97706;
+}
+
+.iconBoxRed {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.iconBoxGreen {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+.iconBoxBlue {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.reviewEditBtn {
+  background: none;
+  border: none;
+  color: #4f46e5;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.reviewEditBtn:hover {
+  background: #eef2ff;
+}
+
+.reviewDetailText {
+  padding-left: 42px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.reviewMainName {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.reviewSubAddress {
+  font-size: 0.82rem;
+  color: #475569;
+  line-height: 1.35;
+}
+
+.reviewContactRow {
+  font-size: 0.8rem;
+  color: #334155;
+  margin-top: 3px;
+  font-weight: 500;
+}
+
+.reviewMetaRow {
+  font-size: 0.82rem;
+  color: #334155;
+  font-weight: 500;
+}
+
+.reviewConditionText {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.reviewDocBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.82rem;
+  color: #16a34a;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+/* ========================================================= */
+/* CONFIRMATION SCREEN (STEP 10 - MATCHING IMAGE 1) */
+/* ========================================================= */
+.bookingIdCardBox {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #fed7aa;
+  border-radius: 12px;
+  padding: 14px 18px;
+  width: 100%;
+  max-width: 580px;
+  margin: 16px auto;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.bookingIdLabelCol {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.bookingIdLabelCol small {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.bookingIdLabelCol strong {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: 0.5px;
+}
+
+.shareBtn {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #0f172a;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.shareBtn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.safeNoticeBanner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #15803d;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  width: 100%;
+  max-width: 580px;
+  margin: 0 auto 18px auto;
+  text-align: left;
+}
+
+.bookingDetailsContainerCard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 580px;
+  margin: 0 auto 20px auto;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  text-align: left;
+}
+
+.bookingDetailsCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.bookingDetailsCardHeader strong {
+  font-size: 0.95rem;
+  color: #0f172a;
+  font-weight: 800;
+}
+
+.viewDetailsTextLink {
+  background: none;
+  border: none;
+  color: #e50914;
+  font-size: 0.82rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+}
+
+.viewDetailsTextLink:hover {
+  text-decoration: underline;
+}
+
+.bookingDetailsInnerGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding: 16px 18px;
+}
+
+.detailGridCell {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.detailCellIconBox {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.detailCellContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.detailCellContent small {
+  font-size: 0.72rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.detailCellContent strong {
+  font-size: 0.86rem;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.returnToTitleStrong {
+  color: #0f172a;
+  font-weight: 800;
+}
+
+.detailSubText {
+  font-size: 0.78rem;
+  color: #475569;
+  line-height: 1.3;
+}
+
+.protectionStatusRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.confirmBottomButtonsRow {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  max-width: 580px;
+  margin: 18px auto 0 auto;
+}
+
+.homeWhiteBtn {
+  flex: 1;
+  background: #ffffff;
+  color: #0f172a;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 12px 18px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.homeWhiteBtn:hover {
+  background: #f8fafc;
+}
+
+.trackOrangeBtn {
+  flex: 1;
+  background: #f59e0b;
+  color: #0f172a;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 18px;
+  font-weight: 800;
+  font-size: 0.88rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.3);
+  transition: all 0.15s;
+}
+
+.trackOrangeBtn:hover {
+  background: #d97706;
+}
+
+@media (max-width: 640px) {
+  .bookingDetailsInnerGrid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}
+

@@ -259,7 +259,47 @@ class DelivezApiClient {
   }
 
   // ==========================================
-  // 8. UNIVERSAL TRACKER & SUPPORT
+  // 8. SERVICE 5: RETURN PICKUP
+  // ==========================================
+  Future<Map<String, dynamic>> getReturnPickupOptions() async {
+    final res = await http.get(Uri.parse('$baseUrl/return-pickup/options'), headers: _buildHeaders());
+    return _handleResponse(res);
+  }
+
+  Future<Map<String, dynamic>> getReturnPickupQuote(Map<String, dynamic> quotePayload) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/return-pickup/quote'),
+      headers: _buildHeaders(),
+      body: jsonEncode(quotePayload),
+    );
+    return _handleResponse(res);
+  }
+
+  Future<Map<String, dynamic>> createReturnPickupBooking(Map<String, dynamic> bookingPayload) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/return-pickup/bookings'),
+      headers: _buildHeaders({'Idempotency-Key': 'idemp-${DateTime.now().millisecondsSinceEpoch}'}),
+      body: jsonEncode(bookingPayload),
+    );
+    return _handleResponse(res);
+  }
+
+  Future<Map<String, dynamic>> trackReturnPickup(String id) async {
+    final res = await http.get(Uri.parse('$baseUrl/return-pickup/track/$id'), headers: _buildHeaders());
+    return _handleResponse(res);
+  }
+
+  Future<Map<String, dynamic>> verifyReturnPickupOtp(String id, String type, String otp) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/return-pickup/track/$id/verify-otp'),
+      headers: _buildHeaders(),
+      body: jsonEncode({'type': type, 'otp': otp}),
+    );
+    return _handleResponse(res);
+  }
+
+  // ==========================================
+  // 9. UNIVERSAL TRACKER & SUPPORT
   // ==========================================
   Future<Map<String, dynamic>> universalTrack(String trackingId) async {
     final res = await http.get(Uri.parse('$baseUrl/track/$trackingId'), headers: _buildHeaders());

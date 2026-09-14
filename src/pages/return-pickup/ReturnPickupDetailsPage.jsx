@@ -214,7 +214,7 @@ export default function ReturnPickupDetailsPage({ bookingId: propId }) {
               <Store size={16} color="#d97706" />
               <div>
                 <small>Return To</small>
-                <strong>{booking.destinationName || 'Seller / Warehouse'}</strong>
+                <strong>{booking.destinationName || booking.delivery?.addressType || booking.returnAddressType || 'Store'}</strong>
               </div>
             </div>
 
@@ -305,7 +305,7 @@ export default function ReturnPickupDetailsPage({ bookingId: propId }) {
               <span className={styles.viewTag}>View</span>
             </div>
             <div className={styles.addressDetails}>
-              <h4>{booking.destinationName || 'Seller / Warehouse'}</h4>
+              <h4>{booking.destinationName || booking.delivery?.addressType || booking.returnAddressType || 'Store'}</h4>
               <p>{booking.returnAddress || 'Warehouse No. 7, KIADB Industrial Area, Hosur Road, Bangalore - 560100, Karnataka'}</p>
               <span className={styles.phoneRow}>{booking.returnPhoneNumber || '+91 91234 56789'}</span>
 

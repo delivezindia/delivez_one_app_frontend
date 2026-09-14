@@ -483,7 +483,7 @@ export default function ReturnPickupTrackingPage({ bookingId: initialId }) {
             </div>
             <div className={styles.snapshotRow}>
               <span>Return To:</span>
-              <strong>{booking.destinationName || 'ABC Retail Warehouse'}</strong>
+              <strong>{booking.destinationName || booking.delivery?.addressType || booking.returnAddressType || 'Store'}</strong>
             </div>
             <div className={styles.snapshotRow}>
               <span>Service Speed:</span>

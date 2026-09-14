@@ -124,7 +124,7 @@ export default function ReturnPickupBookingPage() {
     pickupInstructions: 'Store pickup counter on ground floor',
 
     // Step 3: Where should we deliver the return?
-    returnAddressType: 'My Home',
+    returnAddressType: 'Store',
     returnAddress: 'Flat 402, Green Glen Layout, Outer Ring Road, Bellandur',
     returnCity: 'Bengaluru',
     returnState: 'Karnataka',
@@ -588,26 +588,152 @@ export default function ReturnPickupBookingPage() {
       {/* 4. MAIN WORKSPACE */}
       <main className={styles.mainLayout}>
         {currentStep === 10 && confirmedBooking ? (
-          /* CONFIRMATION SCREEN */
+          /* CONFIRMATION SCREEN (MATCHING IMAGE 1) */
           <div className={styles.confirmationCard}>
             <div className={styles.successCheckCircle}>
               <CheckCircle2 size={36} />
             </div>
-            <h2>Return Pickup Confirmed!</h2>
-            <p>Our delivery partner has been assigned and will pick up your item on schedule.</p>
+            <h2>Your Return is Booked!</h2>
+            <p>Thank you! Your return request has been confirmed.</p>
 
-            <div className={styles.bookingIdPill}>
-              <span>{confirmedBooking.bookingNumber || 'DRVZ-RET-SUCCESS'}</span>
-              <button
-                type="button"
-                className={styles.copyBtn}
-                title="Copy Booking ID"
-                onClick={() => handleCopyId(confirmedBooking.bookingNumber)}
-              >
-                {copiedBookingId ? <Check size={15} color="#10b981" /> : <Copy size={15} />}
-              </button>
+            {/* Booking ID Box with Share */}
+            <div className={styles.bookingIdCardBox}>
+              <div className={styles.bookingIdLabelCol}>
+                <small>Booking ID</small>
+                <strong>{confirmedBooking.bookingNumber || 'DRVZ-RET-140926-16875'}</strong>
+              </div>
+              <div className={styles.bookingIdActions}>
+                <button
+                  type="button"
+                  className={styles.shareBtn}
+                  onClick={() => handleCopyId(confirmedBooking.bookingNumber)}
+                  title="Share / Copy Booking ID"
+                >
+                  <Share2 size={15} />
+                  <span>{copiedBookingId ? 'Copied!' : 'Share'}</span>
+                </button>
+              </div>
             </div>
 
+            {/* Green Notification Safe Banner */}
+            <div className={styles.safeNoticeBanner}>
+              <CheckCircle2 size={16} color="#16a34a" />
+              <span>We will pick up your item as scheduled and deliver it safely.</span>
+            </div>
+
+            {/* Booking Details Card with 6-cell Grid */}
+            <div className={styles.bookingDetailsContainerCard}>
+              <div className={styles.bookingDetailsCardHeader}>
+                <strong>Booking Details</strong>
+                <button
+                  type="button"
+                  className={styles.viewDetailsTextLink}
+                  onClick={() => navigateTo(`/return-pickup/details/${confirmedBooking.bookingNumber}`)}
+                >
+                  View Details <ChevronRight size={14} />
+                </button>
+              </div>
+
+              <div className={styles.bookingDetailsInnerGrid}>
+                {/* 1. Pickup Date & Time */}
+                <div className={styles.detailGridCell}>
+                  <div className={`${styles.detailCellIconBox} ${styles.iconBoxAmber}`}>
+                    <CalendarDays size={18} />
+                  </div>
+                  <div className={styles.detailCellContent}>
+                    <small>Pickup Date & Time</small>
+                    <strong>
+                      {confirmedBooking.scheduledDate || formData.scheduledDate}
+                    </strong>
+                    <div className={styles.detailSubText}>
+                      {confirmedBooking.scheduledTimeSlot || formData.scheduledTimeSlot}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Pickup Address */}
+                <div className={styles.detailGridCell}>
+                  <div className={`${styles.detailCellIconBox} ${styles.iconBoxPink}`}>
+                    <MapPin size={18} />
+                  </div>
+                  <div className={styles.detailCellContent}>
+                    <small>Pickup Address</small>
+                    <strong>
+                      {confirmedBooking.pickup?.storeName || confirmedBooking.pickupStoreName || formData.pickupStoreName || 'Home'} - {confirmedBooking.pickup?.city || confirmedBooking.pickupCity || formData.pickupCity}
+                    </strong>
+                    <div className={styles.detailSubText}>
+                      {confirmedBooking.pickup?.address || confirmedBooking.pickupAddress || formData.pickupAddress}, {confirmedBooking.pickup?.postalCode || confirmedBooking.pickupPostalCode || formData.pickupPostalCode}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. Return To - REFLECTS STORE / SHOP / SERVICE CENTER */}
+                <div className={styles.detailGridCell}>
+                  <div className={`${styles.detailCellIconBox} ${styles.iconBoxGreen}`}>
+                    <Store size={18} />
+                  </div>
+                  <div className={styles.detailCellContent}>
+                    <small>Return To</small>
+                    <strong className={styles.returnToTitleStrong}>
+                      {confirmedBooking.delivery?.addressType || confirmedBooking.returnAddressType || confirmedBooking.destinationName || formData.returnAddressType || 'Store'}
+                    </strong>
+                    <div className={styles.detailSubText}>
+                      {confirmedBooking.delivery?.address || confirmedBooking.returnAddress || formData.returnAddress}
+                    </div>
+                    <div className={styles.detailSubText}>
+                      {confirmedBooking.delivery?.city || confirmedBooking.returnCity || formData.returnCity} - {confirmedBooking.delivery?.postalCode || confirmedBooking.returnPostalCode || formData.returnPostalCode}
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4. Item Details */}
+                <div className={styles.detailGridCell}>
+                  <div className={`${styles.detailCellIconBox} ${styles.iconBoxPurple}`}>
+                    <Package size={18} />
+                  </div>
+                  <div className={styles.detailCellContent}>
+                    <small>Item Details</small>
+                    <strong>
+                      {confirmedBooking.itemCategory || formData.itemCategory}
+                    </strong>
+                    <div className={styles.detailSubText}>
+                      {confirmedBooking.itemQuantity || formData.itemQuantity} Item(s) • {confirmedBooking.approxWeightKg || formData.approxWeightKg} kg
+                    </div>
+                  </div>
+                </div>
+
+                {/* 5. Service Type */}
+                <div className={styles.detailGridCell}>
+                  <div className={`${styles.detailCellIconBox} ${styles.iconBoxBlue}`}>
+                    <Truck size={18} />
+                  </div>
+                  <div className={styles.detailCellContent}>
+                    <small>Service Type</small>
+                    <strong>
+                      {confirmedBooking.deliveryService || formData.deliveryService || 'STANDARD'}
+                    </strong>
+                  </div>
+                </div>
+
+                {/* 6. Shipment Protection */}
+                <div className={styles.detailGridCell}>
+                  <div className={`${styles.detailCellIconBox} ${styles.iconBoxAmber}`}>
+                    <ShieldCheck size={18} />
+                  </div>
+                  <div className={styles.detailCellContent}>
+                    <small>Shipment Protection</small>
+                    <div className={styles.protectionStatusRow}>
+                      <strong>Added</strong> <CheckCircle2 size={13} color="#16a34a" />
+                    </div>
+                    <div className={styles.detailSubText}>
+                      Covered up to ₹10000.0
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* OTP Verification Block */}
             <div className={styles.otpRow}>
               <div className={styles.otpCard}>
                 <small>Pickup Verification OTP</small>
@@ -619,20 +745,21 @@ export default function ReturnPickupBookingPage() {
               </div>
             </div>
 
-            <div className={styles.confirmActionsRow}>
+            {/* Bottom Actions matching Image 1 */}
+            <div className={styles.confirmBottomButtonsRow}>
               <button
                 type="button"
-                className={styles.trackBtn}
-                onClick={() => navigateTo(`/track/return-pickup/${confirmedBooking.bookingNumber}`)}
+                className={styles.homeWhiteBtn}
+                onClick={() => navigateTo('/')}
               >
-                <Truck size={16} /> Live Universal Tracking
+                <Home size={16} /> Go to Home
               </button>
               <button
                 type="button"
-                className={styles.invoiceBtn}
-                onClick={() => navigateTo('/returns')}
+                className={styles.trackOrangeBtn}
+                onClick={() => navigateTo(`/track/return-pickup/${confirmedBooking.bookingNumber}`)}
               >
-                <FileText size={16} /> My Return Bookings
+                Track Return <ChevronRight size={16} />
               </button>
             </div>
           </div>
@@ -853,10 +980,10 @@ export default function ReturnPickupBookingPage() {
                   {/* Delivery Type Horizontal Cards */}
                   <div className={styles.deliveryTypeCardsGrid}>
                     {[
-                      { id: 'My Home', title: 'My Home', sub: 'Deliver to my home address', icon: Home },
-                      { id: 'Another Address', title: 'Another Address', sub: 'Deliver to any other address', icon: Building },
-                      { id: 'Seller / Warehouse', title: 'Seller / Warehouse', sub: 'Deliver to seller or warehouse', icon: Store },
-                      { id: 'Custom Address', title: 'Custom Address', sub: 'Add a new custom address', icon: MapPin }
+                      { id: 'Store', title: 'Store', sub: 'Deliver to store address', icon: Home },
+                      { id: 'Shop', title: 'Shop', sub: 'Deliver to shop address', icon: Building },
+                      { id: 'Service Center', title: 'Service Center', sub: 'Deliver to service center address', icon: Wrench },
+                      { id: 'Seller / Warehouse', title: 'Seller / Warehouse', sub: 'Deliver to seller or warehouse', icon: Store }
                     ].map((item) => {
                       const IconC = item.icon
                       const isSel = formData.returnAddressType === item.id
@@ -864,7 +991,19 @@ export default function ReturnPickupBookingPage() {
                         <div
                           key={item.id}
                           className={`${styles.deliveryTypeCard} ${isSel ? styles.selected : ''}`}
-                          onClick={() => updateField('returnAddressType', item.id)}
+                          onClick={() => {
+                            updateField('returnAddressType', item.id)
+                            if (item.id === 'Store' || item.id === 'Shop') {
+                              updateField('destinationType', 'LOCAL_STORE')
+                              updateField('destinationName', item.id)
+                            } else if (item.id === 'Service Center') {
+                              updateField('destinationType', 'SERVICE_CENTRE')
+                              updateField('destinationName', 'Service Center')
+                            } else if (item.id === 'Seller / Warehouse') {
+                              updateField('destinationType', 'WAREHOUSE')
+                              updateField('destinationName', 'Seller / Warehouse')
+                            }
+                          }}
                         >
                           <div className={styles.cardCheckCircle}>
                             {isSel ? <CheckCircle2 size={15} /> : <div className={styles.emptyCircle} />}
@@ -899,7 +1038,7 @@ export default function ReturnPickupBookingPage() {
                         <input
                           type="text"
                           className={styles.addressTopInput}
-                          placeholder="House/Building, Street, Area"
+                          placeholder="Shop / Store / Service Center, Street, Area"
                           value={formData.returnAddress}
                           onChange={(e) => updateField('returnAddress', e.target.value)}
                         />
@@ -1689,63 +1828,261 @@ export default function ReturnPickupBookingPage() {
                 </section>
               )}
 
-              {/* STEP 9: REVIEW & PAYMENT */}
+              {/* STEP 9: REVIEW & CONFIRM */}
               {currentStep === 9 && (
                 <section className={styles.stepCard}>
                   <div className={styles.stepHeader}>
                     <span className={styles.stepBadge}>Step 9</span>
-                    <h2>Choose Delivery Speed & Payment</h2>
-                    <p>Review the delivery options and select your payment method.</p>
+                    <h2>Review & Confirm</h2>
+                    <p>Please review your return details before confirming.</p>
                   </div>
 
-                  {/* Delivery Service Selection */}
-                  <div className={styles.serviceCardsRow}>
-                    {[
-                      { id: 'STANDARD', name: 'Standard Delivery', eta: '2 - 4 Working Days', price: '₹89', icon: Truck },
-                      { id: 'EXPRESS', name: 'Express Delivery', eta: '24 - 48 Hours', price: '₹149', icon: Rocket },
-                      { id: 'PRECISE_TIME', name: 'Precise Time Delivery', eta: 'Selected 2-hr window', price: '₹199', icon: Clock }
-                    ].map((svc) => {
-                      const IconC = svc.icon
-                      const isSel = formData.deliveryService === svc.id
-                      return (
-                        <div
-                          key={svc.id}
-                          className={`${styles.serviceCard} ${isSel ? styles.selected : ''}`}
-                          onClick={() => updateField('deliveryService', svc.id)}
-                        >
-                          <div className={styles.serviceHeader}>
-                            <strong>{svc.name}</strong>
-                            <span className={styles.servicePrice}>{svc.price}</span>
+                  {/* Notice Banner */}
+                  <div className={styles.reviewNoticeBanner}>
+                    <Shield size={16} className={styles.noticeShieldIcon} />
+                    <span>You can edit any section by tapping on it.</span>
+                  </div>
+
+                  {/* Review Cards List */}
+                  <div className={styles.reviewSectionsList}>
+                    {/* 1. Pickup From */}
+                    <div className={styles.reviewItemCard} onClick={() => setCurrentStep(2)}>
+                      <div className={styles.reviewIndicatorGreen} />
+                      <div className={styles.reviewCardBody}>
+                        <div className={styles.reviewCardHeaderRow}>
+                          <div className={styles.reviewIconAndTitle}>
+                            <div className={`${styles.reviewIconBox} ${styles.iconBoxOrange}`}>
+                              <Store size={18} />
+                            </div>
+                            <strong>Pickup From</strong>
                           </div>
-                          <div className={styles.serviceEta}>{svc.eta}</div>
-                        </div>
-                      )
-                    })}
-                  </div>
-
-                  {/* Payment Methods */}
-                  <div className={styles.fieldBlock}>
-                    <span className={styles.fieldLabel}>Select Payment Method</span>
-                    <div className={styles.paymentMethodsGrid}>
-                      {[
-                        { id: 'PAY_ON_PICKUP', label: 'Pay on Pickup (Cash / UPI)', icon: Wallet },
-                        { id: 'UPI', label: 'Instant UPI (GPay / PhonePe)', icon: Sparkles },
-                        { id: 'WALLET', label: 'Delivez Wallet', icon: Wallet },
-                        { id: 'CARD', label: 'Debit / Credit Card', icon: CreditCard }
-                      ].map((pm) => {
-                        const IconC = pm.icon
-                        const isSel = formData.paymentMethod === pm.id
-                        return (
-                          <div
-                            key={pm.id}
-                            className={`${styles.paymentMethodCard} ${isSel ? styles.selected : ''}`}
-                            onClick={() => updateField('paymentMethod', pm.id)}
+                          <button
+                            type="button"
+                            className={styles.reviewEditBtn}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setCurrentStep(2)
+                            }}
                           >
-                            <IconC size={18} color="#b45309" />
-                            <span>{pm.label}</span>
+                            <Edit3 size={13} /> Edit
+                          </button>
+                        </div>
+                        <div className={styles.reviewDetailText}>
+                          <div className={styles.reviewMainName}>{formData.pickupStoreName || 'Home'}</div>
+                          <div className={styles.reviewSubAddress}>{formData.pickupAddress}</div>
+                          <div className={styles.reviewSubAddress}>
+                            {formData.pickupCity} {formData.pickupPostalCode}
                           </div>
-                        )
-                      })}
+                          <div className={styles.reviewContactRow}>
+                            Contact: {formData.pickupContactName} | {formData.pickupPhoneNumber}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 2. Return To (Delivery Address) - REFLECTS SELECTED STORE / SHOP / SERVICE CENTER */}
+                    <div className={styles.reviewItemCard} onClick={() => setCurrentStep(3)}>
+                      <div className={styles.reviewIndicatorGreen} />
+                      <div className={styles.reviewCardBody}>
+                        <div className={styles.reviewCardHeaderRow}>
+                          <div className={styles.reviewIconAndTitle}>
+                            <div className={`${styles.reviewIconBox} ${styles.iconBoxPink}`}>
+                              <MapPin size={18} />
+                            </div>
+                            <strong>Return To (Delivery Address)</strong>
+                          </div>
+                          <button
+                            type="button"
+                            className={styles.reviewEditBtn}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setCurrentStep(3)
+                            }}
+                          >
+                            <Edit3 size={13} /> Edit
+                          </button>
+                        </div>
+                        <div className={styles.reviewDetailText}>
+                          <div className={styles.reviewMainName}>
+                            {formData.returnAddressType || 'Store'}
+                          </div>
+                          <div className={styles.reviewSubAddress}>{formData.returnAddress}</div>
+                          <div className={styles.reviewSubAddress}>
+                            {formData.returnCity} {formData.returnPostalCode}
+                          </div>
+                          <div className={styles.reviewContactRow}>
+                            Contact: {formData.returnContactName} | {formData.returnPhoneNumber}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 3. Item Details */}
+                    <div className={styles.reviewItemCard} onClick={() => setCurrentStep(5)}>
+                      <div className={styles.reviewIndicatorGreen} />
+                      <div className={styles.reviewCardBody}>
+                        <div className={styles.reviewCardHeaderRow}>
+                          <div className={styles.reviewIconAndTitle}>
+                            <div className={`${styles.reviewIconBox} ${styles.iconBoxYellow}`}>
+                              <Package size={18} />
+                            </div>
+                            <strong>Item Details</strong>
+                          </div>
+                          <button
+                            type="button"
+                            className={styles.reviewEditBtn}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setCurrentStep(5)
+                            }}
+                          >
+                            <Edit3 size={13} /> Edit
+                          </button>
+                        </div>
+                        <div className={styles.reviewDetailText}>
+                          <div className={styles.reviewMainName}>{formData.itemDescription || 'Item for return'}</div>
+                          <div className={styles.reviewMetaRow}>
+                            Qty: {formData.itemQuantity} | Weight: {formData.approxWeightKg} kg | Value: ₹{formData.declaredValue || 0}
+                          </div>
+                          <div className={styles.reviewConditionText}>
+                            Condition: {formData.itemCondition === 'NEW_UNUSED' ? 'New / Unused' : formData.itemCondition === 'USED_GOOD' ? 'Used - Good' : 'Damaged / Defective'}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 4. Documents */}
+                    <div className={styles.reviewItemCard} onClick={() => setCurrentStep(6)}>
+                      <div className={styles.reviewIndicatorGreen} />
+                      <div className={styles.reviewCardBody}>
+                        <div className={styles.reviewCardHeaderRow}>
+                          <div className={styles.reviewIconAndTitle}>
+                            <div className={`${styles.reviewIconBox} ${styles.iconBoxPurple}`}>
+                              <FileText size={18} />
+                            </div>
+                            <strong>Documents</strong>
+                          </div>
+                          <button
+                            type="button"
+                            className={styles.reviewEditBtn}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setCurrentStep(6)
+                            }}
+                          >
+                            <Edit3 size={13} /> Edit
+                          </button>
+                        </div>
+                        <div className={styles.reviewDetailText}>
+                          <div className={styles.reviewMainName}>Return Authorization (If any)</div>
+                          <div className={styles.reviewDocBadge}>
+                            <CheckCircle2 size={14} color="#16a34a" /> {formData.documents?.length || 1} Uploaded
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 5. Pickup Schedule */}
+                    <div className={styles.reviewItemCard} onClick={() => setCurrentStep(8)}>
+                      <div className={styles.reviewIndicatorGreen} />
+                      <div className={styles.reviewCardBody}>
+                        <div className={styles.reviewCardHeaderRow}>
+                          <div className={styles.reviewIconAndTitle}>
+                            <div className={`${styles.reviewIconBox} ${styles.iconBoxAmber}`}>
+                              <CalendarDays size={18} />
+                            </div>
+                            <strong>Pickup Schedule</strong>
+                          </div>
+                          <button
+                            type="button"
+                            className={styles.reviewEditBtn}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setCurrentStep(8)
+                            }}
+                          >
+                            <Edit3 size={13} /> Edit
+                          </button>
+                        </div>
+                        <div className={styles.reviewDetailText}>
+                          <div className={styles.reviewMainName}>{formData.scheduledDate}</div>
+                          <div className={styles.reviewSubAddress}>{formData.scheduledTimeSlot}</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 6. Delivery Service */}
+                    <div className={styles.reviewItemCard}>
+                      <div className={styles.reviewIndicatorGreen} />
+                      <div className={styles.reviewCardBody}>
+                        <div className={styles.reviewCardHeaderRow}>
+                          <div className={styles.reviewIconAndTitle}>
+                            <div className={`${styles.reviewIconBox} ${styles.iconBoxRed}`}>
+                              <Truck size={18} />
+                            </div>
+                            <strong>Delivery Service</strong>
+                          </div>
+                        </div>
+                        <div className={styles.serviceCardsRow} style={{ marginTop: 12 }}>
+                          {[
+                            { id: 'STANDARD', name: 'Standard Delivery', eta: 'Delivery in 2 - 4 Working Days', price: '₹89', icon: Truck },
+                            { id: 'EXPRESS', name: 'Express Delivery', eta: 'Delivery in 24 - 48 Hours', price: '₹149', icon: Rocket },
+                            { id: 'PRECISE_TIME', name: 'Precise Time Delivery', eta: 'Selected 2-hr window', price: '₹199', icon: Clock }
+                          ].map((svc) => {
+                            const IconC = svc.icon
+                            const isSel = formData.deliveryService === svc.id
+                            return (
+                              <div
+                                key={svc.id}
+                                className={`${styles.serviceCard} ${isSel ? styles.selected : ''}`}
+                                onClick={() => updateField('deliveryService', svc.id)}
+                              >
+                                <div className={styles.serviceHeader}>
+                                  <strong>{svc.name}</strong>
+                                  <span className={styles.servicePrice}>{svc.price}</span>
+                                </div>
+                                <div className={styles.serviceEta}>{svc.eta}</div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 7. Payment Methods */}
+                    <div className={styles.reviewItemCard}>
+                      <div className={styles.reviewIndicatorGreen} />
+                      <div className={styles.reviewCardBody}>
+                        <div className={styles.reviewCardHeaderRow}>
+                          <div className={styles.reviewIconAndTitle}>
+                            <div className={`${styles.reviewIconBox} ${styles.iconBoxAmber}`}>
+                              <Wallet size={18} />
+                            </div>
+                            <strong>Select Payment Method</strong>
+                          </div>
+                        </div>
+                        <div className={styles.paymentMethodsGrid} style={{ marginTop: 12 }}>
+                          {[
+                            { id: 'PAY_ON_PICKUP', label: 'Pay on Pickup (Cash / UPI)', icon: Wallet },
+                            { id: 'UPI', label: 'Instant UPI (GPay / PhonePe)', icon: Sparkles },
+                            { id: 'WALLET', label: 'Delivez Wallet', icon: Wallet },
+                            { id: 'CARD', label: 'Debit / Credit Card', icon: CreditCard }
+                          ].map((pm) => {
+                            const IconC = pm.icon
+                            const isSel = formData.paymentMethod === pm.id
+                            return (
+                              <div
+                                key={pm.id}
+                                className={`${styles.paymentMethodCard} ${isSel ? styles.selected : ''}`}
+                                onClick={() => updateField('paymentMethod', pm.id)}
+                              >
+                                <IconC size={18} color="#b45309" />
+                                <span>{pm.label}</span>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </section>
@@ -1821,11 +2158,11 @@ export default function ReturnPickupBookingPage() {
               >
                 {submitting ? (
                   <>
-                    <Loader2 size={16} className={styles.spin} /> Confirming...
+                    <Loader2 size={16} className={styles.spin} /> Processing...
                   </>
                 ) : (
                   <>
-                    <Check size={16} /> Book Return Pickup
+                    Proceed to Payment <ChevronRight size={16} />
                   </>
                 )}
               </button>
