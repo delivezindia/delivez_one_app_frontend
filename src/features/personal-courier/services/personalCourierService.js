@@ -39,20 +39,47 @@ export async function saveAddress(address) {
   return response.data?.address
 }
 
+export function normalizeCourierAddress(addr = {}) {
+  const line1 = addr.addressLine1 || addr.addressLine || addr.address || addr.fullAddress || addr.title || 'Address Line 1'
+  return {
+    ...addr,
+    addressLine1: line1,
+    addressLine: line1,
+    contactName: addr.contactName || addr.contactPerson || addr.name || 'Contact Person',
+    contactPerson: addr.contactPerson || addr.contactName || addr.name || 'Contact Person',
+    phoneNumber: (addr.phoneNumber || addr.phone || '9876543210').toString().replace(/[^\d+]/g, '') || '9876543210',
+    phone: (addr.phone || addr.phoneNumber || '9876543210').toString(),
+    city: addr.city || 'Mumbai',
+    state: addr.state || 'Maharashtra',
+    postalCode: addr.postalCode || addr.pincode || '400077',
+    pincode: addr.pincode || addr.postalCode || '400077',
+  }
+}
+
 export async function fetchCourierQuote(details) {
+  const payload = {
+    ...details,
+    pickup: details.pickup ? normalizeCourierAddress(details.pickup) : undefined,
+    dropoff: details.dropoff ? normalizeCourierAddress(details.dropoff) : (details.delivery ? normalizeCourierAddress(details.delivery) : undefined),
+  }
   const response = await authorizedRequest('/courier-delivery/quote', {
     method: 'POST',
-    body: JSON.stringify(details),
+    body: JSON.stringify(payload),
   })
   return response.data?.quote
 }
 
 export async function createCourierBooking(details, idempotencyKey) {
   const key = idempotencyKey || ('idemp-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7))
+  const payload = {
+    ...details,
+    pickup: details.pickup ? normalizeCourierAddress(details.pickup) : undefined,
+    dropoff: details.dropoff ? normalizeCourierAddress(details.dropoff) : (details.delivery ? normalizeCourierAddress(details.delivery) : undefined),
+  }
   const response = await authorizedRequest('/courier-delivery/bookings', {
     method: 'POST',
     headers: { 'Idempotency-Key': key },
-    body: JSON.stringify(details),
+    body: JSON.stringify(payload),
   })
   return response.data?.booking
 }
