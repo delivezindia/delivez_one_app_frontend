@@ -104,7 +104,7 @@ function Header() {
       navigateTo('/user/dashboard')
       return
     }
-    setAuthOpen(true)
+    navigateTo('/login')
   }
 
   const closeAuth = () => {

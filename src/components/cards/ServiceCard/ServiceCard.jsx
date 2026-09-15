@@ -33,9 +33,10 @@ const serviceSubtitles = {
 
 function ServiceCard({ service, onBook }) {
   const Icon = service.icon
-  const isKnowMore = service.slug === 'know-more' || service.title === 'Know More'
-  const imageSrc = service.imageUrl || serviceImageMap[service.slug] || '/assets/images/service_courier.jpg'
-  const subtitle = serviceSubtitles[service.slug] || (service.available ? 'Available across India' : 'Coming soon')
+  const isKnowMore = service.slug === 'know-more' || service.title === 'Special Delivery' || service.title === 'Know More'
+  const fallbackImage = serviceImageMap[service.slug] || '/assets/images/service_courier.jpg'
+  const imageSrc = service.imageUrl || fallbackImage
+  const subtitle = service.subtitle || serviceSubtitles[service.slug] || (service.available ? 'Available across India' : 'Coming soon')
 
   return (
     <article
@@ -56,11 +57,13 @@ function ServiceCard({ service, onBook }) {
           alt={service.title}
           className={styles.cardImage}
           onError={(e) => {
-            e.currentTarget.style.display = 'none'
+            if (e.currentTarget.src !== fallbackImage) {
+              e.currentTarget.src = fallbackImage
+            }
           }}
         />
         <div className={styles.iconFallback}>
-          {Icon && <Icon size={44} />}
+          {Icon && <Icon size={32} />}
         </div>
       </div>
 
@@ -70,9 +73,8 @@ function ServiceCard({ service, onBook }) {
           <p className={styles.subtitle}>{subtitle}</p>
         </div>
 
-        <p className={styles.description}>{service.description}</p>
-
-        <div className={styles.cardFooter}>
+        <div className={styles.cardBottomRow}>
+          <p className={styles.description}>{service.description}</p>
           <button
             type="button"
             className={styles.actionBtn}
@@ -83,7 +85,7 @@ function ServiceCard({ service, onBook }) {
               onBook(service)
             }}
           >
-            <ChevronRight size={18} className={styles.arrowIcon} />
+            <ChevronRight size={17} className={styles.arrowIcon} />
           </button>
         </div>
       </div>
@@ -92,3 +94,4 @@ function ServiceCard({ service, onBook }) {
 }
 
 export default ServiceCard
+

@@ -260,9 +260,11 @@ function HomePage() {
     return serviceCatalog.items.map((service, index) => ({
       number: String(index + 1).padStart(2, '0'),
       title: service.name,
+      subtitle: service.subtitle,
       description: service.shortDescription,
       imageUrl: service.imageUrl,
       slug: service.slug,
+      displayOrder: service.displayOrder ?? index + 1,
       available: true,
       icon: servicePresentation[service.slug]?.icon ?? PackageCheck,
       tint: servicePresentation[service.slug]?.tint ?? '#f5f7f9',
@@ -275,12 +277,19 @@ function HomePage() {
       navigateTo('/book/confidential-delivery')
     } else if (
       service.slug === 'luggage-delivery' ||
-      service.slug === 'airport-luggage' ||
+      service.slug === 'airport-luggage'
+    ) {
+      navigateTo('/luggage-delivery')
+    } else if (
       service.slug === 'courier-delivery' ||
       service.slug === 'personal-courier'
     ) {
       navigateTo('/courier')
-    } else if (service.slug === 'know-more' || service.slug === 'gift-delivery') {
+    } else if (
+      service.slug === 'know-more' ||
+      service.slug === 'special-delivery' ||
+      service.slug === 'gift-delivery'
+    ) {
       setKnowMoreOpen(true)
     } else {
       navigateTo(`/book/${service.slug}`)
@@ -410,7 +419,7 @@ function HomePage() {
       return
     }
     setQuickAuthError('')
-    navigateTo(`/login?mode=signup&phone=${encodeURIComponent(cleanPhone)}`)
+    navigateTo(`/signup?phone=${encodeURIComponent(cleanPhone)}`)
   }
 
   const trackOrder = async (event) => {
@@ -529,31 +538,13 @@ function HomePage() {
               </div>
             </div>
 
-            {/* Courier Rider Card with Bottom Floating Pill */}
+            {/* Courier Rider Card matching reference design */}
             <div className={styles.riderCard}>
               <img
                 src="/assets/images/rider_hero_landing.jpg"
                 alt="Delivez Courier Delivery Partner"
                 className={styles.riderImg}
               />
-              <div className={styles.riderBottomPill}>
-                <div className={styles.riderPillItem}>
-                  <ShieldCheck size={18} className={styles.pillIcon} />
-                  <span>Safe</span>
-                </div>
-                <div className={styles.riderPillItem}>
-                  <ThumbsUp size={18} className={styles.pillIcon} />
-                  <span>Reliable</span>
-                </div>
-                <div className={styles.riderPillItem}>
-                  <Zap size={18} className={styles.pillIcon} />
-                  <span>On-Time</span>
-                </div>
-                <div className={styles.riderPillItem}>
-                  <Users size={18} className={styles.pillIcon} />
-                  <span>Customer First</span>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -721,6 +712,17 @@ function HomePage() {
                       </svg>
                       <span>Continue with Google</span>
                     </button>
+
+                    <div className={styles.authCardSwitchRow}>
+                      <span>Already have an account?</span>{' '}
+                      <button
+                        type="button"
+                        className={styles.authCardSwitchBtn}
+                        onClick={() => navigateTo('/login')}
+                      >
+                        Sign In
+                      </button>
+                    </div>
                   </form>
                 </>
               )}

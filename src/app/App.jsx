@@ -50,9 +50,16 @@ function App() {
     pathname === '/user/signup' ||
     pathname === '/user/register'
   ) {
+    const searchParams = new URLSearchParams(window.location.search)
+    const isSignup =
+      pathname.includes('signup') ||
+      pathname.includes('register') ||
+      searchParams.get('mode') === 'signup' ||
+      searchParams.get('mode') === 'register'
+
     return (
       <UserLoginPage
-        initialMode={pathname.includes('signup') || pathname.includes('register') ? 'signup' : 'login'}
+        initialMode={isSignup ? 'signup' : 'login'}
       />
     )
   }

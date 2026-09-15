@@ -5,7 +5,7 @@
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 16px;
-  padding: 12px;
+  padding: 10px 10px 12px;
   overflow: hidden;
   cursor: pointer;
   transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
@@ -13,15 +13,15 @@
 }
 
 .card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px -6px rgba(0, 0, 0, 0.07);
   border-color: #d1d5db;
 }
 
 .imageContainer {
   position: relative;
   width: 100%;
-  height: 115px;
+  height: 80px;
   border-radius: 10px;
   overflow: hidden;
   background: #f3f4f6;
@@ -47,62 +47,67 @@
   display: flex;
   flex-direction: column;
   flex: 1;
-  padding-top: 12px;
+  padding-top: 10px;
 }
 
 .titleGroup {
-  margin-bottom: 6px;
+  margin-bottom: 3px;
 }
 
 .title {
-  margin: 0 0 2px;
-  font-size: 0.98rem;
-  font-weight: 700;
+  margin: 0;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 750;
   color: #111827;
   letter-spacing: -0.01em;
+  line-height: 1.2;
 }
 
 .subtitle {
-  margin: 0;
-  font-size: 0.82rem;
+  margin: 2px 0 0;
+  font-size: 0.78rem;
   font-weight: 500;
-  color: #6b7280;
+  color: #4b5563;
+  line-height: 1.25;
+}
+
+.cardBottomRow {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 6px;
 }
 
 .description {
-  margin: 0 0 14px;
-  font-size: 0.78rem;
-  line-height: 1.4;
-  color: #9ca3af;
+  margin: 0;
+  font-size: 0.73rem;
+  line-height: 1.35;
+  color: #6b7280;
   flex: 1;
-}
-
-.cardFooter {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  margin-top: auto;
 }
 
 .actionBtn {
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   border: 1px solid #e5e7eb;
-  background: #f9fafb;
+  background: #f3f4f6;
   color: #374151;
   cursor: pointer;
+  flex-shrink: 0;
   transition: all 160ms ease;
+  padding: 0;
 }
 
 .card:hover .actionBtn,
 .actionBtn:hover {
-  background: #fab800;
-  border-color: #fab800;
+  background: #e5e7eb;
   color: #111827;
-  transform: translateX(2px);
+  transform: translateX(1px);
 }
 
 .actionBtn:disabled {
@@ -113,4 +118,5 @@
 .arrowIcon {
   margin-left: 1px;
 }
+
 

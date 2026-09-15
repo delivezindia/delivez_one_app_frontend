@@ -465,6 +465,33 @@
   border-color: #9ca3af;
 }
 
+.authCardSwitchRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 14px;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.authCardSwitchBtn {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: #111827;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 150ms ease;
+}
+
+.authCardSwitchBtn:hover {
+  color: #2563eb;
+}
+
 /* Logged In View */
 .userActiveCard {
   display: flex;

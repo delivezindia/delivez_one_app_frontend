@@ -38,10 +38,13 @@ function getReturnUrl() {
 
 function UserLoginPage({ initialMode = 'login' }) {
   const [mode, setMode] = useState(() => {
-    if (initialMode) return initialMode
     const urlMode = new URLSearchParams(window.location.search).get('mode')
     if (urlMode === 'signup' || urlMode === 'register') return 'signup'
-    return 'login'
+    if (urlMode === 'login' || urlMode === 'signin') return 'login'
+    return initialMode || 'login'
+  })
+  const [mobileNumber, setMobileNumber] = useState(() => {
+    return new URLSearchParams(window.location.search).get('phone') || ''
   })
   const [loginMethod, setLoginMethod] = useState('phone') // 'phone' | 'email'
   const [loginType, setLoginType] = useState('otp') // 'otp' | 'password'
@@ -50,6 +53,25 @@ function UserLoginPage({ initialMode = 'login' }) {
   const [errorMessage, setErrorMessage] = useState('')
   const [otpChallenge, setOtpChallenge] = useState(null)
   const [otp, setOtp] = useState('')
+
+  useEffect(() => {
+    if (initialMode && initialMode !== mode) {
+      setMode(initialMode)
+    }
+  }, [initialMode])
+
+  const handleSwitchMode = (nextMode) => {
+    setMode(nextMode)
+    setErrorMessage('')
+    setOtpChallenge(null)
+    setOtp('')
+    const targetPath = nextMode === 'signup' ? '/signup' : '/login'
+    const returnTo = new URLSearchParams(window.location.search).get('returnTo')
+    const phone = mobileNumber ? `&phone=${encodeURIComponent(mobileNumber)}` : ''
+    const returnQuery = returnTo ? `&returnTo=${encodeURIComponent(returnTo)}` : ''
+    const query = (phone || returnQuery) ? `?${(phone + returnQuery).replace(/^&/, '')}` : ''
+    window.history.replaceState({}, '', `${targetPath}${query}`)
+  }
 
   useEffect(() => {
     let active = true
@@ -354,7 +376,7 @@ function UserLoginPage({ initialMode = 'login' }) {
                   role="tab"
                   aria-selected={mode === 'login'}
                   className={`${styles.modeTab} ${mode === 'login' ? styles.modeTabActive : ''}`}
-                  onClick={() => { setMode('login'); setErrorMessage(''); }}
+                  onClick={() => handleSwitchMode('login')}
                 >
                   Sign In
                 </button>
@@ -363,7 +385,7 @@ function UserLoginPage({ initialMode = 'login' }) {
                   role="tab"
                   aria-selected={mode === 'signup'}
                   className={`${styles.modeTab} ${mode === 'signup' ? styles.modeTabActive : ''}`}
-                  onClick={() => { setMode('signup'); setErrorMessage(''); }}
+                  onClick={() => handleSwitchMode('signup')}
                 >
                   Create Account
                 </button>
@@ -428,6 +450,8 @@ function UserLoginPage({ initialMode = 'login' }) {
                       <input
                         name="mobileNumber"
                         type="tel"
+                        value={mobileNumber}
+                        onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, '').slice(0, 15))}
                         placeholder="Enter 10-digit number"
                         aria-label="Mobile number"
                         autoComplete="tel-national"
@@ -559,10 +583,7 @@ function UserLoginPage({ initialMode = 'login' }) {
                 <span>{mode === 'login' ? "Don't have an account yet?" : 'Already have an account?'}</span>
                 <button
                   type="button"
-                  onClick={() => {
-                    setMode((current) => (current === 'login' ? 'signup' : 'login'))
-                    setErrorMessage('')
-                  }}
+                  onClick={() => handleSwitchMode(mode === 'login' ? 'signup' : 'login')}
                 >
                   {mode === 'login' ? 'Create account' : 'Sign in'}
                 </button>

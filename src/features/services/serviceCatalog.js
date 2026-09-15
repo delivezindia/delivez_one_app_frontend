@@ -1,39 +1,51 @@
 export const SERVICE_CATALOG = [
   {
-    name: 'Courier Delivery',
+    name: 'Courier',
     slug: 'courier-delivery',
-    tagline: 'Deliver anywhere',
-    shortDescription: 'Send documents, parcels, and everyday items anywhere.',
-  },
-  {
-    name: 'Luggage Delivery',
-    slug: 'luggage-delivery',
-    tagline: 'Deliver your luggage',
-    shortDescription: 'Convenient pickup and secure transit for your luggage.',
+    subtitle: 'Local to Pan India',
+    tagline: 'Local to Pan India',
+    shortDescription: 'Send documents & parcels anywhere in India.',
+    displayOrder: 1,
   },
   {
     name: 'Confidential Delivery',
     slug: 'confidential-delivery',
-    tagline: 'Keep it private',
-    shortDescription: 'Private and secure delivery with strict handling controls.',
-  },
-  {
-    name: 'Forgot Something?',
-    slug: 'forgot-something',
-    tagline: 'Quick retrieval',
-    shortDescription: 'Quick retrieval and delivery of items you left behind.',
+    subtitle: 'Secure & private',
+    tagline: 'Secure & private',
+    shortDescription: 'For sensitive documents and high-value items.',
+    displayOrder: 2,
   },
   {
     name: 'Return Pickup',
     slug: 'return-pickup',
+    subtitle: 'Easy returns',
     tagline: 'Easy returns',
-    shortDescription: 'Easy pickup and returns for personal and retail orders.',
+    shortDescription: 'Schedule a pickup for your online returns.',
+    displayOrder: 3,
   },
   {
-    name: 'Know More',
+    name: 'Forgot Something?',
+    slug: 'forgot-something',
+    subtitle: 'Instant retrieval',
+    tagline: 'Instant retrieval',
+    shortDescription: 'We pick up and deliver what you forgot.',
+    displayOrder: 4,
+  },
+  {
+    name: 'Airport Luggage',
+    slug: 'luggage-delivery',
+    subtitle: 'Door-to-airport convenience',
+    tagline: 'Door-to-airport convenience',
+    shortDescription: 'Luggage pickup & delivery to/from airport.',
+    displayOrder: 5,
+  },
+  {
+    name: 'Special Delivery',
     slug: 'know-more',
-    tagline: 'Custom & Enterprise',
-    shortDescription: 'Explore our full range of tailored logistics, enterprise solutions, and 24/7 support.',
+    subtitle: 'Custom delivery solutions',
+    tagline: 'Custom delivery solutions',
+    shortDescription: 'For unique and special requirements.',
+    displayOrder: 6,
   },
 ]
 
@@ -44,6 +56,7 @@ const SLUG_ALIASES = {
   'personal-return-pickup': 'return-pickup',
   'gift-delivery': 'know-more',
   'gift-and-surprise': 'know-more',
+  'special-delivery': 'know-more',
 }
 
 export function getServiceBySlug(rawSlug) {
@@ -59,20 +72,28 @@ export function mergeServiceCatalog(services = []) {
   const liveServices = new Map()
 
   for (const service of services) {
+    if (service.slug === 'more-services' || service.displayOrder >= 90) continue
     liveServices.set(service.slug, service)
     if (SLUG_ALIASES[service.slug]) {
       liveServices.set(SLUG_ALIASES[service.slug], service)
     }
   }
 
-  return SERVICE_CATALOG.map((fallback) => {
+  const merged = SERVICE_CATALOG.map((fallback) => {
     const live = liveServices.get(fallback.slug) ?? {}
     return {
       ...fallback,
       ...live,
       name: live.name || fallback.name,
-      shortDescription: live.shortDescription || live.description || fallback.shortDescription,
+      subtitle: (live.description && !live.description.startsWith('[') ? live.description : null) || fallback.subtitle,
+      shortDescription: live.shortDescription || fallback.shortDescription,
+      displayOrder: typeof live.displayOrder === 'number' ? live.displayOrder : fallback.displayOrder,
+      imageUrl: live.imageUrl || null,
       available: true,
     }
   })
+
+  // Sort by displayOrder ascending so Row 1 has Courier & Confidential Delivery, etc.
+  return merged.sort((a, b) => (a.displayOrder ?? 99) - (b.displayOrder ?? 99))
 }
+
