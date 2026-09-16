@@ -928,7 +928,7 @@ export default function AdminOrderDetailView({
                 <div className={styles.addressText}>{senderAddress}</div>
 
                 {/* Service specific metadata */}
-                {(pDetails.terminal || pDetails.flightNumber || pDetails.pnr || order?.locationType || order?.pickupStoreName) && (
+                {((sKey.includes('luggage') && (pDetails.terminal || pDetails.flightNumber || pDetails.pnr)) || order?.locationType || order?.pickupStoreName) && (
                   <div className={styles.specialMetaGrid}>
                     {pDetails.terminal && (
                       <div className={styles.specItem}>
@@ -983,7 +983,7 @@ export default function AdminOrderDetailView({
                 <div className={styles.addressText}>{dropoffAddress}</div>
 
                 {/* Dropoff specific metadata */}
-                {(dDetails.hotelName || dDetails.roomNumber || order?.deliverySlot || order?.destinationVendor) && (
+                {((sKey.includes('luggage') && (dDetails.hotelName || dDetails.roomNumber)) || order?.deliverySlot || order?.destinationVendor) && (
                   <div className={styles.specialMetaGrid}>
                     {dDetails.hotelName && (
                       <div className={styles.specItem}>
@@ -1073,40 +1073,53 @@ export default function AdminOrderDetailView({
             ) : (
               <div>
                 {/* Standard / Courier / Luggage Cargo Details */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
                   <div className={styles.subSectionBox}>
-                    <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>ITEM CATEGORY & CONTENT</div>
-                    <strong style={{ fontSize: '0.95rem', color: '#0f172a', display: 'block', marginTop: 4 }}>
-                      {order?.itemCategory || order?.itemSummary || pkg.category || 'Personal Baggage / Luggage'}
+                    <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>DECLARED ITEM CATEGORY</div>
+                    <strong style={{ fontSize: '1rem', color: '#0f172a', display: 'block', marginTop: 4 }}>
+                      {order?.category || order?.itemCategory || order?.package?.category || pkg.category || (sKey.includes('luggage') ? 'Baggage / Luggage' : 'General Courier Cargo')}
                     </strong>
-                    <span style={{ fontSize: '0.8rem', color: '#475569', marginTop: 2, display: 'block' }}>
-                      {order?.itemDescription || pkg.description || 'Pre-checked secure baggage with verified luggage tags'}
+                    <span style={{ fontSize: '0.8rem', color: '#475569', marginTop: 3, display: 'block' }}>
+                      {order?.contentDescription || order?.itemDescription || pkg.contentDescription || pkg.description || 'Declared items verified for express transit'}
                     </span>
                   </div>
 
                   <div className={styles.subSectionBox}>
-                    <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>WEIGHT & VOLUME</div>
-                    <strong style={{ fontSize: '0.95rem', color: '#0f172a', display: 'block', marginTop: 4 }}>
-                      {totalWeight} kg (Actual) / {pkg.chargeableWeightKg || totalWeight} kg (Chargeable)
+                    <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>WEIGHT & VOLUMETRIC SPECS</div>
+                    <strong style={{ fontSize: '1rem', color: '#0f172a', display: 'block', marginTop: 4 }}>
+                      {order?.actualWeightKg ?? totalWeight} kg <span style={{ fontSize: '0.8rem', fontWeight: 500, color: '#64748b' }}>(Actual)</span> • {order?.chargeableWeightKg ?? pkg.chargeableWeightKg ?? totalWeight} kg <span style={{ fontSize: '0.8rem', fontWeight: 500, color: '#64748b' }}>(Chargeable)</span>
                     </strong>
-                    <span style={{ fontSize: '0.8rem', color: '#475569', marginTop: 2, display: 'block' }}>
-                      {totalBags} Bag(s) • Standard Cabin / Cargo Dimensions
+                    <span style={{ fontSize: '0.8rem', color: '#475569', marginTop: 3, display: 'block' }}>
+                      {order?.dimensions?.lengthCm ? `Dimensions: ${order.dimensions.lengthCm} × ${order.dimensions.widthCm} × ${order.dimensions.heightCm} cm` : (pkg.lengthCm ? `Dimensions: ${pkg.lengthCm} × ${pkg.widthCm} × ${pkg.heightCm} cm` : 'Standard Consignment Dimensions')}
                     </span>
                   </div>
 
                   <div className={styles.subSectionBox}>
-                    <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>TAMPER SECURITY SEAL</div>
+                    <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>PACKAGING & BOX TYPE</div>
+                    <strong style={{ fontSize: '1rem', color: '#059669', display: 'block', marginTop: 4 }}>
+                      {order?.packagingName || (order?.packagingType ? order.packagingType.replace(/_/g, ' ') : (pkg.packagingType ? pkg.packagingType.replace(/_/g, ' ') : 'Standard Packaging'))}
+                    </strong>
+                    <span style={{ fontSize: '0.8rem', color: '#475569', marginTop: 3, display: 'block' }}>
+                      {order?.boxSize || pkg.boxSize || (order?.boxCapacity ? `Box Size: ${order.boxCapacity}` : 'Standard Box')}
+                      {(order?.isCustomBox || pkg.isCustomBox) ? ' • Custom Box Spec' : ''}
+                    </span>
+                  </div>
+
+                  <div className={styles.subSectionBox}>
+                    <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>SECURITY & SAFEGUARDS</div>
                     <strong style={{ fontSize: '0.95rem', color: '#0f172a', display: 'block', marginTop: 4, fontFamily: 'monospace' }}>
                       {sealNumber}
                     </strong>
-                    <span style={{ fontSize: '0.8rem', color: '#059669', marginTop: 2, display: 'block', fontWeight: 600 }}>
-                      ✓ High-Tensile Barcode Verified
+                    <span style={{ fontSize: '0.8rem', color: '#d97706', marginTop: 3, display: 'block', fontWeight: 600 }}>
+                      {(order?.fragile || pkg.fragile) ? '✓ Fragile Handled • ' : ''}
+                      {(order?.secureHandling || pkg.secureHandling) ? '✓ High Security Seal • ' : ''}
+                      {((order?.declaredValue || pkg.declaredValue) ? `Cover: ₹${order?.declaredValue || pkg.declaredValue}` : 'Protected')}
                     </span>
                   </div>
                 </div>
 
-                {/* Baggage individual tags if luggage */}
-                {Array.isArray(order?.luggage) && order.luggage.length > 0 && (
+                {/* Baggage individual tags only if luggage service */}
+                {sKey.includes('luggage') && Array.isArray(order?.luggage) && order.luggage.length > 0 && (
                   <div style={{ marginTop: 14 }}>
                     <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569', marginBottom: 6 }}>
                       INDIVIDUAL BAG TAGS & SPECIFICATIONS:
@@ -1119,8 +1132,7 @@ export default function AdminOrderDetailView({
                       ))}
                     </div>
                   </div>
-                )}
-              </div>
+                )}              </div>
             )}
           </div>
 

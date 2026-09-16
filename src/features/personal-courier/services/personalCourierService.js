@@ -57,16 +57,19 @@ export function normalizeCourierAddress(addr = {}) {
 }
 
 export async function fetchCourierQuote(details) {
+  const token = getUserAccessToken()
   const payload = {
     ...details,
     pickup: details.pickup ? normalizeCourierAddress(details.pickup) : undefined,
     dropoff: details.dropoff ? normalizeCourierAddress(details.dropoff) : (details.delivery ? normalizeCourierAddress(details.delivery) : undefined),
   }
-  const response = await authorizedRequest('/courier-delivery/quote', {
+  const headers = token ? { Authorization: `Bearer ${token}` } : {}
+  const response = await apiRequest('/courier-delivery/quote', {
     method: 'POST',
+    headers,
     body: JSON.stringify(payload),
   })
-  return response.data?.quote
+  return response.data?.quote || response.data
 }
 
 export async function createCourierBooking(details, idempotencyKey) {

@@ -21,7 +21,9 @@ import {
   Star,
   Luggage,
   Calendar,
-  Navigation
+  Navigation,
+  Box,
+  Layers
 } from 'lucide-react'
 import CourierProofOfDeliveryView from './CourierProofOfDeliveryView.jsx'
 import {
@@ -86,6 +88,38 @@ export default function CourierTrackingView({
     vehicle: 'DL 1Z 4589',
     rating: '4.9',
     completedTrips: '1,420+',
+  }
+
+  const pkgDetails = tracking?.packageDetails || initialBooking?.packageDetails || {}
+  const actualWeight = Number(pkgDetails?.actualWeightKg || tracking?.actualWeightKg || initialBooking?.actualWeightKg || 10)
+  const chargeableWeight = Number(pkgDetails?.chargeableWeightKg || tracking?.chargeableWeightKg || initialBooking?.chargeableWeightKg || actualWeight)
+  const dimensions = pkgDetails?.dimensions || tracking?.dimensions || initialBooking?.dimensions || { lengthCm: 30, widthCm: 25, heightCm: 20 }
+  const packagingType = pkgDetails?.packagingType || tracking?.packagingType || initialBooking?.packagingType || 'STANDARD'
+  const serviceType = tracking?.serviceType || initialBooking?.serviceType || 'BIKE_PRIORITY'
+  const selfServiceOption = tracking?.selfServiceOption || initialBooking?.selfServiceOption || 'NONE'
+  const contentCategory = pkgDetails?.contentCategory || tracking?.contentCategory || initialBooking?.contentCategory || 'Personal Items'
+  const specialHandling = pkgDetails?.specialHandling || tracking?.specialHandling || initialBooking?.specialHandling || []
+
+  const serviceTypeLabels = {
+    BIKE_PRIORITY: 'Bike Priority Delivery',
+    SAME_DAY: 'Same Day Delivery',
+    HYBRID_DRONE: 'Hybrid Drone Delivery',
+    NEXT_DAY: 'Next Day Delivery',
+    SURFACE_EXPRESS: 'Surface Express',
+    AIR_CARGO: 'Air Cargo Delivery',
+  }
+
+  const packagingTypeLabels = {
+    STANDARD: 'Delivez Standard Box',
+    EXTRA_SECURE: 'Extra Secure Box (+Bubble)',
+    WOODEN_CRATE: 'Reinforced Wooden Crate',
+    CUSTOM_BOX: 'Custom Engineered Box',
+  }
+
+  const selfServiceLabels = {
+    SELF_PICKUP: 'Self Pickup at Nearest Hub (-₹50)',
+    SELF_DROP: 'Self Drop to Hub (-₹40)',
+    NONE: 'Full Doorstep Service',
   }
 
   // 8-step tracking stepper matching APK Screen 29
@@ -328,6 +362,74 @@ export default function CourierTrackingView({
             <button className={styles.msgBtn} onClick={() => alert(`Opening chat with driver ${agent.name}...`)}>
               <MessageSquare size={16} />
             </button>
+          </div>
+        </div>
+
+        {/* Consignment & Parcel Details Card */}
+        <div className={styles.pkgDetailsCard}>
+          <div className={styles.pkgHeader}>
+            <h3 className={styles.pkgTitle}>
+              <Box size={18} color="#e11d48" /> Consignment & Package Specs
+            </h3>
+            <span className={styles.pkgBadge}>
+              {pkgDetails?.parcelSize || tracking?.parcelSize || initialBooking?.parcelSize || 'Medium'} Parcel
+            </span>
+          </div>
+
+          <div className={styles.pkgGrid}>
+            <div className={styles.pkgItem}>
+              <span className={styles.pkgItemLabel}>Actual Weight</span>
+              <span className={styles.pkgItemVal}>{actualWeight.toFixed(2)} Kg</span>
+              <span className={styles.pkgItemSub}>Scale weighed</span>
+            </div>
+            <div className={styles.pkgItem}>
+              <span className={styles.pkgItemLabel}>Chargeable Weight</span>
+              <span className={styles.pkgItemVal}>{chargeableWeight.toFixed(2)} Kg</span>
+              <span className={styles.pkgItemSub}>Max(Actual, Volumetric)</span>
+            </div>
+            <div className={styles.pkgItem}>
+              <span className={styles.pkgItemLabel}>Dimensions (L×W×H)</span>
+              <span className={styles.pkgItemVal}>
+                {dimensions.lengthCm} × {dimensions.widthCm} × {dimensions.heightCm} cm
+              </span>
+              <span className={styles.pkgItemSub}>
+                {((dimensions.lengthCm * dimensions.widthCm * dimensions.heightCm) / 1000).toFixed(1)} Liters
+              </span>
+            </div>
+            <div className={styles.pkgItem}>
+              <span className={styles.pkgItemLabel}>Service Tier</span>
+              <span className={styles.pkgItemVal}>{serviceTypeLabels[serviceType] || serviceType}</span>
+              <span className={styles.pkgItemSub}>Guaranteed SLA</span>
+            </div>
+            <div className={styles.pkgItem}>
+              <span className={styles.pkgItemLabel}>Packaging Spec</span>
+              <span className={styles.pkgItemVal}>{packagingTypeLabels[packagingType] || packagingType}</span>
+              <span className={styles.pkgItemSub}>Damage protected</span>
+            </div>
+            <div className={styles.pkgItem}>
+              <span className={styles.pkgItemLabel}>Content Category</span>
+              <span className={styles.pkgItemVal}>{contentCategory}</span>
+              <span className={styles.pkgItemSub}>Declared goods</span>
+            </div>
+          </div>
+
+          <div className={styles.tagsRow}>
+            {selfServiceOption && selfServiceOption !== 'NONE' && (
+              <span className={`${styles.tagPill} ${styles.tagPillGreen}`}>
+                ✓ {selfServiceLabels[selfServiceOption] || selfServiceOption}
+              </span>
+            )}
+            {specialHandling.includes('FRAGILE') && (
+              <span className={styles.tagPill}>⚠ Fragile Handling Requested</span>
+            )}
+            {specialHandling.includes('EXTRA_SECURITY') && (
+              <span className={`${styles.tagPill} ${styles.tagPillBlue}`}>
+                🔒 Tamper Proof Security Guard
+              </span>
+            )}
+            <span className={`${styles.tagPill} ${styles.tagPillBlue}`}>
+              🛡 ₹50,000 Transit Protection Active
+            </span>
           </div>
         </div>
 

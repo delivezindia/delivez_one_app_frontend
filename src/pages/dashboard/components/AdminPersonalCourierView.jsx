@@ -17,10 +17,10 @@ import {
   Box,
   Check,
   AlertCircle,
-  Lock,
-  Plane,
-  Building,
-  Home
+  Scale,
+  Zap,
+  Layers,
+  ArrowRight
 } from 'lucide-react'
 import {
   fetchAdminCourierBookings,
@@ -33,25 +33,41 @@ import CourierPodModal from '@/pages/personal-courier/components/CourierPodModal
 import styles from './AdminServiceViews.module.css'
 
 export const COURIER_ALL_STATUSES = [
-  { key: 'BOOKING_CONFIRMED', label: 'Booking Confirmed' },
-  { key: 'AGENT_ASSIGNED', label: 'Agent Assigned' },
+  { key: 'CONFIRMED', label: 'Booking Confirmed' },
+  { key: 'AGENT_ASSIGNED', label: 'Rider Assigned' },
   { key: 'PICKUP_IN_PROGRESS', label: 'Pickup in Progress' },
-  { key: 'LUGGAGE_PICKED', label: 'Luggage Picked Up' },
+  { key: 'PICKED_UP', label: 'Package Picked Up' },
   { key: 'IN_TRANSIT', label: 'In Transit' },
   { key: 'REACHED_DESTINATION_CITY', label: 'Reached Destination Hub' },
   { key: 'OUT_FOR_DELIVERY', label: 'Out for Delivery' },
-  { key: 'DELIVERED', label: 'Luggage Delivered' },
+  { key: 'DELIVERED', label: 'Delivered' },
   { key: 'CANCELLED', label: 'Cancelled' },
 ]
 
-export const COURIER_ROUTE_OPTIONS = [
-  { id: 'HOME_TO_AIRPORT', label: 'Home to Airport' },
-  { id: 'AIRPORT_TO_HOME', label: 'Airport to Home' },
-  { id: 'HOTEL_TO_AIRPORT', label: 'Hotel to Airport' },
-  { id: 'AIRPORT_TO_HOTEL', label: 'Airport to Hotel' },
-  { id: 'HOTEL_TO_HOME', label: 'Hotel to Home' },
-  { id: 'HOME_TO_HOTEL', label: 'Home to Hotel' },
-  { id: 'MULTI_STOP', label: 'Multi-Stop Route' },
+export const COURIER_SPEED_OPTIONS = [
+  { id: 'BIKE_PRIORITY', label: 'Bike Priority Delivery' },
+  { id: 'SURFACE_EXPRESS', label: 'Surface Standard' },
+  { id: 'SAME_DAY', label: 'Same Day Delivery' },
+  { id: 'HYBRID_DRONE', label: 'Hybrid Drone Delivery' },
+  { id: 'NEXT_DAY', label: 'Next Day Air' },
+]
+
+export const COURIER_PACKAGING_OPTIONS = [
+  { id: 'STANDARD', label: 'Delivez Standard Packaging' },
+  { id: 'EXTRA_SECURE', label: 'Extra Secure (+Bubble Wrap)' },
+  { id: 'WOODEN_CRATE', label: 'Reinforced Wooden Crate' },
+  { id: 'OWN_PACKAGING', label: 'Customer Own Packaging' },
+]
+
+export const COURIER_CATEGORIES = [
+  'Clothing & Apparel',
+  'Electronics',
+  'Health & Medicine',
+  'Commercial Goods',
+  'Food & Edibles',
+  'Documents & Letters',
+  'Personal Items & Gifts',
+  'Household Items & Kitchenware',
 ]
 
 export default function AdminPersonalCourierView({ onViewOrderDetail }) {
@@ -126,23 +142,33 @@ export default function AdminPersonalCourierView({ onViewOrderDetail }) {
 
     setEditingBooking(b)
     setEditForm({
-      // Route Service & Status
-      serviceType: b.serviceType || 'AIRPORT_TO_HOTEL',
-      status: b.status || 'IN_TRANSIT',
-      totalAmount: b.totalAmount ?? 2395.8,
+      serviceType: b.serviceType || 'BIKE_PRIORITY',
+      status: b.status || 'CONFIRMED',
+      totalAmount: b.totalAmount ?? 450,
       sealNumber: b.sealNumber || 'DLV-SEAL-88492',
+
+      // Package Real Content
+      category: b.category || pkg.category || 'Clothing & Apparel',
+      contentDescription: b.contentDescription || pkg.contentDescription || '',
+      actualWeightKg: b.actualWeightKg ?? pkg.actualWeightKg ?? 2.5,
+      chargeableWeightKg: b.chargeableWeightKg ?? pkg.chargeableWeightKg ?? 2.5,
+      lengthCm: b.dimensions?.lengthCm ?? pkg.lengthCm ?? 30,
+      widthCm: b.dimensions?.widthCm ?? pkg.widthCm ?? 20,
+      heightCm: b.dimensions?.heightCm ?? pkg.heightCm ?? 15,
+      packagingType: b.packagingType || pkg.packagingType || 'STANDARD',
+      boxSize: b.boxSize || 'Small Box (10 Kg)',
+      declaredValue: b.declaredValue ?? pkg.declaredValue ?? 5000,
+      fragile: Boolean(b.fragile ?? pkg.fragile),
+      secureHandling: Boolean(b.secureHandling ?? pkg.secureHandling),
 
       // Pickup Details
       pickupContactName: pDetails.name || pickupAddr.contactName || '',
       pickupPhone: pDetails.phone || pickupAddr.phoneNumber || '',
       pickupAddress: pDetails.address || pickupAddr.addressLine1 || '',
-      pickupCity: pDetails.city || pickupAddr.city || 'New Delhi',
-      pickupState: pDetails.state || pickupAddr.state || 'Delhi',
-      pickupPostalCode: pDetails.pincode || pickupAddr.postalCode || '110037',
-      terminal: pDetails.terminal || 'Terminal 3',
-      flightNumber: pDetails.flightNumber || 'AI 102',
-      pnr: pDetails.pnr || 'AB12CD',
-      luggageBelt: pDetails.luggageBelt || '04',
+      pickupCity: pDetails.city || pickupAddr.city || 'Mumbai',
+      pickupState: pDetails.state || pickupAddr.state || 'Maharashtra',
+      pickupPostalCode: pDetails.pincode || pickupAddr.postalCode || '400001',
+      pickupInstructions: pDetails.instructions || pickupAddr.instructions || '',
 
       // Delivery Details
       dropoffContactName: dDetails.name || dropoffAddr.contactName || '',
@@ -150,13 +176,8 @@ export default function AdminPersonalCourierView({ onViewOrderDetail }) {
       dropoffAddress: dDetails.address || dropoffAddr.addressLine1 || '',
       dropoffCity: dDetails.city || dropoffAddr.city || 'Gurugram',
       dropoffState: dDetails.state || dropoffAddr.state || 'Haryana',
-      dropoffPostalCode: dDetails.pincode || dropoffAddr.postalCode || '122004',
-      hotelName: dDetails.hotelName || 'Taj City Centre',
-      roomNumber: dDetails.roomNumber || '402',
-
-      // Package & Luggage
-      totalBags: b.totalBags || (Array.isArray(b.luggage) ? b.luggage.length : 2),
-      actualWeightKg: b.totalWeightKg || pkg.actualWeightKg || 28,
+      dropoffPostalCode: dDetails.pincode || dropoffAddr.postalCode || '122002',
+      dropoffInstructions: dDetails.instructions || dropoffAddr.instructions || '',
 
       // Agent Details
       agentName: agent.name || 'Ravi Kumar',
@@ -176,6 +197,8 @@ export default function AdminPersonalCourierView({ onViewOrderDetail }) {
         status: editForm.status,
         totalAmount: Number(editForm.totalAmount),
         sealNumber: editForm.sealNumber,
+        category: editForm.category,
+        contentDescription: editForm.contentDescription,
         pickup: {
           contactName: editForm.pickupContactName,
           phoneNumber: editForm.pickupPhone,
@@ -183,6 +206,7 @@ export default function AdminPersonalCourierView({ onViewOrderDetail }) {
           city: editForm.pickupCity,
           state: editForm.pickupState,
           postalCode: editForm.pickupPostalCode,
+          instructions: editForm.pickupInstructions,
         },
         dropoff: {
           contactName: editForm.dropoffContactName,
@@ -191,35 +215,22 @@ export default function AdminPersonalCourierView({ onViewOrderDetail }) {
           city: editForm.dropoffCity,
           state: editForm.dropoffState,
           postalCode: editForm.dropoffPostalCode,
-        },
-        pickupDetails: {
-          name: editForm.pickupContactName,
-          phone: editForm.pickupPhone,
-          address: editForm.pickupAddress,
-          city: editForm.pickupCity,
-          state: editForm.pickupState,
-          pincode: editForm.pickupPostalCode,
-          terminal: editForm.terminal,
-          flightNumber: editForm.flightNumber,
-          pnr: editForm.pnr,
-          luggageBelt: editForm.luggageBelt,
-        },
-        deliveryDetails: {
-          name: editForm.dropoffContactName,
-          phone: editForm.dropoffPhone,
-          address: editForm.dropoffAddress,
-          city: editForm.dropoffCity,
-          state: editForm.dropoffState,
-          pincode: editForm.dropoffPostalCode,
-          hotelName: editForm.hotelName,
-          roomNumber: editForm.roomNumber,
+          instructions: editForm.dropoffInstructions,
         },
         package: {
+          category: editForm.category,
           actualWeightKg: Number(editForm.actualWeightKg),
-          chargeableWeightKg: Number(editForm.actualWeightKg),
+          chargeableWeightKg: Number(editForm.chargeableWeightKg),
+          lengthCm: Number(editForm.lengthCm),
+          widthCm: Number(editForm.widthCm),
+          heightCm: Number(editForm.heightCm),
+          packagingType: editForm.packagingType,
+          boxSize: editForm.boxSize,
+          declaredValue: Number(editForm.declaredValue),
+          fragile: Boolean(editForm.fragile),
+          secureHandling: Boolean(editForm.secureHandling),
+          contentDescription: editForm.contentDescription,
         },
-        totalBags: Number(editForm.totalBags),
-        totalWeightKg: Number(editForm.actualWeightKg),
         agent: {
           name: editForm.agentName,
           id: editForm.agentId,
@@ -229,7 +240,7 @@ export default function AdminPersonalCourierView({ onViewOrderDetail }) {
       }
 
       const updated = await updateAdminCourierBooking(editingBooking.id, payload)
-      showToast(`Consignment #${editingBooking.bookingNumber} updated successfully in PostgreSQL database.`)
+      showToast(`Consignment #${editingBooking.bookingNumber} updated successfully.`)
       setEditingBooking(null)
       loadData()
       if (selected && (selected.id === editingBooking.id || selected.bookingNumber === editingBooking.bookingNumber)) {
@@ -254,7 +265,7 @@ export default function AdminPersonalCourierView({ onViewOrderDetail }) {
       <div className={styles.header}>
         <div>
           <h2><Truck size={24} className={styles.iconBlue} /> Personal Courier Management</h2>
-          <p>Real-time consignment control, 8-status tracking sync, tamper-evident seals, and proof of delivery verification.</p>
+          <p>Real-time consignment control with verified item categories, package dimensions, packaging types, and live tracking.</p>
         </div>
         <button type="button" className={styles.refreshBtn} onClick={loadData}>
           <RefreshCw size={14} className={loading ? styles.spin : ''} /> Refresh
@@ -266,7 +277,7 @@ export default function AdminPersonalCourierView({ onViewOrderDetail }) {
         <div className={styles.search}>
           <Search size={15} />
           <input
-            placeholder="Search consignment ID, customer name, hotel, flight..."
+            placeholder="Search tracking ID, item category, customer name, destination city..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -276,7 +287,7 @@ export default function AdminPersonalCourierView({ onViewOrderDetail }) {
           onChange={(e) => setStatusFilter(e.target.value)}
           className={styles.select}
         >
-          <option value="ALL">All Statuses (8 Stages)</option>
+          <option value="ALL">All Statuses</option>
           {COURIER_ALL_STATUSES.map((s) => (
             <option key={s.key} value={s.key}>
               {s.label}
@@ -290,10 +301,11 @@ export default function AdminPersonalCourierView({ onViewOrderDetail }) {
         <table className={styles.table}>
           <thead>
             <tr>
-              <th>Tracking ID</th>
-              <th>Customer / Guest</th>
-              <th>Route Service</th>
-              <th>Consignment & Seal</th>
+              <th>Tracking ID & Route</th>
+              <th>Sender</th>
+              <th>Recipient & Destination</th>
+              <th>Package Content & Specs</th>
+              <th>Service & Speed</th>
               <th>Fare</th>
               <th>Live Status</th>
               <th>Actions</th>
@@ -302,7 +314,7 @@ export default function AdminPersonalCourierView({ onViewOrderDetail }) {
           <tbody>
             {bookings.length === 0 ? (
               <tr>
-                <td colSpan={7} className={styles.empty}>
+                <td colSpan={8} className={styles.empty}>
                   {loading ? 'Loading personal courier shipments…' : 'No courier bookings found.'}
                 </td>
               </tr>
@@ -314,8 +326,14 @@ export default function AdminPersonalCourierView({ onViewOrderDetail }) {
                 const pDetails = b.pickupDetails || {}
                 const dDetails = b.deliveryDetails || {}
 
+                const dims = b.dimensions || pkg.dimensions || { lengthCm: pkg.lengthCm || 30, widthCm: pkg.widthCm || 20, heightCm: pkg.heightCm || 15 }
+                const actualWeight = b.actualWeightKg ?? pkg.actualWeightKg ?? 2.5
+                const category = b.category || b.itemCategory || pkg.category || 'Personal Goods'
+                const packagingName = b.packagingName || (b.packagingType ? b.packagingType.replace(/_/g, ' ') : 'Standard Packaging')
+
                 return (
                   <tr key={b.id}>
+                    {/* Tracking ID & Route */}
                     <td>
                       <strong
                         className={styles.link}
@@ -324,34 +342,69 @@ export default function AdminPersonalCourierView({ onViewOrderDetail }) {
                       >
                         {b.bookingNumber}
                       </strong>
-                      <small>
-                        {pDetails.city || pickupAddr.city || 'New Delhi'} → {dDetails.city || dropoffAddr.city || 'Gurugram'}
+                      <small style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                        <span>{pDetails.city || pickupAddr.city || 'Origin'}</span>
+                        <ArrowRight size={10} color="#94a3b8" />
+                        <span>{dDetails.city || dropoffAddr.city || 'Destination'}</span>
                       </small>
                     </td>
+
+                    {/* Sender */}
                     <td>
-                      <strong>{b.user?.fullName || pDetails.name || dropoffAddr.contactName || 'Customer'}</strong>
-                      <small>{b.user?.mobileNumber || pDetails.phone || dropoffAddr.phoneNumber}</small>
+                      <strong>{pDetails.name || pickupAddr.contactName || b.user?.fullName || 'Sender'}</strong>
+                      <small>{pDetails.phone || pickupAddr.phoneNumber || b.user?.mobileNumber || '—'}</small>
                     </td>
+
+                    {/* Recipient */}
                     <td>
-                      <span className={styles.badgeBlue}>
-                        {b.serviceType?.replace(/_/g, ' ') || 'AIRPORT TO HOTEL'}
+                      <strong>{dDetails.name || dropoffAddr.contactName || 'Recipient'}</strong>
+                      <small style={{ maxWidth: 180, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {dDetails.address || dropoffAddr.addressLine1 || 'Destination on file'}
+                      </small>
+                    </td>
+
+                    {/* Package Content & Specs */}
+                    <td>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <span className={styles.badgeBlue} style={{ alignSelf: 'flex-start' }}>
+                          <Package size={11} style={{ display: 'inline', marginRight: 3 }} />
+                          {category}
+                        </span>
+                        <span style={{ fontSize: '11px', fontWeight: 600, color: '#334155' }}>
+                          {actualWeight} kg • {dims.lengthCm}×{dims.widthCm}×{dims.heightCm} cm
+                        </span>
+                        <small style={{ color: '#059669', fontWeight: 600 }}>
+                          {packagingName}
+                        </small>
+                      </div>
+                    </td>
+
+                    {/* Service & Speed */}
+                    <td>
+                      <span className={styles.badgeGold} style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                        <Zap size={10} />
+                        {b.serviceName || b.serviceType?.replace(/_/g, ' ') || 'BIKE PRIORITY'}
                       </span>
-                      {dDetails.hotelName && <small>{dDetails.hotelName} (Room {dDetails.roomNumber || '402'})</small>}
+                      {b.selfServiceOption && b.selfServiceOption !== 'NONE' && (
+                        <small style={{ color: '#7c3aed', fontWeight: 700, marginTop: 2 }}>
+                          {b.selfServiceOption === 'SELF_PICKUP' ? 'Hub Pickup (-₹50)' : b.selfServiceOption === 'SELF_DROPOFF' ? 'Hub Drop (-₹50)' : 'Self-Service (-₹100)'}
+                        </small>
+                      )}
                     </td>
+
+                    {/* Fare */}
                     <td>
-                      <span>{b.totalBags || 2} Bags ({b.totalWeightKg || pkg.actualWeightKg || 28} Kg)</span>
-                      <small>
-                        Seal: <strong>{b.sealNumber || 'DLV-SEAL-88492'}</strong>
-                      </small>
+                      <strong style={{ fontSize: '13px', color: '#0f172a' }}>
+                        ₹{Number(b.totalAmount || 0).toFixed(2)}
+                      </strong>
+                      <small>{b.paymentMethod?.replace(/_/g, ' ') || 'ONLINE'} ({b.paymentStatus || 'PAID'})</small>
                     </td>
-                    <td>
-                      <strong>₹{Number(b.totalAmount || 2395.8).toFixed(2)}</strong>
-                      <small>{b.paymentMethod?.replace(/_/g, ' ')} ({b.paymentStatus || 'PAID'})</small>
-                    </td>
+
+                    {/* Live Status */}
                     <td>
                       <select
                         className={styles.statusSelect}
-                        value={b.status || 'IN_TRANSIT'}
+                        value={b.status || 'CONFIRMED'}
                         onChange={(e) => handleStatusChange(b.id, e.target.value)}
                       >
                         {COURIER_ALL_STATUSES.map((s) => (
@@ -361,13 +414,15 @@ export default function AdminPersonalCourierView({ onViewOrderDetail }) {
                         ))}
                       </select>
                     </td>
+
+                    {/* Actions */}
                     <td>
                       <div className={styles.actionGroup}>
                         <button
                           type="button"
                           className={styles.iconBtn}
                           onClick={() => (onViewOrderDetail ? onViewOrderDetail(b, 'personal-courier') : setSelected(b))}
-                          title="Open Dedicated Order Page"
+                          title="Open Dedicated Order Details"
                         >
                           <Eye size={15} />
                         </button>
@@ -375,7 +430,7 @@ export default function AdminPersonalCourierView({ onViewOrderDetail }) {
                           type="button"
                           className={styles.iconBtn}
                           onClick={() => handleStartEdit(b)}
-                          title="Edit Consignment"
+                          title="Edit Consignment Content"
                         >
                           <Edit2 size={15} color="#2563EB" />
                         </button>
@@ -403,16 +458,20 @@ export default function AdminPersonalCourierView({ onViewOrderDetail }) {
           <div className={styles.drawerWide} onClick={(e) => e.stopPropagation()}>
             <div className={styles.drawerHead}>
               <div>
-                <h3>Consignment #{selected.bookingNumber}</h3>
-                <span className={styles.badgeBlue}>{selected.serviceType?.replace(/_/g, ' ')}</span>
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Package size={18} color="#2563eb" />
+                  Consignment #{selected.bookingNumber}
+                </h3>
+                <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+                  <span className={styles.badgeBlue}>{selected.category || 'Courier Consignment'}</span>
+                  <span className={styles.badgeGold}>{selected.serviceName || selected.serviceType?.replace(/_/g, ' ')}</span>
+                </div>
               </div>
               <div className={styles.drawerHeadActions}>
                 <button
                   type="button"
                   className={styles.primaryBtnSmall}
-                  onClick={() => {
-                    handleStartEdit(selected)
-                  }}
+                  onClick={() => handleStartEdit(selected)}
                 >
                   <Edit2 size={14} /> Edit
                 </button>
@@ -426,8 +485,8 @@ export default function AdminPersonalCourierView({ onViewOrderDetail }) {
               </div>
             </div>
 
-            <div className={styles.drawerBody}>
-              {/* Status and Seal Box */}
+            <div className={styles.drawerBody} style={{ padding: '20px', overflowY: 'auto' }}>
+              {/* Status and Fare Row */}
               <div className={styles.detailGrid2}>
                 <div className={styles.infoCard}>
                   <h4>Current Status & Seal</h4>
@@ -437,25 +496,31 @@ export default function AdminPersonalCourierView({ onViewOrderDetail }) {
                   </div>
                   <div className={styles.metaLine}>
                     <span>Tamper Barcode Seal:</span>
-                    <strong>{selected.sealNumber || 'DLV-SEAL-88492'}</strong>
+                    <strong style={{ fontFamily: 'monospace' }}>{selected.sealNumber || 'DLV-SEAL-88492'}</strong>
                   </div>
                   <div className={styles.metaLine}>
-                    <span>Expected Delivery:</span>
-                    <span>{selected.schedule?.estimatedDelivery || '12 May 2025 by 06:00 PM'}</span>
+                    <span>Service Speed:</span>
+                    <span>{selected.serviceName || selected.serviceType?.replace(/_/g, ' ')}</span>
                   </div>
+                  {selected.selfServiceLabel && (
+                    <div className={styles.metaLine}>
+                      <span>Self-Service Tier:</span>
+                      <span style={{ color: '#7c3aed', fontWeight: 600 }}>{selected.selfServiceLabel}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className={styles.infoCard}>
-                  <h4>Fare & Payment</h4>
+                  <h4>Fare & Commercials</h4>
                   <div className={styles.metaLine}>
                     <span>Total Amount:</span>
                     <strong style={{ fontSize: '1.2rem', color: '#0f172a' }}>
-                      ₹{Number(selected.totalAmount || 2395.8).toFixed(2)}
+                      ₹{Number(selected.totalAmount || 0).toFixed(2)}
                     </strong>
                   </div>
                   <div className={styles.metaLine}>
                     <span>Payment Method:</span>
-                    <span>{selected.paymentMethod}</span>
+                    <span>{selected.paymentMethod?.replace(/_/g, ' ') || 'ONLINE'}</span>
                   </div>
                   <div className={styles.metaLine}>
                     <span>Payment Status:</span>
@@ -464,41 +529,111 @@ export default function AdminPersonalCourierView({ onViewOrderDetail }) {
                 </div>
               </div>
 
-              {/* Pickup & Delivery Cards */}
+              {/* Package Real Content & Specifications */}
+              <div className={styles.infoCard} style={{ marginTop: '1rem', border: '1.5px solid #bfdbfe', background: '#f8faff' }}>
+                <h4 style={{ color: '#1e40af', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Box size={16} /> Declared Package Content & Specifications
+                </h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginTop: 8 }}>
+                  <div>
+                    <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700 }}>ITEM CATEGORY</span>
+                    <p style={{ margin: '2px 0 0 0', fontWeight: 700, fontSize: '14px', color: '#0f172a' }}>
+                      {selected.category || selected.package?.category || 'General Cargo'}
+                    </p>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700 }}>PACKAGING TYPE</span>
+                    <p style={{ margin: '2px 0 0 0', fontWeight: 700, fontSize: '14px', color: '#059669' }}>
+                      {selected.packagingName || selected.package?.packagingName || 'Standard Packaging'}
+                    </p>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700 }}>WEIGHT SPECS</span>
+                    <p style={{ margin: '2px 0 0 0', fontWeight: 600, fontSize: '13px' }}>
+                      {selected.actualWeightKg ?? selected.package?.actualWeightKg ?? 2.5} kg (Actual) • {selected.chargeableWeightKg ?? selected.package?.chargeableWeightKg ?? 2.5} kg (Chargeable)
+                    </p>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700 }}>DIMENSIONS & VOLUME</span>
+                    <p style={{ margin: '2px 0 0 0', fontWeight: 600, fontSize: '13px' }}>
+                      {selected.dimensions?.lengthCm || selected.package?.lengthCm || 30} × {selected.dimensions?.widthCm || selected.package?.widthCm || 20} × {selected.dimensions?.heightCm || selected.package?.heightCm || 15} cm
+                    </p>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700 }}>BOX SIZE / CAPACITY</span>
+                    <p style={{ margin: '2px 0 0 0', fontSize: '13px', color: '#334155' }}>
+                      {selected.boxSize || selected.package?.boxSize || 'Small Box (10 Kg)'}
+                    </p>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700 }}>SPECIAL SAFEGUARDS</span>
+                    <p style={{ margin: '2px 0 0 0', fontSize: '13px', color: '#d97706', fontWeight: 600 }}>
+                      {selected.fragile || selected.package?.fragile ? '✓ Fragile Handling ' : ''}
+                      {selected.secureHandling || selected.package?.secureHandling ? '✓ High Security Seal' : ''}
+                      {!selected.fragile && !selected.package?.fragile && !selected.secureHandling && !selected.package?.secureHandling ? 'Standard Courier Handling' : ''}
+                    </p>
+                  </div>
+                </div>
+
+                {(selected.contentDescription || selected.package?.contentDescription) && (
+                  <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px dashed #cbd5e1' }}>
+                    <span style={{ fontSize: '11px', color: '#64748b', fontWeight: 700 }}>CONTENT DESCRIPTION / MANIFEST:</span>
+                    <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#334155', fontStyle: 'italic' }}>
+                      "{selected.contentDescription || selected.package?.contentDescription}"
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Pickup & Delivery Addresses */}
               <div className={styles.detailGrid2} style={{ marginTop: '1rem' }}>
                 <div className={styles.infoCard}>
-                  <h4>Pickup (Origin)</h4>
-                  <p><strong>{selected.pickupDetails?.terminal || 'Terminal 3'}</strong> • Belt {selected.pickupDetails?.luggageBelt || '04'}</p>
-                  <p>Flight: {selected.pickupDetails?.flightNumber || 'AI 102'} (PNR: {selected.pickupDetails?.pnr || 'AB12CD'})</p>
-                  <p>Contact: {selected.pickupDetails?.name || 'Rahul Sharma'} ({selected.pickupDetails?.phone || '+91 98765 43210'})</p>
+                  <h4 style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <MapPin size={15} color="#2563eb" /> Pickup Origin (Sender)
+                  </h4>
+                  <p><strong>{selected.pickupDetails?.name || 'Sender'}</strong></p>
+                  <p style={{ color: '#2563eb', fontWeight: 600 }}>{selected.pickupDetails?.phone || '—'}</p>
                   <p className={styles.textMuted}>{selected.pickupDetails?.address}</p>
+                  {selected.pickupDetails?.instructions && (
+                    <p style={{ fontSize: '11px', background: '#f1f5f9', padding: '4px 8px', borderRadius: 4, marginTop: 6 }}>
+                      <strong>Note:</strong> {selected.pickupDetails.instructions}
+                    </p>
+                  )}
                 </div>
 
                 <div className={styles.infoCard}>
-                  <h4>Delivery (Destination)</h4>
-                  <p><strong>{selected.deliveryDetails?.hotelName || 'Taj City Centre'}</strong> • Room {selected.deliveryDetails?.roomNumber || '402'}</p>
-                  <p>Guest: {selected.deliveryDetails?.name || 'Rahul Sharma'} ({selected.deliveryDetails?.phone || '+91 98765 43210'})</p>
-                  <p className={styles.textMuted}>{selected.deliveryDetails?.address}, {selected.deliveryDetails?.city}</p>
+                  <h4 style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <MapPin size={15} color="#059669" /> Delivery Destination (Recipient)
+                  </h4>
+                  <p><strong>{selected.deliveryDetails?.name || 'Recipient'}</strong></p>
+                  <p style={{ color: '#059669', fontWeight: 600 }}>{selected.deliveryDetails?.phone || '—'}</p>
+                  <p className={styles.textMuted}>{selected.deliveryDetails?.address}</p>
+                  {selected.deliveryDetails?.instructions && (
+                    <p style={{ fontSize: '11px', background: '#f1f5f9', padding: '4px 8px', borderRadius: 4, marginTop: 6 }}>
+                      <strong>Note:</strong> {selected.deliveryDetails.instructions}
+                    </p>
+                  )}
                 </div>
               </div>
 
-              {/* Luggage & Agent */}
-              <div className={styles.detailGrid2} style={{ marginTop: '1rem' }}>
-                <div className={styles.infoCard}>
-                  <h4>Baggage Details</h4>
-                  <p><strong>{selected.totalBags || 2} Bags</strong> (Total Verified: {selected.totalWeightKg || 28} Kg)</p>
-                  <p className={styles.textMuted}>
-                    {Array.isArray(selected.luggage)
-                      ? selected.luggage.map((b, i) => `Bag ${i+1}: ${b.type} (${b.weight}kg)`).join(', ')
-                      : 'Check-in Bag (15kg), Cabin Bag (13kg)'}
-                  </p>
-                </div>
-
-                <div className={styles.infoCard}>
-                  <h4>Assigned Driver Executive</h4>
-                  <p><strong>{selected.agent?.name || 'Ravi Kumar'}</strong> ({selected.agent?.id || 'DLZAGT45521'})</p>
-                  <p>Phone: {selected.agent?.phone || '+91 98765 43210'}</p>
-                  <p>Vehicle: {selected.agent?.vehicle || 'DL 1Z 4589'}</p>
+              {/* Assigned Driver Executive */}
+              <div className={styles.infoCard} style={{ marginTop: '1rem' }}>
+                <h4 style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Truck size={15} color="#475569" /> Assigned Fleet Executive
+                </h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                  <div>
+                    <span style={{ fontSize: '11px', color: '#64748b' }}>Executive Name</span>
+                    <p style={{ margin: 0, fontWeight: 700 }}>{selected.agent?.name || 'Ravi Kumar'}</p>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '11px', color: '#64748b' }}>Contact</span>
+                    <p style={{ margin: 0, fontWeight: 600 }}>{selected.agent?.phone || '+91 98765 43210'}</p>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '11px', color: '#64748b' }}>Vehicle</span>
+                    <p style={{ margin: 0, fontWeight: 600 }}>{selected.agent?.vehicle || 'DL 1Z 4589'}</p>
+                  </div>
                 </div>
               </div>
 
@@ -525,7 +660,7 @@ export default function AdminPersonalCourierView({ onViewOrderDetail }) {
               <div>
                 <h3>Edit Consignment #{editingBooking.bookingNumber}</h3>
                 <p style={{ margin: 0, fontSize: '0.85rem', color: '#64748b' }}>
-                  Update live consignment attributes directly in PostgreSQL database.
+                  Update live consignment content, dimensions, packaging, and addresses.
                 </p>
               </div>
               <button
@@ -538,16 +673,16 @@ export default function AdminPersonalCourierView({ onViewOrderDetail }) {
             </div>
 
             <form onSubmit={handleSaveEdit} className={styles.editFormGrid}>
-              {/* Route & Status */}
-              <div className={styles.formSectionHeader}>Route & Consignment Status</div>
+              {/* Service & Status */}
+              <div className={styles.formSectionHeader}>Service Speed & Lifecycle Status</div>
               <div className={styles.formRow2}>
                 <div className={styles.formGroup}>
-                  <label>Service Route</label>
+                  <label>Service Speed</label>
                   <select
                     value={editForm.serviceType}
                     onChange={(e) => setEditForm({ ...editForm, serviceType: e.target.value })}
                   >
-                    {COURIER_ROUTE_OPTIONS.map((r) => (
+                    {COURIER_SPEED_OPTIONS.map((r) => (
                       <option key={r.id} value={r.id}>
                         {r.label}
                       </option>
@@ -555,7 +690,7 @@ export default function AdminPersonalCourierView({ onViewOrderDetail }) {
                   </select>
                 </div>
                 <div className={styles.formGroup}>
-                  <label>Status (8 Stages)</label>
+                  <label>Status</label>
                   <select
                     value={editForm.status}
                     onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
@@ -567,6 +702,100 @@ export default function AdminPersonalCourierView({ onViewOrderDetail }) {
                     ))}
                   </select>
                 </div>
+              </div>
+
+              {/* Package Content & Dimensions */}
+              <div className={styles.formSectionHeader}>Package Real Content & Dimensions</div>
+              <div className={styles.formRow2}>
+                <div className={styles.formGroup}>
+                  <label>Declared Item Category</label>
+                  <select
+                    value={editForm.category}
+                    onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+                  >
+                    {COURIER_CATEGORIES.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Packaging Type</label>
+                  <select
+                    value={editForm.packagingType}
+                    onChange={(e) => setEditForm({ ...editForm, packagingType: e.target.value })}
+                  >
+                    {COURIER_PACKAGING_OPTIONS.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className={styles.formRow3} style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                <div className={styles.formGroup}>
+                  <label>Length (cm)</label>
+                  <input
+                    type="number"
+                    value={editForm.lengthCm}
+                    onChange={(e) => setEditForm({ ...editForm, lengthCm: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Width (cm)</label>
+                  <input
+                    type="number"
+                    value={editForm.widthCm}
+                    onChange={(e) => setEditForm({ ...editForm, widthCm: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Height (cm)</label>
+                  <input
+                    type="number"
+                    value={editForm.heightCm}
+                    onChange={(e) => setEditForm({ ...editForm, heightCm: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className={styles.formRow2}>
+                <div className={styles.formGroup}>
+                  <label>Actual Weight (Kg)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={editForm.actualWeightKg}
+                    onChange={(e) => setEditForm({ ...editForm, actualWeightKg: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Chargeable Weight (Kg)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={editForm.chargeableWeightKg}
+                    onChange={(e) => setEditForm({ ...editForm, chargeableWeightKg: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>Content Description / Declared Items</label>
+                <input
+                  type="text"
+                  value={editForm.contentDescription}
+                  onChange={(e) => setEditForm({ ...editForm, contentDescription: e.target.value })}
+                  placeholder="e.g. Designer suits, electronic gadgets, medical samples"
+                />
               </div>
 
               <div className={styles.formRow2}>
@@ -591,71 +820,74 @@ export default function AdminPersonalCourierView({ onViewOrderDetail }) {
                 </div>
               </div>
 
-              {/* Pickup & Terminal */}
-              <div className={styles.formSectionHeader}>Pickup & Airport Info</div>
+              {/* Pickup Address */}
+              <div className={styles.formSectionHeader}>Pickup Origin Address</div>
               <div className={styles.formRow2}>
                 <div className={styles.formGroup}>
-                  <label>Airport Terminal</label>
+                  <label>Sender Contact Name</label>
                   <input
                     type="text"
-                    value={editForm.terminal}
-                    onChange={(e) => setEditForm({ ...editForm, terminal: e.target.value })}
-                  />
-                </div>
-                <div className={styles.formGroup}>
-                  <label>Luggage Belt #</label>
-                  <input
-                    type="text"
-                    value={editForm.luggageBelt}
-                    onChange={(e) => setEditForm({ ...editForm, luggageBelt: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className={styles.formRow2}>
-                <div className={styles.formGroup}>
-                  <label>Flight Number</label>
-                  <input
-                    type="text"
-                    value={editForm.flightNumber}
-                    onChange={(e) => setEditForm({ ...editForm, flightNumber: e.target.value })}
-                  />
-                </div>
-                <div className={styles.formGroup}>
-                  <label>PNR Reference</label>
-                  <input
-                    type="text"
-                    value={editForm.pnr}
-                    onChange={(e) => setEditForm({ ...editForm, pnr: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              {/* Destination Hotel */}
-              <div className={styles.formSectionHeader}>Delivery Destination & Hotel</div>
-              <div className={styles.formRow2}>
-                <div className={styles.formGroup}>
-                  <label>Hotel Name</label>
-                  <input
-                    type="text"
-                    value={editForm.hotelName}
-                    onChange={(e) => setEditForm({ ...editForm, hotelName: e.target.value })}
+                    value={editForm.pickupContactName}
+                    onChange={(e) => setEditForm({ ...editForm, pickupContactName: e.target.value })}
                     required
                   />
                 </div>
                 <div className={styles.formGroup}>
-                  <label>Room Number</label>
+                  <label>Sender Phone</label>
                   <input
                     type="text"
-                    value={editForm.roomNumber}
-                    onChange={(e) => setEditForm({ ...editForm, roomNumber: e.target.value })}
+                    value={editForm.pickupPhone}
+                    onChange={(e) => setEditForm({ ...editForm, pickupPhone: e.target.value })}
+                    required
                   />
                 </div>
               </div>
 
+              <div className={styles.formGroup}>
+                <label>Pickup Street Address</label>
+                <input
+                  type="text"
+                  value={editForm.pickupAddress}
+                  onChange={(e) => setEditForm({ ...editForm, pickupAddress: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className={styles.formRow3} style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                <div className={styles.formGroup}>
+                  <label>City</label>
+                  <input
+                    type="text"
+                    value={editForm.pickupCity}
+                    onChange={(e) => setEditForm({ ...editForm, pickupCity: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label>State</label>
+                  <input
+                    type="text"
+                    value={editForm.pickupState}
+                    onChange={(e) => setEditForm({ ...editForm, pickupState: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Pincode</label>
+                  <input
+                    type="text"
+                    value={editForm.pickupPostalCode}
+                    onChange={(e) => setEditForm({ ...editForm, pickupPostalCode: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Delivery Address */}
+              <div className={styles.formSectionHeader}>Delivery Destination Address</div>
               <div className={styles.formRow2}>
                 <div className={styles.formGroup}>
-                  <label>Guest / Recipient Name</label>
+                  <label>Recipient Name</label>
                   <input
                     type="text"
                     value={editForm.dropoffContactName}
@@ -674,29 +906,48 @@ export default function AdminPersonalCourierView({ onViewOrderDetail }) {
                 </div>
               </div>
 
-              {/* Luggage Details */}
-              <div className={styles.formSectionHeader}>Baggage & Driver Executive</div>
-              <div className={styles.formRow2}>
+              <div className={styles.formGroup}>
+                <label>Delivery Street Address</label>
+                <input
+                  type="text"
+                  value={editForm.dropoffAddress}
+                  onChange={(e) => setEditForm({ ...editForm, dropoffAddress: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className={styles.formRow3} style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
                 <div className={styles.formGroup}>
-                  <label>Total Bags</label>
+                  <label>City</label>
                   <input
-                    type="number"
-                    value={editForm.totalBags}
-                    onChange={(e) => setEditForm({ ...editForm, totalBags: e.target.value })}
+                    type="text"
+                    value={editForm.dropoffCity}
+                    onChange={(e) => setEditForm({ ...editForm, dropoffCity: e.target.value })}
                     required
                   />
                 </div>
                 <div className={styles.formGroup}>
-                  <label>Total Weight (Kg)</label>
+                  <label>State</label>
                   <input
-                    type="number"
-                    value={editForm.actualWeightKg}
-                    onChange={(e) => setEditForm({ ...editForm, actualWeightKg: e.target.value })}
+                    type="text"
+                    value={editForm.dropoffState}
+                    onChange={(e) => setEditForm({ ...editForm, dropoffState: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label>Pincode</label>
+                  <input
+                    type="text"
+                    value={editForm.dropoffPostalCode}
+                    onChange={(e) => setEditForm({ ...editForm, dropoffPostalCode: e.target.value })}
                     required
                   />
                 </div>
               </div>
 
+              {/* Driver Executive */}
+              <div className={styles.formSectionHeader}>Assigned Driver Executive</div>
               <div className={styles.formRow2}>
                 <div className={styles.formGroup}>
                   <label>Driver Executive Name</label>
