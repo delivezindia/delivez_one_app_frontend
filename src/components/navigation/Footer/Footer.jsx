@@ -1,9 +1,50 @@
-import { Mail, PhoneCall } from 'lucide-react'
+import { Clock3, Leaf, Luggage, Mail, PhoneCall, ShieldCheck } from 'lucide-react'
 import styles from './Footer.module.css'
 
 function Footer() {
   return (
     <footer id="support" className={styles.footer}>
+      {/* 4-Pillar Trust Badge Bar (Matching Reference Screenshots) */}
+      <div className={styles.trustBar}>
+        <div className={styles.trustInner}>
+          <div className={styles.trustPillar}>
+            <div className={styles.trustIconWrap}><Clock3 size={20} /></div>
+            <div>
+              <strong className={styles.trustTitle}>On-Time Delivery</strong>
+              <p className={styles.trustDesc}>Because your time matters.</p>
+            </div>
+          </div>
+
+          <div className={styles.trustPillar}>
+            <div className={styles.trustIconWrap}><ShieldCheck size={20} /></div>
+            <div>
+              <strong className={styles.trustTitle}>Safe &amp; Secure</strong>
+              <p className={styles.trustDesc}>Your shipments are in safe hands.</p>
+            </div>
+          </div>
+
+          <div className={styles.trustPillar}>
+            <div className={styles.trustIconWrap}><Luggage size={20} /></div>
+            <div>
+              <strong className={styles.trustTitle}>Trusted by 1M+ Customers</strong>
+              <p className={styles.trustDesc}>Across India.</p>
+            </div>
+          </div>
+
+          <div className={styles.trustPillar}>
+            <div className={styles.trustIconWrap}><Leaf size={20} /></div>
+            <div>
+              <strong className={styles.trustTitle}>A Cleaner Tomorrow</strong>
+              <p className={styles.trustDesc}>Reducing travel stress &amp; carbon footprints.</p>
+            </div>
+          </div>
+
+          <div className={styles.trustScriptTag}>
+            <span>Travel Lighter, Live Brighter</span>
+          </div>
+        </div>
+      </div>
+
       <div className={styles.inner}>
         <div className={styles.leftCol}>
           <div className={styles.logoGroup}>
@@ -13,7 +54,7 @@ function Footer() {
             <span className={styles.logoDivider}>|</span>
             <span className={styles.logoOne}>ONE</span>
           </div>
-          <p className={styles.tagline}>Personal Logistics. One App. Every Need.</p>
+          <p className={styles.tagline}>Moving a Smarter Tomorrow. Sustainable logistics for all of India.</p>
         </div>
 
         <div className={styles.linksRow}>
@@ -30,11 +71,11 @@ function Footer() {
         <div className={styles.bottomInner}>
           <p className={styles.copyright}>© 2026 Delvez. All rights reserved.</p>
           <div className={styles.policyLinks}>
-            <a href="#support">Help & Support</a>
+            <a href="#support">Help &amp; Support</a>
             <span className={styles.dot}>|</span>
             <a href="#privacy">Privacy Policy</a>
             <span className={styles.dot}>|</span>
-            <a href="#terms">Terms & Conditions</a>
+            <a href="#terms">Terms &amp; Conditions</a>
           </div>
         </div>
       </div>

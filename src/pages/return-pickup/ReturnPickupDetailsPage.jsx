@@ -359,7 +359,7 @@ export default function ReturnPickupDetailsPage({ bookingId: propId }) {
               { id: '2', name: 'Return Authorization.pdf', uploadedAt: '08 May 2026' }
             ]).map(doc => (
               <div key={doc.id || doc.name} className={styles.docItemCard}>
-                <FileText size={20} color="#dc2626" />
+                <FileText size={20} color="#fab800" />
                 <div className={styles.docItemMeta}>
                   <strong>{doc.name}</strong>
                   <small>Uploaded on {doc.uploadedAt || '08 May 2026'}</small>

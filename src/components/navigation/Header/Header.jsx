@@ -9,6 +9,7 @@ import {
   MapPin,
   Menu,
   RotateCcw,
+  Search,
   Shield,
   ShieldCheck,
   ShoppingBag,
@@ -22,12 +23,12 @@ import { getStoredUser } from '@/features/auth/services/userAuthService.js'
 import styles from './Header.module.css'
 
 const services = [
-  { label: 'Confidential Delivery (Delivez Vault)', href: '/book/confidential-delivery', icon: ShieldCheck, highlight: true },
-  { label: 'Courier Delivery', href: '/courier', icon: Truck },
-  { label: 'Luggage Delivery', href: '/book/luggage-delivery', icon: Luggage },
-  { label: 'Forgot Something?', href: '/book/forgot-something', icon: ShoppingBag },
+  { label: 'Courier Delivery', href: '/courier', icon: Truck, highlight: true },
+  { label: 'Airport Luggage Delivery', href: '/book/luggage-delivery', icon: Luggage },
   { label: 'Return Pickup', href: '/book/return-pickup', icon: RotateCcw },
-  { label: 'Know More', href: '#services', icon: CircleHelp },
+  { label: 'Confidential Delivery (Delvez Vault)', href: '/book/confidential-delivery', icon: ShieldCheck },
+  { label: 'Forgot Something?', href: '/book/forgot-something', icon: ShoppingBag },
+  { label: 'All Services Catalog', href: '/#services', icon: CircleHelp },
 ]
 
 const supportLinks = [
@@ -125,19 +126,20 @@ function Header() {
     <>
       <header className={styles.header} ref={headerRef}>
         <div className={styles.inner}>
-          {/* Delvez One Logo matching reference */}
-          <a
-            className={styles.logo}
-            href="/"
-            onClick={(e) => { e.preventDefault(); closeNavigation(); navigateTo('/'); }}
-            aria-label="Delivez One home"
-          >
-            <span className={styles.logoText}>
-              DELVE<span className={styles.logoZ}>Z</span>
-            </span>
-            <span className={styles.logoDivider}>|</span>
-            <span className={styles.logoOne}>ONE</span>
-          </a>
+          {/* Delvez Brand Logo with Tagline matching screenshots */}
+          <div className={styles.brandCol}>
+            <a
+              className={styles.logo}
+              href="/"
+              onClick={(e) => { e.preventDefault(); closeNavigation(); navigateTo('/'); }}
+              aria-label="Delvez home"
+            >
+              <span className={styles.logoText}>
+                DELVE<span className={styles.logoZ}>Z</span>
+              </span>
+            </a>
+            <span className={styles.logoTagline}>Moving a Smarter Tomorrow</span>
+          </div>
 
           <button
             className={styles.menuButton}
@@ -149,15 +151,33 @@ function Header() {
             {menuOpen ? <X size={24} color="#fff" /> : <Menu size={24} color="#fff" />}
           </button>
 
+          {/* Navigation Links matching Screenshot reference */}
           <nav className={`${styles.nav} ${menuOpen ? styles.navOpen : ''}`} aria-label="Primary navigation">
+            <a
+              className={styles.navLink}
+              href="/courier"
+              onClick={(e) => { e.preventDefault(); closeNavigation(); navigateTo('/courier'); }}
+            >
+              Send Parcel
+            </a>
+
+            <a
+              className={styles.navLink}
+              href="/#services"
+              onClick={(e) => { e.preventDefault(); closeNavigation(); navigateTo('/#services'); }}
+            >
+              Business Solutions
+            </a>
+
             <div className={styles.navGroup}>
               <button
                 type="button"
-                className={styles.navLinkBtn}
+                className={`${styles.navLinkBtn} ${styles.navLinkActive}`}
                 onClick={() => toggleDropdown('services')}
                 aria-expanded={openDropdown === 'services'}
               >
-                Services <ChevronDown size={15} />
+                <span>Our Services</span>
+                <ChevronDown size={14} />
               </button>
               {openDropdown === 'services' && <Dropdown items={services} onClose={closeNavigation} />}
             </div>
@@ -167,59 +187,81 @@ function Header() {
               href="#why-choose-us"
               onClick={closeNavigation}
             >
-              Features
+              Industries
             </a>
 
             <a
               className={styles.navLink}
-              href="#how-it-works"
+              href="#features"
               onClick={closeNavigation}
             >
-              How It Works
+              Technology
             </a>
 
-            <div className={styles.navGroup}>
-              <button
-                type="button"
-                className={styles.navLinkBtn}
-                onClick={() => toggleDropdown('support')}
-                aria-expanded={openDropdown === 'support'}
-              >
-                Support <ChevronDown size={15} />
-              </button>
-              {openDropdown === 'support' && <Dropdown items={supportLinks} onClose={closeNavigation} />}
-            </div>
+            <a
+              className={styles.navLink}
+              href="#network"
+              onClick={closeNavigation}
+            >
+              Network
+            </a>
+
+            <a
+              className={styles.navLink}
+              href="#resources"
+              onClick={closeNavigation}
+            >
+              Resources
+            </a>
+
+            <a
+              className={styles.navLink}
+              href="#company"
+              onClick={closeNavigation}
+            >
+              Company
+            </a>
 
             {/* Mobile Actions */}
             <div className={styles.mobileActions}>
-              <div className={styles.langSelector}>
-                <Globe2 size={16} />
-                <span>English</span>
-                <ChevronDown size={13} />
-              </div>
+              <button
+                className={styles.trackShipmentOutlineBtn}
+                type="button"
+                onClick={() => { closeNavigation(); navigateTo('/track/courier'); }}
+              >
+                Track Shipment
+              </button>
 
               {currentUser ? (
-                <button className={styles.outlineLoginBtn} type="button" onClick={openAccount}>
-                  <UserRound size={17} /> {currentUser.fullName || 'My Dashboard'}
+                <button className={styles.loginGoldBtn} type="button" onClick={openAccount}>
+                  <UserRound size={16} /> {currentUser.fullName || 'My Dashboard'}
                 </button>
               ) : (
-                <div className={styles.loginActionGroup}>
-                  <span className={styles.alreadyAccountText}>Already have an account?</span>
-                  <button className={styles.outlineLoginBtn} type="button" onClick={openAccount}>
-                    Login
-                  </button>
-                </div>
+                <button className={styles.loginGoldBtn} type="button" onClick={openAccount}>
+                  Login / Sign Up
+                </button>
               )}
             </div>
           </nav>
 
-          {/* Desktop Right Controls (Language & Auth) */}
+          {/* Desktop Right Controls matching reference screenshot */}
           <div className={styles.desktopActions}>
-            <div className={styles.langSelector}>
-              <Globe2 size={16} />
-              <span>English</span>
-              <ChevronDown size={13} />
-            </div>
+            <button
+              type="button"
+              className={styles.searchIconButton}
+              onClick={() => navigateTo('/track/courier')}
+              title="Search & Track"
+            >
+              <Search size={18} />
+            </button>
+
+            <button
+              type="button"
+              className={styles.trackShipmentOutlineBtn}
+              onClick={() => navigateTo('/track/courier')}
+            >
+              Track Shipment
+            </button>
 
             {currentUser ? (
               <div className={styles.userProfileGroup}>
@@ -253,12 +295,9 @@ function Header() {
                 </button>
               </div>
             ) : (
-              <div className={styles.loginActionGroup}>
-                <span className={styles.alreadyAccountText}>Already have an account?</span>
-                <button className={styles.outlineLoginBtn} type="button" onClick={openAccount}>
-                  Login
-                </button>
-              </div>
+              <button className={styles.loginGoldBtn} type="button" onClick={openAccount}>
+                Login / Sign Up
+              </button>
             )}
           </div>
         </div>

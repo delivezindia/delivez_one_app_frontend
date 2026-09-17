@@ -38,8 +38,8 @@
 }
 
 .serviceBadge {
-  background: #fee2e2;
-  color: #e11d48;
+  background: #fef3c7;
+  color: #d97706;
   font-size: 0.75rem;
   font-weight: 700;
   padding: 0.35rem 0.75rem;
@@ -116,8 +116,9 @@
 }
 
 .tabBtnActive {
-  color: #e11d48;
-  border-bottom: 2px solid #e11d48;
+  color: #0f172a;
+  border-bottom: 2px solid #fab800;
+  font-weight: 800;
 }
 
 .body {
@@ -155,8 +156,9 @@
 }
 
 .highlightIcon {
-  background: #ffe4e6;
-  color: #e11d48;
+  background: #fffdf5;
+  color: #fab800;
+  border: 1px solid #fef3c7;
   width: 36px;
   height: 36px;
   border-radius: 10px;
@@ -353,23 +355,23 @@
 }
 
 .proceedBtn {
-  background: #e11d48;
-  color: #ffffff;
+  background: #fab800;
+  color: #0d0f12;
   border: none;
   padding: 0.85rem 1.5rem;
   border-radius: 12px;
   font-size: 0.95rem;
-  font-weight: 700;
+  font-weight: 850;
   display: flex;
   align-items: center;
   gap: 0.5rem;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.25);
+  box-shadow: 0 4px 12px rgba(250, 184, 0, 0.25);
 }
 
 .proceedBtn:hover {
-  background: #be123c;
+  background: #e5a700;
   transform: translateY(-1px);
 }
 

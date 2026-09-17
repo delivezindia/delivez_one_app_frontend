@@ -1,8 +1,63 @@
 .footer {
-  padding: 48px 0 24px;
+  padding: 0 0 24px;
   color: #ffffff;
   background: #0d0f12;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* 4-Pillar Trust Badge Bar matching reference screenshot */
+.trustBar {
+  background: #000000;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 24px 0;
+  margin-bottom: 40px;
+}
+
+.trustInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: min(100% - 48px, 1536px);
+  margin-inline: auto;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.trustPillar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.trustIconWrap {
+  color: #fab800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.trustTitle {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #ffffff;
+  display: block;
+}
+
+.trustDesc {
+  font-size: 0.76rem;
+  color: #9ca3af;
+  margin: 2px 0 0 0;
+}
+
+.trustScriptTag {
+  color: #fab800;
+  font-size: 1.15rem;
+  font-weight: 700;
+  font-style: italic;
+  font-family: 'Caveat', cursive, system-ui, sans-serif;
+  letter-spacing: 0.5px;
+  margin-left: auto;
 }
 
 .inner {

@@ -15,14 +15,28 @@
   gap: 20px;
 }
 
-/* Delvez One Logo */
+/* Delvez Brand Logo & Tagline */
+.brandCol {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
 .logo {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   text-decoration: none;
   cursor: pointer;
-  flex-shrink: 0;
+}
+
+.logoTagline {
+  font-size: 0.65rem;
+  color: #9ca3af;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+  font-weight: 500;
 }
 
 .logoText {
@@ -375,3 +389,69 @@
     font-size: 0.95rem;
   }
 }
+
+/* Reference Header Action Buttons */
+.navLinkActive {
+  color: #ffffff !important;
+  position: relative;
+  border-bottom: 2px solid #fab800;
+  padding-bottom: 4px;
+}
+
+.searchIconButton {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 50%;
+  transition: all 0.15s ease;
+}
+
+.searchIconButton:hover {
+  color: #fab800;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.trackShipmentOutlineBtn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.trackShipmentOutlineBtn:hover {
+  border-color: #fab800;
+  color: #fab800;
+}
+
+.loginGoldBtn {
+  background: #fab800;
+  border: none;
+  color: #0d0f12;
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.loginGoldBtn:hover {
+  background: #e5a700;
+  transform: translateY(-1px);
+}
+

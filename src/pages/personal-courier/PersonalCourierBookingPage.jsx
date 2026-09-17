@@ -579,7 +579,7 @@ export default function PersonalCourierBookingPage({ serviceSlug }) {
                   style={{
                     border: 'none',
                     background: 'transparent',
-                    color: '#E11D48',
+                    color: '#0284c7',
                     fontWeight: 800,
                     cursor: 'pointer',
                     fontSize: '0.86rem'
@@ -802,7 +802,7 @@ export default function PersonalCourierBookingPage({ serviceSlug }) {
                   style={{
                     border: 'none',
                     background: 'transparent',
-                    color: '#E11D48',
+                    color: '#0284c7',
                     fontWeight: 800,
                     cursor: 'pointer',
                     fontSize: '0.86rem'
@@ -1807,7 +1807,7 @@ export default function PersonalCourierBookingPage({ serviceSlug }) {
                     />
                     <div style={{ textAlign: 'right' }}>
                       <small style={{ display: 'block', fontSize: '0.7rem', color: '#64748B' }}>Premium (0.75%)</small>
-                      <strong style={{ fontSize: '1.1rem', color: '#E11D48' }}>
+                      <strong style={{ fontSize: '1.1rem', color: '#16a34a' }}>
                         ₹{Math.round(booking.declaredValue * 0.0075)}.00
                       </strong>
                     </div>
@@ -1955,7 +1955,7 @@ export default function PersonalCourierBookingPage({ serviceSlug }) {
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #cbd5e1', paddingTop: 6, fontSize: '1.1rem', fontWeight: 900, color: '#0F172A' }}>
                     <span>Total Payable</span>
-                    <span style={{ color: '#E11D48' }}>₹{pricing.total}.00</span>
+                    <span style={{ color: '#16a34a' }}>₹{pricing.total}.00</span>
                   </div>
                 </div>
               </div>
@@ -2074,7 +2074,7 @@ export default function PersonalCourierBookingPage({ serviceSlug }) {
               <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: '#F8FAFC', borderRadius: 10, border: '1px solid #E2E8F0' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <Receipt size={18} color="#E11D48" />
+                    <Receipt size={18} color="#fab800" />
                     <div>
                       <strong style={{ fontSize: '0.86rem', color: '#0F172A' }}>GST / Business Tax Invoice</strong>
                       <div style={{ fontSize: '0.72rem', color: '#64748B' }}>Add company details for input tax credit claim</div>
@@ -2086,8 +2086,8 @@ export default function PersonalCourierBookingPage({ serviceSlug }) {
                       padding: '4px 10px',
                       borderRadius: 6,
                       border: '1px solid #cbd5e1',
-                      background: booking.isGstEnabled ? '#E11D48' : '#ffffff',
-                      color: booking.isGstEnabled ? '#ffffff' : '#334155',
+                      background: booking.isGstEnabled ? '#fab800' : '#ffffff',
+                      color: booking.isGstEnabled ? '#0d0f12' : '#334155',
                       fontSize: '0.78rem',
                       fontWeight: 750,
                       cursor: 'pointer'
@@ -2263,7 +2263,7 @@ export default function PersonalCourierBookingPage({ serviceSlug }) {
               {/* Dynamic Package Information & Dimensions Specs Grid */}
               <div style={{ margin: '16px 0' }}>
                 <h4 style={{ fontSize: '0.9rem', fontWeight: 800, color: '#0F172A', margin: '0 0 10px', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Box size={16} color="#E11D48" /> Dynamic Package &amp; Packaging Specs
+                  <Box size={16} color="#fab800" /> Dynamic Package &amp; Packaging Specs
                 </h4>
                 
                 <div className={styles.confirmedSpecGrid}>
@@ -2795,11 +2795,11 @@ export default function PersonalCourierBookingPage({ serviceSlug }) {
                     padding: '8px 4px',
                     borderRadius: 8,
                     border: '1.5px solid #cbd5e1',
-                    background: booking[`${scheduleTarget}ScheduleDate`] === d ? '#FFF1F2' : '#ffffff',
-                    borderColor: booking[`${scheduleTarget}ScheduleDate`] === d ? '#E11D48' : '#cbd5e1',
+                    background: booking[`${scheduleTarget}ScheduleDate`] === d ? '#fffdf5' : '#ffffff',
+                    borderColor: booking[`${scheduleTarget}ScheduleDate`] === d ? '#fab800' : '#cbd5e1',
                     fontWeight: 750,
                     fontSize: '0.8rem',
-                    color: booking[`${scheduleTarget}ScheduleDate`] === d ? '#E11D48' : '#334155',
+                    color: booking[`${scheduleTarget}ScheduleDate`] === d ? '#0d0f12' : '#334155',
                     cursor: 'pointer'
                   }}
                   onClick={() => setBooking({ ...booking, [`${scheduleTarget}ScheduleDate`]: d })}

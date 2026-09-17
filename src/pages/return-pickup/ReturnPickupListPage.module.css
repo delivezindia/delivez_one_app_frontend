@@ -65,15 +65,21 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: #d97706;
-  color: #ffffff;
+  background: #fab800;
+  color: #0d0f12;
   border: none;
-  padding: 12px 22px;
-  border-radius: 10px;
+  padding: 12px 24px;
+  border-radius: 999px;
   font-size: 0.92rem;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(217, 119, 6, 0.25);
+  box-shadow: 0 4px 14px rgba(250, 184, 0, 0.35);
+  transition: all 0.2s ease;
+}
+
+.newReturnBtn:hover {
+  background: #e5a700;
+  transform: translateY(-1px);
 }
 
 /* List Container */
@@ -109,9 +115,10 @@
 }
 
 .tabsList button.activeTab {
-  background: #d97706;
-  color: #ffffff;
-  border-color: #d97706;
+  background: #fab800;
+  color: #0d0f12;
+  border-color: #fab800;
+  font-weight: 800;
 }
 
 .searchForm {
@@ -164,15 +171,21 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: #d97706;
-  color: #ffffff;
+  background: #fab800;
+  color: #0d0f12;
   border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
+  padding: 11px 22px;
+  border-radius: 999px;
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: 800;
   margin-top: 8px;
   cursor: pointer;
+  box-shadow: 0 4px 14px rgba(250, 184, 0, 0.35);
+  transition: all 0.2s ease;
+}
+
+.emptyActionBtn:hover {
+  background: #e5a700;
 }
 
 .bookingCardsGrid {
@@ -302,28 +315,39 @@
 }
 
 .detailsBtn {
-  background: #f1f5f9;
-  border: 1px solid #cbd5e1;
-  padding: 8px 14px;
-  border-radius: 8px;
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  padding: 8px 16px;
+  border-radius: 999px;
   font-size: 0.82rem;
-  font-weight: 700;
-  color: #334155;
+  font-weight: 750;
+  color: #0f172a;
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.detailsBtn:hover {
+  background: #f1f5f9;
 }
 
 .trackBtn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: #d97706;
-  color: #ffffff;
+  background: #fab800;
+  color: #0d0f12;
   border: none;
-  padding: 8px 16px;
-  border-radius: 8px;
+  padding: 8px 18px;
+  border-radius: 999px;
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
+  box-shadow: 0 2px 8px rgba(250, 184, 0, 0.3);
+  transition: all 0.2s ease;
+}
+
+.trackBtn:hover {
+  background: #e5a700;
 }
 
 .spinner {

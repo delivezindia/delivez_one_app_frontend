@@ -171,12 +171,12 @@
 .giftPrice {
   font-size: 17px;
   font-weight: 800;
-  color: #E11D48;
+  color: #0f172a;
 }
 
 .greetingCardBox {
-  background: #FFF1F2;
-  border: 1px dashed #FECDD3;
+  background: #fffdf0;
+  border: 1px dashed #fab800;
   border-radius: 12px;
   padding: 14px 18px;
 }
@@ -275,5 +275,5 @@
 
 .pulse {
   animation: pulse 1.5s infinite;
-  color: #E11D48;
+  color: #fab800;
 }

@@ -93,7 +93,7 @@
   right: 6px;
   width: 7px;
   height: 7px;
-  background-color: #e50914;
+  background-color: #fab800;
   border-radius: 50%;
   border: 1px solid #ffffff;
 }
@@ -218,23 +218,23 @@
 }
 
 .sliderNextBtn {
-  background: #d30000;
+  background: #fab800;
   border: none;
-  color: #ffffff;
+  color: #0d0f12;
   padding: 6px 18px;
   border-radius: 20px;
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight: 800;
   display: flex;
   align-items: center;
   gap: 4px;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(211, 0, 0, 0.4);
+  box-shadow: 0 2px 8px rgba(250, 184, 0, 0.4);
   transition: background 0.2s;
 }
 
 .sliderNextBtn:hover {
-  background: #b70000;
+  background: #e5a700;
 }
 
 /* STEPPER RAIL */
@@ -283,15 +283,15 @@
 }
 
 .stepItem.active .stepNode {
-  background: #e50914;
-  border-color: #e50914;
-  color: #ffffff;
-  box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.2);
+  background: #fab800;
+  border-color: #fab800;
+  color: #0d0f12;
+  box-shadow: 0 0 0 3px rgba(250, 184, 0, 0.25);
 }
 
 .stepItem.completed .stepNode {
-  background: #f59e0b;
-  border-color: #f59e0b;
+  background: #10b981;
+  border-color: #10b981;
   color: #ffffff;
 }
 
@@ -303,8 +303,8 @@
 }
 
 .stepItem.active .stepLabel {
-  color: #e50914;
-  font-weight: 700;
+  color: #0f172a;
+  font-weight: 800;
 }
 
 .stepItem.completed .stepLabel {
@@ -320,7 +320,7 @@
 }
 
 .stepLine.completedLine {
-  background: #f59e0b;
+  background: #10b981;
 }
 
 /* MAIN LAYOUT */
@@ -466,9 +466,9 @@
 }
 
 .optionCard.selected {
-  border-color: #e50914;
+  border-color: #fab800;
   background: #ffffff;
-  box-shadow: 0 0 0 1px #e50914;
+  box-shadow: 0 0 0 1px #fab800;
 }
 
 .optionAmberIcon {
@@ -514,7 +514,7 @@
 }
 
 .optionCard.selected .optionChevron {
-  color: #e50914;
+  color: #fab800;
   transform: translateX(2px);
 }
 
@@ -537,7 +537,7 @@
 }
 
 .requiredStar {
-  color: #e50914;
+  color: #ef4444;
   font-weight: 800;
 }
 
@@ -601,7 +601,7 @@
 
 .standardInput:focus {
   outline: none;
-  border-color: #e50914;
+  border-color: #fab800;
   box-shadow: 0 0 0 2px rgba(229, 9, 20, 0.1);
 }
 
@@ -833,7 +833,7 @@
 }
 
 .destCard.selected {
-  border-color: #e50914;
+  border-color: #fab800;
   background: #fffafa;
 }
 
@@ -882,7 +882,7 @@
 }
 
 .otherDestCard.selected {
-  border-color: #e50914;
+  border-color: #fab800;
   background: #fffafa;
 }
 
@@ -1030,7 +1030,7 @@
 
 .itemDescTextarea:focus {
   outline: none;
-  border-color: #e50914;
+  border-color: #fab800;
 }
 
 .charCounter {
@@ -1077,7 +1077,7 @@
 
 .dimBox input:focus {
   outline: none;
-  border-color: #e50914;
+  border-color: #fab800;
 }
 
 .dimBox label {
@@ -1107,7 +1107,7 @@
 }
 
 .conditionCard.selected {
-  border-color: #e50914;
+  border-color: #fab800;
 }
 
 .conditionCardIcon {
@@ -1137,8 +1137,8 @@
 }
 
 .conditionCard.selected .conditionCheckMark {
-  background: #e50914;
-  border-color: #e50914;
+  background: #fab800;
+  border-color: #fab800;
   color: #ffffff;
 }
 
@@ -1165,7 +1165,7 @@
 }
 
 .handlingChip.selected {
-  border-color: #e50914;
+  border-color: #fab800;
   color: #e50914;
   background: #fffafa;
 }
@@ -1181,8 +1181,8 @@
 }
 
 .handlingChip.selected .chipBox {
-  background: #e50914;
-  border-color: #e50914;
+  background: #fab800;
+  border-color: #fab800;
   color: #ffffff;
 }
 
@@ -1199,7 +1199,7 @@
 }
 
 .photosDropBox:hover {
-  border-color: #e50914;
+  border-color: #fab800;
 }
 
 .photosDropBox strong {
@@ -1313,7 +1313,7 @@
 
 .uploadDocBtn {
   background: #ffffff;
-  border: 1px solid #e50914;
+  border: 1px solid #fab800;
   color: #e50914;
   padding: 4px 12px;
   border-radius: 6px;
@@ -1365,7 +1365,7 @@
 }
 
 .methodCard.selected {
-  border-color: #e50914;
+  border-color: #fab800;
   background: #fffafa;
 }
 
@@ -1403,8 +1403,8 @@
 }
 
 .fastestBadge {
-  background: #e50914;
-  color: #ffffff;
+  background: #fab800;
+  color: #0d0f12;
   font-size: 0.68rem;
   font-weight: 800;
   padding: 2px 6px;
@@ -1582,7 +1582,7 @@
 }
 
 .timeSlotCard.selected {
-  border-color: #e50914;
+  border-color: #fab800;
   background: #fffafa;
 }
 
@@ -1641,7 +1641,7 @@
 
 .preciseBtn {
   background: #ffffff;
-  border: 1px solid #e50914;
+  border: 1px solid #fab800;
   color: #e50914;
   padding: 5px 10px;
   border-radius: 6px;
@@ -1676,7 +1676,7 @@
 }
 
 .serviceCard.selected {
-  border-color: #e50914;
+  border-color: #fab800;
   background: #fffafa;
 }
 
@@ -1782,23 +1782,24 @@
   height: 44px;
   flex: 1;
   max-width: 320px;
-  background: #e50914;
+  background: #fab800;
   border: none;
-  border-radius: 22px;
+  border-radius: 10px;
   font-size: 0.92rem;
   font-weight: 800;
-  color: #ffffff;
+  color: #0d0f12;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  box-shadow: 0 4px 12px rgba(229, 9, 20, 0.3);
+  box-shadow: 0 4px 12px rgba(250, 184, 0, 0.3);
   transition: background 0.2s, transform 0.1s;
 }
 
 .continueBtn:hover {
-  background: #cc0812;
+  background: #e5a700;
+  transform: translateY(-1px);
 }
 
 .continueBtn:active {
@@ -1976,22 +1977,22 @@
 }
 
 .trackBtn {
-  background: #e50914;
-  color: #ffffff;
+  background: #fab800;
+  color: #0d0f12;
   border: none;
   padding: 12px 24px;
   border-radius: 24px;
-  font-weight: 800;
+  font-weight: 850;
   font-size: 0.9rem;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(229, 9, 20, 0.3);
+  box-shadow: 0 4px 12px rgba(250, 184, 0, 0.3);
 }
 
 .trackBtn:hover {
-  background: #cc0812;
+  background: #e5a700;
 }
 
 .invoiceBtn {
@@ -2413,8 +2414,8 @@
 
 .trackOrangeBtn {
   flex: 1;
-  background: #f59e0b;
-  color: #0f172a;
+  background: #fab800;
+  color: #0d0f12;
   border: none;
   border-radius: 8px;
   padding: 12px 18px;
@@ -2425,12 +2426,12 @@
   justify-content: center;
   gap: 4px;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.3);
+  box-shadow: 0 2px 6px rgba(250, 184, 0, 0.3);
   transition: all 0.15s;
 }
 
 .trackOrangeBtn:hover {
-  background: #d97706;
+  background: #e5a700;
 }
 
 @media (max-width: 640px) {

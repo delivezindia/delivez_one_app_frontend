@@ -72,7 +72,7 @@
 .brandSub {
   font-size: 0.72rem;
   font-weight: 800;
-  color: #d32f2f;
+  color: #fab800;
   letter-spacing: 1px;
   text-transform: uppercase;
 }
@@ -154,10 +154,10 @@
 }
 
 .stepRailActive .stepRailNumber {
-  background: #d32f2f;
-  border-color: #d32f2f;
-  color: #ffffff;
-  box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.2);
+  background: #fab800;
+  border-color: #fab800;
+  color: #0d0f12;
+  box-shadow: 0 0 0 3px rgba(250, 184, 0, 0.25);
 }
 
 .stepRailDone .stepRailNumber {
@@ -224,7 +224,7 @@
 }
 
 .panelTitleHighlight {
-  color: #d32f2f;
+  color: #fab800;
 }
 
 .panelSubtitle {
@@ -471,8 +471,8 @@
 }
 
 .inputField:focus {
-  border-color: #d32f2f;
-  box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.12);
+  border-color: #fab800;
+  box-shadow: 0 0 0 3px rgba(250, 184, 0, 0.15);
 }
 
 .selectField {
@@ -500,8 +500,8 @@
 }
 
 .locationDetectBox:hover {
-  border-color: #d32f2f;
-  background: #fff5f5;
+  border-color: #fab800;
+  background: #fffdf0;
 }
 
 /* Step 6: Item Details (Side-by-side desktop layout) */
@@ -529,8 +529,8 @@
 }
 
 .photoUploadBox:hover {
-  border-color: #d32f2f;
-  background: #fff5f5;
+  border-color: #fab800;
+  background: #fffdf0;
 }
 
 .photoPreviewThumb {
@@ -594,9 +594,9 @@
 }
 
 .speedCardActive {
-  border-color: #d32f2f;
-  background: #fff5f5;
-  box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.2);
+  border-color: #fab800;
+  background: #fffdf0;
+  box-shadow: 0 0 0 2px rgba(250, 184, 0, 0.25);
 }
 
 .speedTitle {
@@ -639,9 +639,9 @@
 }
 
 .datePillActive {
-  background: #d32f2f;
-  border-color: #d32f2f;
-  color: #ffffff;
+  background: #fab800;
+  border-color: #fab800;
+  color: #0d0f12;
 }
 
 .datePillLabel {
@@ -675,9 +675,10 @@
 }
 
 .timePillActive {
-  border-color: #d32f2f;
-  color: #d32f2f;
-  background: #fff5f5;
+  border-color: #fab800;
+  color: #0d0f12;
+  background: #fffdf0;
+  font-weight: 800;
 }
 
 /* Step 8: Security Toggles Grid (2 Columns on Desktop) */
@@ -753,7 +754,7 @@
 }
 
 input:checked + .slider {
-  background-color: #d32f2f;
+  background-color: #fab800;
 }
 
 input:checked + .slider:before {
@@ -786,9 +787,10 @@ input:checked + .slider:before {
 }
 
 .paymentCardSelected {
-  border-color: #d32f2f;
-  background: #fff5f5;
-  color: #d32f2f;
+  border-color: #fab800;
+  background: #fffdf0;
+  color: #0d0f12;
+  font-weight: 800;
 }
 
 /* Trust and Notice Banners */
@@ -803,8 +805,9 @@ input:checked + .slider:before {
 }
 
 .alertRedBanner {
-  background: #d32f2f;
+  background: #0d0f12;
   color: #ffffff;
+  border: 1px solid rgba(250, 184, 0, 0.35);
   border-radius: 16px;
   padding: 1rem 1.25rem;
   display: flex;
@@ -845,18 +848,18 @@ input:checked + .slider:before {
 }
 
 .continueRedBtn {
-  background: #d32f2f;
+  background: #fab800;
   border: none;
   border-radius: 12px;
   padding: 0.9rem 2rem;
   font-size: 1rem;
   font-weight: 800;
-  color: #ffffff;
+  color: #0d0f12;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 8px;
-  box-shadow: 0 4px 14px rgba(211, 47, 47, 0.3);
+  box-shadow: 0 4px 14px rgba(250, 184, 0, 0.35);
   transition: all 0.2s ease;
 }
 
@@ -944,7 +947,7 @@ input:checked + .slider:before {
   height: 44px;
   border-radius: 12px;
   background: #fef8ee;
-  color: #d32f2f;
+  color: #fab800;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -981,7 +984,7 @@ input:checked + .slider:before {
   height: 20px;
   border-radius: 50%;
   background: #ffffff;
-  border: 2px solid #d32f2f;
+  border: 2px solid #fab800;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1129,8 +1132,8 @@ input:checked + .slider:before {
 }
 
 .milestoneNodeDone {
-  background: #d32f2f;
-  border-color: #d32f2f;
+  background: #10b981;
+  border-color: #10b981;
 }
 
 .milestoneLabels {
@@ -1154,11 +1157,11 @@ input:checked + .slider:before {
   font-size: 1.25rem;
   font-weight: 900;
   letter-spacing: 3px;
-  color: #d32f2f;
+  color: #0d0f12;
   background: #ffffff;
   padding: 0.4rem 1rem;
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
+  border: 1.5px solid #fab800;
 }
 
 /* Responsive Media Queries */

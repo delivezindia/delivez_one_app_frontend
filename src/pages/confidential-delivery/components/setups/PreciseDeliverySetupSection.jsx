@@ -12,6 +12,8 @@ import {
   CheckCircle,
   Info,
   ChevronDown,
+  Shield,
+  Lock,
 } from 'lucide-react'
 import styles from '../../ConfidentialDeliveryBookingPage.module.css'
 
@@ -35,6 +37,14 @@ export default function PreciseDeliverySetupSection({
   const handlingOption = data.handlingOption || 'Precise Delivery'
   const specialInstructions = data.specialInstructions || ''
   const customDeliveryAddress = data.customDeliveryAddress || ''
+
+  // Precise Security & Handling controls
+  const tamperProofSealing = data.tamperProofSealing !== false
+  const singlePointOfContact = data.singlePointOfContact !== false
+  const secureStorageAtHubs = data.secureStorageAtHubs !== false
+  const armedEscort = Boolean(data.armedEscort)
+  const noUnattendedDelivery = data.noUnattendedDelivery !== false
+  const photoProofAtEveryStage = data.photoProofAtEveryStage !== false
 
   const handleUpdate = (patch) => {
     if (onChange) {
@@ -96,7 +106,6 @@ export default function PreciseDeliverySetupSection({
                 onChange={(e) => handleUpdate({ timezone: e.target.value })}
               >
                 <option value="IST (GMT +05:30)">IST (GMT +05:30)</option>
-                <option value="UTC (GMT +00:00)">UTC (GMT +00:00)</option>
               </select>
               <ChevronDown className={styles.selectChevron} />
             </div>
@@ -107,15 +116,16 @@ export default function PreciseDeliverySetupSection({
           <div>
             <label className={styles.inputLabel}>Delivery Deadline (Hard Cut-off)</label>
             <div className={`${styles.inputWrapper} mt-2`}>
+              <Clock size={16} className={styles.inputIcon} />
               <select
                 className={styles.selectDropdown}
                 value={hardDeadline}
                 onChange={(e) => handleUpdate({ hardDeadline: e.target.value })}
               >
-                <option value="None">None (Flexible window)</option>
-                <option value="Strictly Before 12:00 PM">Strictly Before 12:00 PM</option>
-                <option value="Strictly Before 03:00 PM">Strictly Before 03:00 PM</option>
-                <option value="Strictly Before 06:00 PM">Strictly Before 06:00 PM</option>
+                <option value="None">None (Deliver within window)</option>
+                <option value="Hard Cut-off at Window End">Hard Cut-off at Window End</option>
+                <option value="15 Mins Before Window End">15 Mins Before Window End</option>
+                <option value="30 Mins Before Window End">30 Mins Before Window End</option>
               </select>
               <ChevronDown className={styles.selectChevron} />
             </div>
@@ -138,19 +148,15 @@ export default function PreciseDeliverySetupSection({
 
       <div className={styles.setupDivider} />
 
-      {/* 2. DELIVERY LOCATION */}
+      {/* 2. DELIVERY ADDRESS PREVIEW */}
       <div className={styles.setupSectionHeader}>
         <MapPin size={18} className={styles.setupGoldIcon} />
-        <span className={styles.setupTitle}>DELIVERY LOCATION</span>
+        <span className={styles.setupTitle}>DELIVERY ADDRESS</span>
       </div>
 
       <div className={styles.setupSectionBody}>
-        <div className={styles.addressPreviewBox}>
-          <MapPin size={24} className={styles.setupGoldIcon} />
-          <div className="flex-1">
-            <div className={styles.addressPreviewTitle}>Delivery Address Preview</div>
-            <div className={styles.addressPreviewText}>{displayAddress}</div>
-          </div>
+        <div className={styles.previewAddressCard}>
+          <div className={styles.previewAddressText}>{displayAddress}</div>
           <button
             type="button"
             className={styles.editAddressBtn}
@@ -245,7 +251,9 @@ export default function PreciseDeliverySetupSection({
                 <option value="OTP Verification">OTP Verification</option>
                 <option value="ID Proof Verification">ID Proof Verification</option>
                 <option value="Signature Verification">Signature Verification</option>
-                <option value="Face Match Verification">Face Match Verification</option>
+                <option value="Face Verification">Face Verification</option>
+                <option value="Authorized Person Verification">Authorized Person Verification</option>
+                <option value="PIN Verification">PIN Verification</option>
               </select>
               <ChevronDown className={styles.selectChevron} />
             </div>
@@ -284,7 +292,97 @@ export default function PreciseDeliverySetupSection({
 
       <div className={styles.setupDivider} />
 
-      {/* 4. HANDLING & SERVICE OPTIONS */}
+      {/* 4. SECURITY & HANDLING CONFIGURATION */}
+      <div className={styles.setupSectionHeader}>
+        <Shield size={18} className={styles.setupGoldIcon} />
+        <span className={styles.setupTitle}>SECURITY & HANDLING CONFIGURATION</span>
+      </div>
+
+      <div className={styles.setupSectionBody}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+          <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-lg">
+            <div>
+              <div className="text-xs font-bold text-slate-900">Tamper-Proof Sealing</div>
+              <div className="text-[10px] text-slate-500">Serialized tamper-evident security barcode seal.</div>
+            </div>
+            <input
+              type="checkbox"
+              className={styles.goldSwitch}
+              checked={tamperProofSealing}
+              onChange={(e) => handleUpdate({ tamperProofSealing: e.target.checked })}
+            />
+          </div>
+
+          <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-lg">
+            <div>
+              <div className="text-xs font-bold text-slate-900">Single Point of Contact</div>
+              <div className="text-[10px] text-slate-500">Dedicated custodian from pickup to delivery.</div>
+            </div>
+            <input
+              type="checkbox"
+              className={styles.goldSwitch}
+              checked={singlePointOfContact}
+              onChange={(e) => handleUpdate({ singlePointOfContact: e.target.checked })}
+            />
+          </div>
+
+          <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-lg">
+            <div>
+              <div className="text-xs font-bold text-slate-900">Secure Storage at Hubs</div>
+              <div className="text-[10px] text-slate-500">Access-controlled locked vault for holding.</div>
+            </div>
+            <input
+              type="checkbox"
+              className={styles.goldSwitch}
+              checked={secureStorageAtHubs}
+              onChange={(e) => handleUpdate({ secureStorageAtHubs: e.target.checked })}
+            />
+          </div>
+
+          <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-lg">
+            <div>
+              <div className="text-xs font-bold text-slate-900">Armed Escort (If Available)</div>
+              <div className="text-[10px] text-slate-500">Armed security personnel accompaniment.</div>
+            </div>
+            <input
+              type="checkbox"
+              className={styles.goldSwitch}
+              checked={armedEscort}
+              onChange={(e) => handleUpdate({ armedEscort: e.target.checked })}
+            />
+          </div>
+
+          <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-lg">
+            <div>
+              <div className="text-xs font-bold text-slate-900">No Unattended Delivery</div>
+              <div className="text-[10px] text-slate-500">Never left without verified recipient signature.</div>
+            </div>
+            <input
+              type="checkbox"
+              className={styles.goldSwitch}
+              checked={noUnattendedDelivery}
+              onChange={(e) => handleUpdate({ noUnattendedDelivery: e.target.checked })}
+            />
+          </div>
+
+          <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-lg">
+            <div>
+              <div className="text-xs font-bold text-slate-900">Photo Proof at Every Stage</div>
+              <div className="text-[10px] text-slate-500">Time and geolocation stamped custody photos.</div>
+            </div>
+            <input
+              type="checkbox"
+              className={styles.goldSwitch}
+              checked={photoProofAtEveryStage}
+              onChange={(e) => handleUpdate({ photoProofAtEveryStage: e.target.checked })}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.setupDivider} />
+
+      {/* 5. HANDLING & SERVICE OPTIONS */}
       <div className={styles.setupSectionHeader}>
         <CheckCircle size={18} className={styles.setupGoldIcon} />
         <span className={styles.setupTitle}>HANDLING & SERVICE OPTIONS</span>

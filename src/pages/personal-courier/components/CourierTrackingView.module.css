@@ -76,7 +76,7 @@
 }
 
 .copyBtn:hover {
-  color: #e11d48;
+  color: #fab800;
 }
 
 .copiedIcon {
@@ -210,7 +210,7 @@
   position: absolute;
   width: 50px;
   height: 50px;
-  background: rgba(225, 29, 72, 0.3);
+  background: rgba(250, 184, 0, 0.3);
   border-radius: 50%;
   animation: pulse 2s infinite;
   transform: translate(-50%, -50%);
@@ -219,8 +219,8 @@
 }
 
 .driverIconBox {
-  background: #e11d48;
-  color: #ffffff;
+  background: #fab800;
+  color: #0d0f12;
   width: 38px;
   height: 38px;
   border-radius: 50%;
@@ -228,7 +228,7 @@
   align-items: center;
   justify-content: center;
   border: 3px solid #ffffff;
-  box-shadow: 0 4px 10px rgba(225, 29, 72, 0.4);
+  box-shadow: 0 4px 10px rgba(250, 184, 0, 0.4);
   position: relative;
   z-index: 2;
 }
@@ -260,7 +260,7 @@
 }
 
 .etaIcon {
-  color: #e11d48;
+  color: #fab800;
 }
 
 .locIcon {
@@ -555,10 +555,10 @@
 }
 
 .stepCurrent .stepCircle {
-  background: #e11d48;
-  border-color: #e11d48;
-  color: #ffffff;
-  box-shadow: 0 0 0 4px rgba(225, 29, 72, 0.2);
+  background: #fab800;
+  border-color: #fab800;
+  color: #0d0f12;
+  box-shadow: 0 0 0 4px rgba(250, 184, 0, 0.25);
 }
 
 .stepDetails {
@@ -584,8 +584,8 @@
 }
 
 .currentBadge {
-  background: #fee2e2;
-  color: #e11d48;
+  background: #fef3c7;
+  color: #d97706;
   font-size: 0.68rem;
   font-weight: 800;
   padding: 0.15rem 0.45rem;
@@ -664,10 +664,10 @@
 }
 
 .milestoneCurrent .milestoneDot {
-  background: #e11d48;
-  border-color: #e11d48;
-  color: #ffffff;
-  box-shadow: 0 0 0 4px rgba(225, 29, 72, 0.2);
+  background: #fab800;
+  border-color: #fab800;
+  color: #0d0f12;
+  box-shadow: 0 0 0 4px rgba(250, 184, 0, 0.25);
 }
 
 .milestoneContent {
@@ -696,7 +696,7 @@
 
 .milestoneLocation {
   font-size: 0.8rem;
-  color: #e11d48;
+  color: #d97706;
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -857,8 +857,8 @@
 
 .formGroup input:focus, .formGroup textarea:focus {
   outline: none;
-  border-color: #e11d48;
-  box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.15);
+  border-color: #fab800;
+  box-shadow: 0 0 0 3px rgba(250, 184, 0, 0.2);
 }
 
 .modalActions {
@@ -880,12 +880,12 @@
 }
 
 .saveBtn {
-  background: #e11d48;
+  background: #fab800;
   border: none;
   border-radius: 8px;
   padding: 0.65rem 1.4rem;
-  font-weight: 700;
-  color: #ffffff;
+  font-weight: 800;
+  color: #0d0f12;
   cursor: pointer;
 }
 
@@ -1007,9 +1007,9 @@
   font-weight: 700;
   padding: 0.25rem 0.65rem;
   border-radius: 6px;
-  background: #fef2f2;
-  color: #e11d48;
-  border: 1px solid #fecdd3;
+  background: #fef3c7;
+  color: #d97706;
+  border: 1px solid #fde68a;
 }
 
 .tagPillBlue {

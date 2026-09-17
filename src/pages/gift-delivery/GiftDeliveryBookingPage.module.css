@@ -68,13 +68,13 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #FFF1F2;
-  color: #E11D48;
-  border: 1px solid #FECDD3;
-  padding: 6px 14px;
-  border-radius: 20px;
+  background: rgba(250, 184, 0, 0.15);
+  color: #0f172a;
+  border: 1px solid rgba(250, 184, 0, 0.35);
   font-size: 13px;
   font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 9999px;
 }
 
 @media (max-width: 640px) {
@@ -181,9 +181,9 @@
 }
 
 .stepActive .stepIconCircle {
-  background: #E11D48;
-  color: #FFFFFF;
-  box-shadow: 0 4px 10px rgba(225, 29, 72, 0.3);
+  background: #fab800;
+  color: #0d0f12;
+  box-shadow: 0 4px 10px rgba(250, 184, 0, 0.3);
 }
 
 .stepCompleted .stepIconCircle {
@@ -198,7 +198,7 @@
 }
 
 .stepActive .stepTitle {
-  color: #E11D48;
+  color: #0f172a;
   font-weight: 800;
 }
 
@@ -314,9 +314,9 @@
 }
 
 .categoryCardActive {
-  border-color: #E11D48;
-  background: #FFF1F2;
-  box-shadow: 0 4px 14px rgba(225, 29, 72, 0.15);
+  border-color: #fab800;
+  background: #fffdf5;
+  box-shadow: 0 4px 14px rgba(250, 184, 0, 0.15);
 }
 
 .categoryIconCircle {
@@ -324,14 +324,14 @@
   height: 40px;
   border-radius: 10px;
   background: #F8FAFC;
-  color: #E11D48;
+  color: #fab800;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .categoryCardActive .categoryIconCircle {
-  background: #FFE4E6;
+  background: rgba(250, 184, 0, 0.2);
 }
 
 .categoryName {
@@ -474,8 +474,8 @@
 }
 
 .productCardActive {
-  border-color: #E11D48;
-  box-shadow: 0 8px 24px rgba(225, 29, 72, 0.18);
+  border-color: #fab800;
+  box-shadow: 0 8px 24px rgba(250, 184, 0, 0.25);
 }
 
 .productImageWrapper {
@@ -495,8 +495,8 @@
   position: absolute;
   top: 10px;
   left: 10px;
-  background: #E11D48;
-  color: #FFFFFF;
+  background: #fab800;
+  color: #0d0f12;
   font-size: 10px;
   font-weight: 800;
   padding: 4px 8px;
@@ -523,7 +523,7 @@
 }
 
 .favBtnActive {
-  color: #E11D48;
+  color: #fab800;
 }
 
 .productInfo {
@@ -551,7 +551,7 @@
 .productPrice {
   font-size: 16px;
   font-weight: 800;
-  color: #E11D48;
+  color: #0f172a;
   white-space: nowrap;
 }
 
@@ -559,11 +559,8 @@
   font-size: 12px;
   color: #64748B;
   line-height: 1.4;
-  margin-bottom: 8px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  margin-bottom: 12px;
+  flex: 1;
 }
 
 .productAttributes {
@@ -646,14 +643,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #E11D48;
+  color: #0f172a;
   cursor: pointer;
 }
 
 .qtyValue {
   font-size: 14px;
   font-weight: 800;
-  color: #E11D48;
+  color: #0f172a;
 }
 
 /* Expert Help Card */
@@ -783,14 +780,14 @@
 
 .sidebarProductOccasion {
   font-size: 11px;
-  color: #E11D48;
+  color: #b45309;
   font-weight: 700;
 }
 
 .sidebarEditBtn {
   background: transparent;
   border: none;
-  color: #E11D48;
+  color: #0f172a;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
@@ -843,7 +840,7 @@
   border-radius: 10px;
   padding: 6px 10px;
   margin-bottom: 16px;
-  color: #E11D48;
+  color: #0f172a;
 }
 
 .sidebarCouponRow input {
@@ -1103,7 +1100,7 @@
 .useLocationBtn {
   background: transparent;
   border: none;
-  color: #E11D48;
+  color: #b45309;
   font-size: 12px;
   font-weight: 700;
   display: flex;
@@ -1175,7 +1172,7 @@ textarea {
 }
 
 .cardPreviewIcon {
-  color: #E11D48;
+  color: #fab800;
 }
 
 .cardPreviewLeft strong {
@@ -1242,8 +1239,8 @@ textarea {
 }
 
 .deliveryTypeCardActive {
-  border-color: #E11D48;
-  background: #FFF1F2;
+  border-color: #fab800;
+  background: #fffdf0;
 }
 
 .deliveryTypeHeader {
@@ -1264,14 +1261,14 @@ textarea {
 }
 
 .deliveryTypeCardActive .radioCircle {
-  border-color: #E11D48;
+  border-color: #fab800;
 }
 
 .radioDot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #E11D48;
+  background: #fab800;
 }
 
 .deliveryTypeTitleGroup {
@@ -1424,9 +1421,10 @@ textarea {
 }
 
 .timeSlotBtnActive {
-  border-color: #E11D48;
-  background: #FFF1F2;
-  color: #E11D48;
+  border-color: #fab800;
+  background: #fffdf0;
+  color: #0d0f12;
+  font-weight: 800;
 }
 
 .guaranteeNotice {
@@ -1459,8 +1457,8 @@ textarea {
 }
 
 .premiumCardActive {
-  border-color: #E11D48;
-  background: #FFF1F2;
+  border-color: #fab800;
+  background: #fffdf0;
 }
 
 .checkboxCircle {
@@ -1476,13 +1474,15 @@ textarea {
 }
 
 .premiumCardActive .checkboxCircle {
-  background: #E11D48;
-  border-color: #E11D48;
+  background: #fab800;
+  border-color: #fab800;
+  color: #0d0f12;
 }
 
 .addonCardActive .checkboxCircle {
-  background: #E11D48;
-  border-color: #E11D48;
+  background: #fab800;
+  border-color: #fab800;
+  color: #0d0f12;
 }
 
 .premiumDetails {
@@ -1591,8 +1591,8 @@ textarea {
 }
 
 .addonCardActive {
-  border-color: #E11D48;
-  background: #FFF1F2;
+  border-color: #fab800;
+  background: #fffdf0;
 }
 
 .addonHeader {
@@ -1691,7 +1691,7 @@ textarea {
 .editLinkBtn {
   background: transparent;
   border: none;
-  color: #E11D48;
+  color: #0f172a;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
@@ -2206,8 +2206,8 @@ textarea {
 }
 
 .cardOptionActive {
-  border-color: #E11D48;
-  background: #FFF1F2;
+  border-color: #fab800;
+  background: #fffdf0;
 }
 
 .cardOptionImg {

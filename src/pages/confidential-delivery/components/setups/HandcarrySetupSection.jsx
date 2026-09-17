@@ -157,7 +157,7 @@ export default function HandcarrySetupSection({ data = {}, onChange }) {
 
             <div className={styles.toggleRowItem}>
               <div className="flex-1">
-                <div className={styles.toggleTitle}>ID Check on Pickup</div>
+                <div className={styles.toggleTitle}>ID Check Pickup</div>
                 <div className={styles.toggleDesc}>Verify sender ID before accepting shipment.</div>
               </div>
               <input
@@ -170,7 +170,7 @@ export default function HandcarrySetupSection({ data = {}, onChange }) {
 
             <div className={styles.toggleRowItem}>
               <div className="flex-1">
-                <div className={styles.toggleTitle}>ID Check on Delivery</div>
+                <div className={styles.toggleTitle}>ID Check Delivery</div>
                 <div className={styles.toggleDesc}>Verify recipient ID before handover.</div>
               </div>
               <input
@@ -185,7 +185,7 @@ export default function HandcarrySetupSection({ data = {}, onChange }) {
           <div>
             <div className={styles.toggleRowItem}>
               <div className="flex-1">
-                <div className={styles.toggleTitle}>Signature at Handover</div>
+                <div className={styles.toggleTitle}>Signature Handover</div>
                 <div className={styles.toggleDesc}>Obtain digital signature from recipient.</div>
               </div>
               <input
@@ -198,7 +198,7 @@ export default function HandcarrySetupSection({ data = {}, onChange }) {
 
             <div className={styles.toggleRowItem}>
               <div className="flex-1">
-                <div className={styles.toggleTitle}>No Unattended Delivery</div>
+                <div className={styles.toggleTitle}>No Unattended</div>
                 <div className={styles.toggleDesc}>Delivery only when recipient is present.</div>
               </div>
               <input
@@ -211,7 +211,7 @@ export default function HandcarrySetupSection({ data = {}, onChange }) {
 
             <div className={styles.toggleRowItem}>
               <div className="flex-1">
-                <div className={styles.toggleTitle}>Recipient Must Be Present</div>
+                <div className={styles.toggleTitle}>Recipient Present</div>
                 <div className={styles.toggleDesc}>No delivery to proxies or representatives.</div>
               </div>
               <input
@@ -238,7 +238,7 @@ export default function HandcarrySetupSection({ data = {}, onChange }) {
           <div>
             <div className={styles.toggleRowItem}>
               <div className="flex-1">
-                <div className={styles.toggleTitle}>Real-time Tracking & Alerts</div>
+                <div className={styles.toggleTitle}>Real Time Tracking</div>
                 <div className={styles.toggleDesc}>Track live location with instant alerts.</div>
               </div>
               <input
@@ -264,7 +264,7 @@ export default function HandcarrySetupSection({ data = {}, onChange }) {
 
             <div className={styles.toggleRowItem}>
               <div className="flex-1">
-                <div className={styles.toggleTitle}>Photo Proof at Delivery</div>
+                <div className={styles.toggleTitle}>Photo Proof</div>
                 <div className={styles.toggleDesc}>Capture delivery photo with timestamp.</div>
               </div>
               <input
@@ -292,7 +292,7 @@ export default function HandcarrySetupSection({ data = {}, onChange }) {
 
             <div className={styles.toggleRowItem}>
               <div className="flex-1">
-                <div className={styles.toggleTitle}>Escalation Contact Required</div>
+                <div className={styles.toggleTitle}>Escalation Contact</div>
                 <div className={styles.toggleDesc}>Mandatory escalation contact for incidents.</div>
               </div>
               <input

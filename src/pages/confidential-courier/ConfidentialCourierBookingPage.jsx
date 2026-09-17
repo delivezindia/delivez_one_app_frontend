@@ -1,2 +1,3 @@
-﻿import LuggageDeliveryBookingPage from '@/pages/luggage-delivery/LuggageDeliveryBookingPage.jsx'
-export default LuggageDeliveryBookingPage
+import ConfidentialDeliveryBookingPage from '@/pages/confidential-delivery/ConfidentialDeliveryBookingPage.jsx'
+
+export default ConfidentialDeliveryBookingPage

@@ -87,7 +87,7 @@
 .brandSubtitle {
   font-size: 0.8rem;
   font-weight: 800;
-  color: #dc2626;
+  color: #fab800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -267,7 +267,7 @@
 .titleUnderlineRed {
   width: 48px;
   height: 4px;
-  background: #dc2626;
+  background: #fab800;
   border-radius: 2px;
   margin-top: 6px;
 }
@@ -574,8 +574,8 @@
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  background: #dc2626;
-  color: #ffffff;
+  background: #fab800;
+  color: #0d0f12;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -740,8 +740,8 @@
 }
 
 .addressTypeBtnSelected {
-  border-color: #dc2626;
-  box-shadow: 0 2px 10px rgba(220, 38, 38, 0.15);
+  border-color: #fab800;
+  box-shadow: 0 2px 10px rgba(250, 184, 0, 0.25);
 }
 
 .addressTypeCheckRed {
@@ -751,8 +751,8 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #dc2626;
-  color: #ffffff;
+  background: #fab800;
+  color: #0d0f12;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -813,8 +813,9 @@
 }
 
 .redSecurityBanner {
-  background: #dc2626;
+  background: #0d0f12;
   color: #ffffff;
+  border: 1px solid rgba(250, 184, 0, 0.35);
   border-radius: 16px;
   padding: 14px 18px;
   display: flex;
@@ -860,8 +861,8 @@
 }
 
 .speedCardSelected {
-  border-color: #dc2626;
-  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.18);
+  border-color: #fab800;
+  box-shadow: 0 4px 14px rgba(250, 184, 0, 0.25);
 }
 
 .speedTitle {
@@ -920,9 +921,9 @@
 }
 
 .datePillSelected {
-  background: #dc2626;
-  border-color: #dc2626;
-  color: #ffffff;
+  background: #fab800;
+  border-color: #fab800;
+  color: #0d0f12;
 }
 
 .dateDayName {
@@ -958,8 +959,8 @@
 }
 
 .timeSlotPillSelected {
-  border-color: #dc2626;
-  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.12);
+  border-color: #fab800;
+  box-shadow: 0 2px 8px rgba(250, 184, 0, 0.25);
 }
 
 .timeSlotTitle {
@@ -974,8 +975,9 @@
 }
 
 .redCommitmentCard {
-  background: #dc2626;
+  background: #0d0f12;
   color: #ffffff;
+  border: 1px solid rgba(250, 184, 0, 0.35);
   border-radius: 18px;
   padding: 18px 20px;
   display: flex;
@@ -1111,8 +1113,8 @@
 }
 
 .uploadPhotoBox:hover {
-  border-color: #dc2626;
-  background: #fef2f2;
+  border-color: #fab800;
+  background: #fffdf0;
 }
 
 .uploadPhotoBox strong {
@@ -1222,7 +1224,7 @@
 }
 
 .switchToggleActive {
-  background: #dc2626;
+  background: #fab800;
 }
 
 .switchKnob {
@@ -1386,8 +1388,8 @@
 }
 
 .paymentBtnSelected {
-  border-color: #dc2626;
-  box-shadow: 0 2px 10px rgba(220, 38, 38, 0.15);
+  border-color: #fab800;
+  box-shadow: 0 2px 10px rgba(250, 184, 0, 0.25);
 }
 
 .paymentLabel {
@@ -1416,14 +1418,14 @@
 .termsRow input[type='checkbox'] {
   width: 18px;
   height: 18px;
-  accent-color: #dc2626;
+  accent-color: #fab800;
   cursor: pointer;
 }
 
 .confirmBookBtn {
   width: 100%;
-  background: #dc2626;
-  color: #ffffff;
+  background: #fab800;
+  color: #0d0f12;
   border: none;
   border-radius: 999px;
   padding: 16px 28px;
@@ -1434,12 +1436,12 @@
   justify-content: center;
   gap: 10px;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(220, 38, 38, 0.35);
+  box-shadow: 0 4px 16px rgba(250, 184, 0, 0.35);
   transition: all 0.15s ease;
 }
 
 .confirmBookBtn:hover {
-  background: #b91c1c;
+  background: #e5a700;
   transform: translateY(-1px);
 }
 
@@ -1447,8 +1449,8 @@
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: #ffffff;
-  color: #dc2626;
+  background: #0d0f12;
+  color: #fab800;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1629,25 +1631,25 @@
 }
 
 .btnContinueRed {
-  background: #dc2626;
+  background: #fab800;
   border: none;
   border-radius: 999px;
   padding: 14px 34px;
   font-size: 1rem;
   font-weight: 800;
-  color: #ffffff;
+  color: #0d0f12;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35);
+  box-shadow: 0 4px 14px rgba(250, 184, 0, 0.35);
   transition: all 0.15s;
   margin-left: auto;
 }
 
 .btnContinueRed:hover {
-  background: #b91c1c;
+  background: #e5a700;
 }
 
 .btnContinueYellow {
@@ -1815,7 +1817,7 @@
   top: 16px;
   left: 30px;
   height: 3px;
-  background: #dc2626;
+  background: #10b981;
   z-index: 1;
 }
 
@@ -1841,21 +1843,21 @@
 }
 
 .milestoneNodeCompleted {
-  background: #dc2626;
-  border-color: #dc2626;
+  background: #10b981;
+  border-color: #10b981;
   color: #ffffff;
 }
 
 .milestoneNodeActive {
   background: #ffffff;
-  border-color: #dc2626;
+  border-color: #fab800;
 }
 
 .milestoneNodeActiveInner {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: #dc2626;
+  background: #fab800;
 }
 
 .milestoneIconWrap {

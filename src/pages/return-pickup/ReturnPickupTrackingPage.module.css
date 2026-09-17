@@ -468,15 +468,30 @@
 }
 
 .callPartnerBtn {
-  background: #d97706;
-  color: #ffffff;
+  background: #fab800;
+  color: #0d0f12;
   border: none;
+  border-radius: 999px;
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgba(250, 184, 0, 0.3);
+  transition: all 0.2s ease;
+}
+
+.callPartnerBtn:hover {
+  background: #e5a700;
 }
 
 .chatPartnerBtn {
   background: #f1f5f9;
   border: 1px solid #cbd5e1;
-  color: #334155;
+  border-radius: 999px;
+  color: #0f172a;
+  font-weight: 750;
+  transition: all 0.2s ease;
+}
+
+.chatPartnerBtn:hover {
+  background: #e2e8f0;
 }
 
 /* OTP Card */

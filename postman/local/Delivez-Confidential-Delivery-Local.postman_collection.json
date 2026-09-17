@@ -1,0 +1,515 @@
+{
+  "info": {
+    "_postman_id": "c7f1a9b2-6c3d-4e5f-8a12-9b8c7d6e5f4a",
+    "name": "Delivez - Confidential Delivery (Vault) - Local",
+    "description": "STANDALONE LOCAL POSTMAN COLLECTION for Delivez Confidential Delivery (Delvez Vault).\n\nEverything is pre-configured directly inside this file:\n- Base URL: http://localhost:4000/api/v1\n- Pre-loaded Tokens: Both user and admin access tokens are pre-filled\n- Auto-Variables: Login and booking endpoints automatically save tokens and IDs to collection variables\n\nYou can import ONLY this file into Postman and execute requests immediately without needing an environment file.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "userMobile",
+      "value": "9876543210",
+      "type": "string"
+    },
+    {
+      "key": "userPassword",
+      "value": "Customer@1234",
+      "type": "string"
+    },
+    {
+      "key": "adminEmail",
+      "value": "admin@delevez.com",
+      "type": "string"
+    },
+    {
+      "key": "adminPassword",
+      "value": "Admin@1234",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3ODkwNDQ3MjEsImV4cCI6MTc5MTYzNjcyMSwic3ViIjoiOGQ2ODA0YjAtNDRkYi00ZjE3LWIwMzItYzdkZGFhZWIzY2YxIn0.2lcJ-bUqtk_HwVyXtLIMvx-L8qhwZXqk20w9Jj48kxI",
+      "type": "string"
+    },
+    {
+      "key": "adminAccessToken",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3ODkwNDQ3MjEsImV4cCI6MTc5MTYzNjcyMSwic3ViIjoiMDAxN2UxZjMtOTQyNy00NTYxLTllM2YtN2M5ZTc3MTEwNmFiIn0.kcv_Vy02qmlot-JAnkOKM7CAb2G2I9ozcoiEj_Pu_oc",
+      "type": "string"
+    },
+    {
+      "key": "confidentialBookingId",
+      "value": "DLVZ-VLT-99999",
+      "type": "string"
+    },
+    {
+      "key": "vaultId",
+      "value": "DLVZ-VLT-99999",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Authentication",
+      "description": "Login requests to obtain access tokens. Automated test scripts update both collectionVariables and environmentVariables.",
+      "item": [
+        {
+          "name": "1.1 User Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var json = pm.response.json();",
+                  "var token = json.data && (json.data.accessToken || json.data.token);",
+                  "if (token) {",
+                  "    pm.collectionVariables.set(\"accessToken\", token);",
+                  "    pm.environment.set(\"accessToken\", token);",
+                  "    console.log(\"accessToken updated: \" + token.substring(0, 15) + \"...\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"countryCode\": \"+91\",\n  \"mobileNumber\": \"{{userMobile}}\",\n  \"password\": \"{{userPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Logs in customer user and stores {{accessToken}} directly into collection variables."
+          },
+          "response": []
+        },
+        {
+          "name": "1.2 Admin Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "var json = pm.response.json();",
+                  "var token = json.data && (json.data.accessToken || json.data.token);",
+                  "if (token) {",
+                  "    pm.collectionVariables.set(\"adminAccessToken\", token);",
+                  "    pm.environment.set(\"adminAccessToken\", token);",
+                  "    console.log(\"adminAccessToken updated: \" + token.substring(0, 15) + \"...\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "auth", "login"]
+            },
+            "description": "Logs in platform administrator and stores {{adminAccessToken}} directly into collection variables."
+          },
+          "response": []
+        },
+        {
+          "name": "1.3 Get Current User Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "profile"]
+            },
+            "description": "Verifies that the {{accessToken}} is active and returns profile information."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Confidential Delivery (Vault)",
+      "description": "End-to-end endpoints for confidential transit, tamper-proof pouches, chain of custody, and dual OTP.",
+      "item": [
+        {
+          "name": "2.1 Get Vault Options",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/confidential-delivery/options",
+              "host": ["{{baseUrl}}"],
+              "path": ["confidential-delivery", "options"]
+            },
+            "description": "Returns security levels (Standard, Enhanced, Maximum Security), tamper-proof pouch options, and verification methods."
+          },
+          "response": []
+        },
+        {
+          "name": "2.2 Calculate Vault Quote",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pickup\": {\n    \"addressLine1\": \"Advocates Chambers, High Court Complex\",\n    \"city\": \"Bengaluru\",\n    \"state\": \"Karnataka\",\n    \"postalCode\": \"560001\",\n    \"latitude\": 12.9778,\n    \"longitude\": 77.5926\n  },\n  \"dropoff\": {\n    \"addressLine1\": \"KPMG Corporate Office, Embassy GolfLinks\",\n    \"city\": \"Bengaluru\",\n    \"state\": \"Karnataka\",\n    \"postalCode\": \"560071\",\n    \"latitude\": 12.9538,\n    \"longitude\": 77.6484\n  },\n  \"securityLevel\": \"MAXIMUM_SECURITY\",\n  \"packagingType\": \"TAMPER_PROOF_POUCH\",\n  \"verificationMethod\": \"OTP\",\n  \"serviceType\": \"VAULT_SECURE\",\n  \"addonProtections\": [\n    \"EXTRA_BUBBLE_WRAP\",\n    \"SEAL_SECURITY_TAPE\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/confidential-delivery/quote",
+              "host": ["{{baseUrl}}"],
+              "path": ["confidential-delivery", "quote"]
+            },
+            "description": "Calculates real-time quote including security handling, tamper-evident seals, and specialized armed escort fees."
+          },
+          "response": []
+        },
+        {
+          "name": "2.3 Create Vault Booking",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Vault booking created successfully\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});",
+                  "var json = pm.response.json();",
+                  "var b = (json.data && json.data.booking) || json.data;",
+                  "if (b && b.id) {",
+                  "    pm.collectionVariables.set(\"confidentialBookingId\", b.id);",
+                  "    pm.environment.set(\"confidentialBookingId\", b.id);",
+                  "    var vid = b.vaultId || b.trackingId || b.id;",
+                  "    pm.collectionVariables.set(\"vaultId\", vid);",
+                  "    pm.environment.set(\"vaultId\", vid);",
+                  "    console.log(\"Saved confidentialBookingId: \" + b.id + \" and vaultId: \" + vid);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "idemp-vault-{{$timestamp}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pickup\": {\n    \"contactName\": \"Advocate Ramesh Sen\",\n    \"phoneNumber\": \"+919876543220\",\n    \"addressLine1\": \"High Court Complex, Chamber 14\",\n    \"city\": \"Bengaluru\",\n    \"state\": \"Karnataka\",\n    \"postalCode\": \"560001\",\n    \"latitude\": 12.9778,\n    \"longitude\": 77.5926\n  },\n  \"delivery\": {\n    \"contactName\": \"Director Anita Roy\",\n    \"phoneNumber\": \"+919876543221\",\n    \"addressLine1\": \"Embassy GolfLinks Business Park, Pebble Beach\",\n    \"addressLine2\": \"3rd Floor Legal Wing\",\n    \"city\": \"Bengaluru\",\n    \"state\": \"Karnataka\",\n    \"postalCode\": \"560071\",\n    \"latitude\": 12.9538,\n    \"longitude\": 77.6484\n  },\n  \"dropoff\": {\n    \"contactName\": \"Director Anita Roy\",\n    \"phoneNumber\": \"+919876543221\",\n    \"addressLine1\": \"Embassy GolfLinks Business Park, Pebble Beach\",\n    \"addressLine2\": \"3rd Floor Legal Wing\",\n    \"city\": \"Bengaluru\",\n    \"state\": \"Karnataka\",\n    \"postalCode\": \"560071\",\n    \"latitude\": 12.9538,\n    \"longitude\": 77.6484\n  },\n  \"securityLevel\": \"MAXIMUM_SECURITY\",\n  \"packagingType\": \"TAMPER_PROOF_POUCH\",\n  \"verificationMethod\": \"OTP\",\n  \"itemDescription\": \"Original Deed Agreement & Legal Records\",\n  \"handlingInstructions\": \"Do not fold, direct handoff only to Anita Roy with ID check.\",\n  \"paymentMethod\": \"ONLINE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/confidential-delivery/bookings",
+              "host": ["{{baseUrl}}"],
+              "path": ["confidential-delivery", "bookings"]
+            },
+            "description": "Creates a confidential vault shipment and saves {{confidentialBookingId}} and {{vaultId}} into variables."
+          },
+          "response": []
+        },
+        {
+          "name": "2.4 List User Vault Bookings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/confidential-delivery/bookings",
+              "host": ["{{baseUrl}}"],
+              "path": ["confidential-delivery", "bookings"]
+            },
+            "description": "Lists all confidential delivery bookings for the authenticated user."
+          },
+          "response": []
+        },
+        {
+          "name": "2.5 Get Vault Booking Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/confidential-delivery/bookings/{{confidentialBookingId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["confidential-delivery", "bookings", "{{confidentialBookingId}}"]
+            },
+            "description": "Fetches details of a specific vault booking including tamper status, security level, and assigned escort."
+          },
+          "response": []
+        },
+        {
+          "name": "2.6 Track Vault Shipment (Public / Secured)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/confidential-delivery/track/{{vaultId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["confidential-delivery", "track", "{{vaultId}}"]
+            },
+            "description": "Public/Secured tracking endpoint that returns tamper seal status, live GPS telemetry, and chain of custody checkpoints."
+          },
+          "response": []
+        },
+        {
+          "name": "2.7 Verify Vault Delivery OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"otp\": \"123456\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/confidential-delivery/track/{{confidentialBookingId}}/verify-otp",
+              "host": ["{{baseUrl}}"],
+              "path": ["confidential-delivery", "track", "{{confidentialBookingId}}", "verify-otp"]
+            },
+            "description": "Validates the dual delivery OTP before confidential parcel release."
+          },
+          "response": []
+        },
+        {
+          "name": "2.8 Complete Vault Sandbox Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"paymentMethod\": \"ONLINE\",\n  \"status\": \"COMPLETED\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/confidential-delivery/bookings/{{confidentialBookingId}}/payments/sandbox",
+              "host": ["{{baseUrl}}"],
+              "path": ["confidential-delivery", "bookings", "{{confidentialBookingId}}", "payments", "sandbox"]
+            },
+            "description": "Completes sandbox payment transaction for confidential vault delivery."
+          },
+          "response": []
+        },
+        {
+          "name": "2.9 Cancel Vault Booking",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Schedule changed by client\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/confidential-delivery/bookings/{{confidentialBookingId}}/cancel",
+              "host": ["{{baseUrl}}"],
+              "path": ["confidential-delivery", "bookings", "{{confidentialBookingId}}", "cancel"]
+            },
+            "description": "Cancels an active confidential delivery request."
+          },
+          "response": []
+        },
+        {
+          "name": "2.10 Admin Update Vault Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminAccessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"IN_TRANSIT\",\n  \"tamperSealIntact\": true,\n  \"notes\": \"Armed courier dispatched from Delvez Vault hub with GPS transponder active.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/confidential-delivery/admin/bookings/{{confidentialBookingId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["confidential-delivery", "admin", "bookings", "{{confidentialBookingId}}", "status"]
+            },
+            "description": "Platform Admin updates the chain of custody status and tamper condition."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

@@ -398,7 +398,14 @@ export default function ConfidentialDeliveryBookingPage() {
           instructions: formData.delivery.specialInstructions,
           accessRequirements: formData.delivery.accessRequirements,
         },
-        setups: formData.setups,
+        // Conditional service configuration matching exact serviceType
+        ...(formData.serviceType === 'Vault Return' ? { returnDetails: formData.setups.returnSetup, serviceConfiguration: formData.setups.returnSetup } : {}),
+        ...(formData.serviceType === 'Vault Exchange' ? { exchangeDetails: formData.setups.exchangeSetup, serviceConfiguration: formData.setups.exchangeSetup } : {}),
+        ...(formData.serviceType === 'Vault MultiPoint' ? { multipointDetails: formData.setups.multipointSetup, serviceConfiguration: formData.setups.multipointSetup } : {}),
+        ...(formData.serviceType === 'Vault Critical' ? { criticalDetails: formData.setups.criticalSetup, serviceConfiguration: formData.setups.criticalSetup } : {}),
+        ...(formData.serviceType === 'Vault Hand Carry' ? { handCarryDetails: formData.setups.handcarrySetup, serviceConfiguration: formData.setups.handcarrySetup } : {}),
+        ...(formData.serviceType === 'Vault Precise' ? { preciseDetails: formData.setups.preciseSetup, serviceConfiguration: formData.setups.preciseSetup } : {}),
+        ...(formData.serviceType === 'Vault Direct' ? { directDetails: formData.setups.directSetup, serviceConfiguration: formData.setups.directSetup } : {}),
         paymentMethod: 'PAY_ON_DELIVERY',
       }
 

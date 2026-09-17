@@ -9,6 +9,8 @@ import {
   Smartphone,
   CreditCard,
   Camera,
+  KeyRound,
+  Hash,
 } from 'lucide-react'
 import styles from '../../ConfidentialDeliveryBookingPage.module.css'
 
@@ -54,6 +56,14 @@ export const VERIFICATION_METHODS = [
     icon: Shield,
     sideIcon: User,
   },
+  {
+    id: 'PIN',
+    name: 'PIN Verification',
+    desc: 'Recipient must provide a pre-shared PIN to receive the delivery.',
+    note: 'Extra layer of security for sensitive items',
+    icon: KeyRound,
+    sideIcon: Hash,
+  },
 ]
 
 export default function VerificationMethodStep({
@@ -63,6 +73,7 @@ export default function VerificationMethodStep({
   onBack,
 }) {
   const verificationMethod = data.verificationMethod || 'OTP'
+  const deliveryPin = data.deliveryPin || ''
   const captureRecipientPhoto = data.captureRecipientPhoto !== false
   const captureIdPhoto = data.captureIdPhoto || false
 
@@ -115,6 +126,31 @@ export default function VerificationMethodStep({
           )
         })}
       </div>
+
+      {verificationMethod === 'PIN' && (
+        <div className={`${styles.cardContainer} mb-6`}>
+          <div className={styles.cardHeaderRow}>
+            <KeyRound size={18} className={styles.setupGoldIcon} />
+            <span className={styles.cardHeaderTitle}>PRE-SHARED DELIVERY PIN</span>
+          </div>
+          <div className="mt-3">
+            <label className="text-xs font-bold text-slate-700 block mb-1">
+              Enter 4 to 6 Digit PIN *
+            </label>
+            <input
+              type="password"
+              maxLength={6}
+              placeholder="e.g. 482915"
+              className={styles.setupInputField}
+              value={deliveryPin}
+              onChange={(e) => handleUpdate({ deliveryPin: e.target.value.replace(/\D/g, '') })}
+            />
+            <p className="text-[11px] text-slate-500 mt-1">
+              Recipient must quote this PIN to the delivery executive to release the consignment.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Verification Additional Controls */}
       <div className={`${styles.cardContainer} mb-6`}>

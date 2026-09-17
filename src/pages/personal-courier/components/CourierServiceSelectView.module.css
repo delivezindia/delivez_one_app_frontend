@@ -93,9 +93,9 @@
 }
 
 .serviceCardSelected {
-  border-color: #e11d48;
-  background: #fffdfd;
-  box-shadow: 0 10px 25px -5px rgba(225, 29, 72, 0.15);
+  border-color: #fab800;
+  background: #fffdf5;
+  box-shadow: 0 10px 25px -5px rgba(250, 184, 0, 0.18);
 }
 
 .cardHeader {
@@ -144,9 +144,9 @@
 }
 
 .serviceCardSelected .badge {
-  background: #fee2e2;
-  color: #e11d48;
-  border-color: #fecdd3;
+  background: #fef3c7;
+  color: #d97706;
+  border-color: #fde68a;
 }
 
 .infoBtn {
@@ -162,8 +162,8 @@
 }
 
 .infoBtn:hover {
-  color: #e11d48;
-  background: #fef2f2;
+  color: #fab800;
+  background: #fffdf5;
 }
 
 .cardBody {
@@ -357,7 +357,7 @@
 }
 
 .trustIcon {
-  color: #e11d48;
+  color: #fab800;
 }
 
 /* Sticky Bottom Bar */
@@ -416,27 +416,27 @@
 .bottomPriceVal {
   font-size: 1.4rem;
   font-weight: 800;
-  color: #e11d48;
+  color: #16a34a;
 }
 
 .continueBtn {
-  background: #e11d48;
-  color: #ffffff;
+  background: #fab800;
+  color: #0d0f12;
   border: none;
   border-radius: 12px;
   padding: 0.9rem 1.8rem;
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: 850;
   display: flex;
   align-items: center;
   gap: 0.6rem;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: 0 4px 14px rgba(225, 29, 72, 0.28);
+  box-shadow: 0 4px 14px rgba(250, 184, 0, 0.28);
 }
 
 .continueBtn:hover {
-  background: #be123c;
+  background: #e5a700;
   transform: translateY(-1px);
 }
 

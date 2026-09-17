@@ -1,37 +1,50 @@
 :root {
   --color-brand-yellow: #fab800;
   --color-brand-yellow-hover: #e5a700;
-  --color-brand-yellow-soft: #fffdf0;
-  --color-brand-yellow-border: #fde68a;
+  --color-brand-yellow-soft: #fefce8;
+  --color-brand-yellow-border: #fde047;
   --color-brand-red: #ef4444;
 
-  --color-dark-header: #0d0f12;
-  --color-dark-sidebar: #0d0f12;
+  --color-dark-header: #0f172a;
+  --color-dark-sidebar: #0c1017;
+  --color-dark-sidebar-nav: #94a3b8;
+  --color-dark-sidebar-hover: #1e293b;
   --color-dark-surface: #161920;
   --color-dark-surface-hover: #20242d;
   --color-dark-border: #232731;
   --color-dark-text-muted: #9ea4b0;
 
-  --color-background: #f8f9fa;
+  --color-canvas-bg: #f8fafc;
+  --color-background: #f8fafc;
   --color-surface: #ffffff;
   --color-surface-subtle: #f9fafb;
-  --color-text: #111827;
-  --color-text-secondary: #4b5563;
-  --color-text-muted: #6b7280;
+  --color-card-border: #e2e8f0;
+  --color-text: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-muted: #64748b;
 
   --color-danger: #ef4444;
   --color-danger-dark: #dc2626;
   --color-danger-soft: #fef2f2;
   --color-accent: #fab800;
-  --color-border: #e5e7eb;
-  --color-border-strong: #d1d5db;
+  --color-border: #e2e8f0;
+  --color-border-strong: #cbd5e1;
 
   --color-success: #16a34a;
-  --color-success-soft: #dcfce7;
+  --color-success-soft: #ecfdf5;
   --color-info: #0284c7;
-  --color-info-soft: #e0f2fe;
+  --color-info-soft: #eff6ff;
   --color-warning: #f59e0b;
   --color-warning-soft: #fef3c7;
+
+  --color-pill-delivered-bg: #ecfdf5;
+  --color-pill-delivered-text: #059669;
+  --color-pill-transit-bg: #eff6ff;
+  --color-pill-transit-text: #2563eb;
+  --color-pill-pending-bg: #fef3c7;
+  --color-pill-pending-text: #d97706;
+  --color-pill-cancelled-bg: #fef2f2;
+  --color-pill-cancelled-text: #ef4444;
 
   --space-1: 0.25rem;
   --space-2: 0.5rem;
@@ -51,7 +64,7 @@
   --radius-pill: 9999px;
 
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.05);
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.03);
   --shadow-hover: 0 10px 20px -5px rgb(0 0 0 / 0.08), 0 6px 10px -5px rgb(0 0 0 / 0.04);
   --shadow-menu: 0 10px 25px -3px rgb(0 0 0 / 0.15), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   --shadow-modal: 0 25px 50px -12px rgb(0 0 0 / 0.25);

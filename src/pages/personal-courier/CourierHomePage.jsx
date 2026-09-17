@@ -58,32 +58,32 @@ export default function CourierHomePage({ onBookCourier, onSelectService, onTrac
       title: 'Local Delivery',
       sub: 'Within the city',
       icon: Bike,
-      iconColor: '#E11D48',
-      bgColor: '#FFF1F2'
+      iconColor: '#fab800',
+      bgColor: '#fffdf5'
     },
     {
       id: 'intercity',
       title: 'Intercity',
       sub: 'Across India',
       icon: Truck,
-      iconColor: '#F59E0B',
-      bgColor: '#FEF3C7'
+      iconColor: '#fab800',
+      bgColor: '#fffdf5'
     },
     {
       id: 'documents',
       title: 'Documents',
       sub: 'Papers & files',
       icon: FileText,
-      iconColor: '#D97706',
-      bgColor: '#FFFBEB'
+      iconColor: '#fab800',
+      bgColor: '#fffdf5'
     },
     {
       id: 'parcel',
       title: 'Parcel',
       sub: 'Boxes & items',
       icon: Package,
-      iconColor: '#E11D48',
-      bgColor: '#FFF1F2'
+      iconColor: '#fab800',
+      bgColor: '#fffdf5'
     },
     {
       id: 'sameday',
@@ -288,18 +288,18 @@ export default function CourierHomePage({ onBookCourier, onSelectService, onTrac
             >
               {/* Decorative Scooter Delivery Illustration */}
               <circle cx="50" cy="105" r="24" stroke="#0F172A" strokeWidth="8" fill="#FFFFFF" />
-              <circle cx="50" cy="105" r="8" fill="#E11D48" />
+              <circle cx="50" cy="105" r="8" fill="#fab800" />
               <circle cx="155" cy="105" r="24" stroke="#0F172A" strokeWidth="8" fill="#FFFFFF" />
-              <circle cx="155" cy="105" r="8" fill="#E11D48" />
+              <circle cx="155" cy="105" r="8" fill="#fab800" />
               <path d="M50 105 L80 105 L105 75 L145 75 L155 105" stroke="#0F172A" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" />
               <path d="M100 75 L125 35 L140 35" stroke="#0F172A" strokeWidth="6" strokeLinecap="round" />
               {/* Delivery Box */}
-              <rect x="52" y="42" width="46" height="38" rx="6" fill="#FFC107" stroke="#0F172A" strokeWidth="5" />
+              <rect x="52" y="42" width="46" height="38" rx="6" fill="#fab800" stroke="#0F172A" strokeWidth="5" />
               <path d="M52 58 L98 58" stroke="#0F172A" strokeWidth="4" />
               <path d="M75 42 L75 80" stroke="#0F172A" strokeWidth="3" strokeDasharray="4 2" />
               {/* Headlight & Seat */}
-              <path d="M125 45 C125 45 132 42 136 48" stroke="#E11D48" strokeWidth="7" strokeLinecap="round" />
-              <polygon points="144,32 155,30 152,38" fill="#FFC107" />
+              <path d="M125 45 C125 45 132 42 136 48" stroke="#fab800" strokeWidth="7" strokeLinecap="round" />
+              <polygon points="144,32 155,30 152,38" fill="#fab800" />
             </svg>
           </div>
         </section>
@@ -394,9 +394,9 @@ export default function CourierHomePage({ onBookCourier, onSelectService, onTrac
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginTop: 8 }}>
-                <div style={{ textAlign: 'center', padding: '16px 8px', background: '#FFF5F5', borderRadius: 14 }}>
-                  <div style={{ width: 44, height: 44, margin: '0 auto 8px', borderRadius: '50%', background: '#FEE2E2', color: '#E11D48', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Package size={22} />
+                <div style={{ textAlign: 'center', padding: '16px 8px', background: '#fffdf5', borderRadius: 14, border: '1px solid #fef3c7' }}>
+                  <div style={{ width: 44, height: 44, margin: '0 auto 8px', borderRadius: '50%', background: '#fef3c7', color: '#0d0f12', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Package size={22} color="#fab800" />
                   </div>
                   <strong style={{ display: 'block', fontSize: '0.92rem', color: '#0F172A', marginBottom: 3 }}>1. Book</strong>
                   <p style={{ margin: 0, fontSize: '0.78rem', color: '#64748B', lineHeight: 1.3 }}>Enter details and choose a service</p>
@@ -445,8 +445,8 @@ export default function CourierHomePage({ onBookCourier, onSelectService, onTrac
                   <div
                     className={styles.shipmentIconBox}
                     style={{
-                      background: shipment.isDocument ? '#FFFBEB' : '#FFF1F2',
-                      color: shipment.isDocument ? '#D97706' : '#E11D48'
+                      background: '#fffdf5',
+                      color: '#fab800'
                     }}
                   >
                     {shipment.isDocument ? <FileText size={22} /> : <Package size={22} />}
@@ -483,13 +483,13 @@ export default function CourierHomePage({ onBookCourier, onSelectService, onTrac
                       type="button"
                       style={{
                         marginTop: 4,
-                        padding: '4px 10px',
+                        padding: '5px 12px',
                         borderRadius: 6,
-                        border: '1px solid #E11D48',
-                        background: '#FFFFFF',
-                        color: '#E11D48',
+                        border: '1px solid #fab800',
+                        background: '#fab800',
+                        color: '#0d0f12',
                         fontSize: '0.74rem',
-                        fontWeight: 700,
+                        fontWeight: 800,
                         cursor: 'pointer'
                       }}
                       onClick={(e) => {

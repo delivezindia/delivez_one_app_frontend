@@ -1791,7 +1791,7 @@ export default function ReturnPickupBookingPage() {
                               {slot.badge && <span className={styles.slotBadge}>{slot.badge}</span>}
                             </div>
                             <div className={styles.slotCheckCircle}>
-                              {isSel ? <CheckCircle2 size={16} color="#e50914" /> : <div className={styles.emptyCircle} />}
+                              {isSel ? <CheckCircle2 size={16} color="#fab800" /> : <div className={styles.emptyCircle} />}
                             </div>
                           </div>
                         )
