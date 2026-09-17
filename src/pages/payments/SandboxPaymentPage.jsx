@@ -14,9 +14,7 @@ function SandboxPaymentPage({ serviceSlug, bookingId }) {
     fetchSandboxPaymentBooking(serviceSlug, bookingId)
       .then((result) => {
         if (!active) return
-        const isPayOnDelivery = result.paymentMethod === 'PAY_ON_DELIVERY' || result.paymentMethod === 'CASH'
-        if (isPayOnDelivery) setError('This booking uses pay on delivery and does not need online payment.')
-        else if (result.paymentStatus === 'PAID') setComplete(true)
+        if (result.paymentStatus === 'PAID') setComplete(true)
         setBooking(result)
       })
       .catch((requestError) => active && setError(requestError.message))

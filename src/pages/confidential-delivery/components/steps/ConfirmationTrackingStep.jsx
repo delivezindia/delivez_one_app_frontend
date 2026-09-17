@@ -12,7 +12,9 @@ import {
   FileText,
   MapPin,
   RefreshCw,
+  CreditCard,
 } from 'lucide-react'
+import { navigateTo } from '@/app/router/navigation.js'
 import VaultSuitcaseGraphic from '../VaultSuitcaseGraphic.jsx'
 import styles from '../../ConfidentialDeliveryBookingPage.module.css'
 
@@ -183,6 +185,26 @@ export default function ConfirmationTrackingStep({
               <Share2 size={16} />
               <span>Share ID</span>
             </button>
+
+            {booking.paymentStatus !== 'PAID' && (
+              <button
+                type="button"
+                className={styles.outlineGoldBtn}
+                style={{
+                  background: '#fef3c7',
+                  borderColor: '#f59e0b',
+                  color: '#92400e',
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6
+                }}
+                onClick={() => navigateTo(`/pay/confidential-delivery/${booking.id || vaultId}`)}
+              >
+                <CreditCard size={16} className="text-amber-600" />
+                <span>Pay Online</span>
+              </button>
+            )}
 
             <button
               type="button"
