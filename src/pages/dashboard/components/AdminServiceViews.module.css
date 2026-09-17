@@ -615,3 +615,367 @@
   from { transform: scale(0.96); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
 }
+
+/* Vault Confidential Drawer Enhancements */
+.vaultDrawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  max-width: 660px;
+  background: #FFFFFF;
+  padding: 24px;
+  box-shadow: -6px 0 30px rgba(15, 23, 42, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  z-index: 120;
+  overflow-y: auto;
+  animation: slideInRight 0.22s ease-out;
+}
+
+.vaultHeaderCard {
+  background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+  border: 1.5px solid #FCD34D;
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vaultBadgeRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.vaultPillGold {
+  background: #FEF3C7;
+  color: #92400E;
+  border: 1px solid #FCD34D;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.vaultPillBlue {
+  background: #EFF6FF;
+  color: #1E40AF;
+  border: 1px solid #BFDBFE;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.vaultPillGreen {
+  background: #ECFDF5;
+  color: #065F46;
+  border: 1px solid #A7F3D0;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.vaultSectionCard {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.vaultSectionTitle {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #E2E8F0;
+}
+
+.vaultDataGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px 14px;
+}
+
+@media (max-width: 540px) {
+  .vaultDataGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.vaultDataItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.vaultDataLabel {
+  font-size: 11px;
+  color: #64748B;
+  font-weight: 600;
+}
+
+.vaultDataValue {
+  font-size: 13px;
+  color: #0F172A;
+  font-weight: 700;
+  word-break: break-word;
+}
+
+.vaultAddressCard {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vaultPriceTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.vaultPriceTable tr td {
+  padding: 6px 0;
+  font-size: 12px;
+  color: #475569;
+}
+
+.vaultPriceTable tr td:last-child {
+  text-align: right;
+  font-weight: 700;
+  color: #0F172A;
+}
+
+.vaultPriceTable tr.totalRow td {
+  border-top: 1.5px solid #CBD5E1;
+  padding-top: 10px;
+  font-size: 14px;
+  font-weight: 800;
+  color: #0F172A;
+}
+
+.vaultPriceTable tr.totalRow td:last-child {
+  color: #B45309;
+  font-size: 16px;
+}
+
+/* ========================================================================== */
+/* VAULT SERVICE TIERS (9 SPECIALIZED PROTOCOLS) GRID STYLES                  */
+/* ========================================================================== */
+
+.vaultServicesSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 6px;
+  margin-bottom: 8px;
+}
+
+.vaultServicesHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.vaultServicesHeader h3 {
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #334155;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.vaultServicesHeader p {
+  font-size: 12px;
+  color: #64748B;
+  margin: 0;
+}
+
+.vaultServicesGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 1080px) {
+  .vaultServicesGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .vaultServicesGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.vaultServiceCard {
+  background: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  text-align: left;
+  min-height: 168px;
+}
+
+.vaultServiceCard:hover {
+  border-color: #CBD5E1;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px);
+}
+
+.vaultServiceCardActive {
+  border: 2px solid #FAB800 !important;
+  background: #FFFCF2 !important;
+  box-shadow: 0 6px 20px rgba(250, 184, 0, 0.16) !important;
+}
+
+.vaultServiceCardActive::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: #FAB800;
+  border-radius: 12px 12px 0 0;
+}
+
+.vaultServiceCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.vaultServiceIconBox {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: #FFFBEB;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #FEF08A;
+}
+
+.vaultServiceTagBadge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.02em;
+}
+
+.vaultServiceTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0F172A;
+  margin: 0 0 6px 0;
+  letter-spacing: -0.01em;
+}
+
+.vaultServiceDesc {
+  font-size: 13px;
+  color: #64748B;
+  line-height: 1.48;
+  margin: 0;
+  min-height: 38px;
+}
+
+.vaultServiceFooter {
+  border-top: 1px solid #F1F5F9;
+  padding-top: 14px;
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.vaultServiceTime {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.vaultServiceOrderCount {
+  font-size: 11px;
+  font-weight: 700;
+  background: #F1F5F9;
+  color: #334155;
+  padding: 3px 9px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.vaultServiceOrderCountActive {
+  background: #FEF3C7;
+  color: #92400E;
+  border: 1px solid #FDE68A;
+}
+
+.servicePill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.serviceShowcase {
+  background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+  border: 1.5px solid #FCD34D;
+  border-radius: 12px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+

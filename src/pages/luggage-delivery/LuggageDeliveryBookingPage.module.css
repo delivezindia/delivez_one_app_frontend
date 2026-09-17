@@ -366,3 +366,269 @@ button { color: inherit; }
   .confirmationRoute > div > span, .confirmationRoute > div > svg { display: none; }
   .covered > div { grid-template-columns: 1fr; }
 }
+
+
+/* Luggage Delivery Module CSS Extensions */
+
+.serviceCardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.serviceCard {
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #ffffff;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.serviceCard:hover {
+  border-color: #fab800;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(250, 184, 0, 0.15);
+}
+
+.serviceCardSelected {
+  border-color: #fab800;
+  background: #fffdf5;
+  box-shadow: 0 0 0 2px #fab800;
+}
+
+.serviceCardHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.serviceIconWrap {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: #fef3c7;
+  color: #b45309;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.serviceTagPill {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #475569;
+  margin-bottom: 4px;
+}
+
+.serviceCardSelected .serviceTagPill {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.servicePrice {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.serviceHighlights {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed #e2e8f0;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.serviceHighlights ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.serviceHighlights li {
+  margin-bottom: 4px;
+}
+
+.detailsToggleBtn {
+  margin-top: 10px;
+  background: none;
+  border: none;
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.serviceDetailsDrawer {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  background: #f8fafc;
+  font-size: 11px;
+}
+
+.infoTableGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.infoTableGrid div {
+  background: #ffffff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #edf2f7;
+}
+
+.infoTableGrid dt {
+  color: #94a3b8;
+  font-size: 10px;
+}
+
+.infoTableGrid dd {
+  margin: 0;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+/* Addons and Protections */
+.gridPills {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.itemSelectionCard {
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 14px 16px;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.itemSelectionCard:hover {
+  border-color: #fab800;
+  background: #fffdf8;
+}
+
+.itemSelectionCardActive {
+  border-color: #fab800;
+  background: #fffdf5;
+  box-shadow: inset 0 0 0 1px #fab800;
+}
+
+.itemSelectionCardActive .itemCheckBadge {
+  background: #fab800;
+  color: #0f172a;
+}
+
+.itemCheckBadge {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  color: #94a3b8;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+/* Timeline Milestones (10 Steps) */
+.timelineContainer {
+  margin-top: 24px;
+  border-left: 2px solid #e2e8f0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.timelineItem {
+  position: relative;
+}
+
+.timelineMarker {
+  position: absolute;
+  left: -29px;
+  top: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  border: 2px solid #ffffff;
+}
+
+.timelineMarkerCompleted {
+  background: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+}
+
+.timelineMarkerActive {
+  background: #fab800;
+  box-shadow: 0 0 0 4px rgba(250, 184, 0, 0.3);
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.timelineCard {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+.timelineCardCompleted {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.timelineCardActive {
+  background: #fffdf5;
+  border-color: #fde68a;
+}
+
+/* Proof of Delivery (POD) Modal */
+.podModalBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.podModalContent {
+  width: min(600px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}

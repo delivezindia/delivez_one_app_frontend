@@ -147,6 +147,19 @@ export async function fetchAdminConfidentialBookings(params = {}, { signal } = {
   }
 }
 
+export async function fetchAdminConfidentialBookingById(id, { signal } = {}) {
+  const accessToken = requireAdminToken()
+  try {
+    const res = await apiRequest(`/admin/confidential/bookings/${encodeURIComponent(id)}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      signal,
+    })
+    return res?.data?.booking
+  } catch (error) {
+    handleAuthenticationError(error)
+  }
+}
+
 // ---------------------------------------------------------------------------
 // STATUS TIMING PAYLOAD BUILDER & EXTRACTOR
 // ---------------------------------------------------------------------------
@@ -1003,6 +1016,25 @@ export async function fetchAdminOrderFullDetails(serviceKey, orderId, { signal }
           ...res.data.booking,
           serviceKey: sKey.includes('luggage') ? 'luggage-delivery' : 'personal-courier',
           serviceName: sKey.includes('luggage') ? 'Luggage Delivery' : 'Personal Courier',
+        }
+      }
+    } else if (
+      sKey === 'confidential-delivery' ||
+      sKey === 'confidential-courier' ||
+      sKey === 'vault' ||
+      String(orderId).startsWith('DV') ||
+      String(orderId).includes('VAULT') ||
+      String(orderId).startsWith('DLZ-VLT')
+    ) {
+      const res = await apiRequest(`/admin/confidential/bookings/${encodeURIComponent(orderId)}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        signal,
+      })
+      if (res?.data?.booking) {
+        detailedData = {
+          ...res.data.booking,
+          serviceKey: 'confidential-courier',
+          serviceName: 'Delivez Vault (Confidential)',
         }
       }
     }

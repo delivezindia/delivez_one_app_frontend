@@ -45,7 +45,12 @@ import {
   Zap,
   Ban,
   AlertTriangle,
-  History
+  History,
+  GitFork,
+  Briefcase,
+  Repeat,
+  ShieldAlert,
+  Share2,
 } from 'lucide-react'
 import {
   fetchAdminOrderFullDetails,
@@ -68,6 +73,36 @@ import {
   cancelAdminGiftOrder
 } from '@/features/admin-gift-delivery/services/adminGiftDeliveryService.js'
 import styles from './AdminOrderDetailView.module.css'
+
+export const VAULT_SERVICES_ORDER_MAP = {
+  VAULT_SECURE: { title: 'Vault Secure', desc: 'Standard secure delivery with full verification and chain of custody.', time: '1-2 Days', icon: Shield },
+  VAULT_PRIORITY: { title: 'Vault Priority', desc: 'Faster delivery with priority handling and dedicated partners.', time: 'Same / Next Day', icon: Zap },
+  VAULT_DIRECT: { title: 'Vault Direct', desc: 'Point-to-point delivery with no stops in between. Maximum confidentiality.', time: '1-2 Days', icon: GitFork },
+  VAULT_PRECISE: { title: 'Vault Precise', desc: 'Deliver at a specific date and time window of your choice.', time: 'Scheduled', icon: Calendar },
+  VAULT_HAND_CARRY: { title: 'Vault Hand Carry', desc: 'Dedicated hand carry by authorized executive for highest priority items.', time: '1-2 Days', icon: Briefcase },
+  VAULT_RETURN: { title: 'Vault Return', desc: 'Deliver and collect signed or processed documents and return to sender.', time: '1-3 Days', icon: RotateCcw },
+  VAULT_EXCHANGE: { title: 'Vault Exchange', desc: 'Two-way document or item exchange in a single trip.', time: '1-3 Days', icon: Repeat },
+  VAULT_CRITICAL: { title: 'Vault Critical', desc: 'Highest level of security with armed escort and real-time monitoring.', time: 'Same Day', icon: ShieldAlert },
+  VAULT_MULTIPOINT: { title: 'Vault MultiPoint', desc: 'Multiple secure stops in a single journey with optimized routing.', time: '1-3 Days', icon: Share2 },
+}
+
+export function resolveVaultOrderService(order) {
+  if (!order) return VAULT_SERVICES_ORDER_MAP.VAULT_SECURE
+  const sKey = String(order.vaultServiceKey || '').toUpperCase()
+  if (VAULT_SERVICES_ORDER_MAP[sKey]) return VAULT_SERVICES_ORDER_MAP[sKey]
+
+  const sType = String(order.serviceType || '').toLowerCase()
+  const desc = String(order.documentDescription || '').toLowerCase()
+  if (sType.includes('multipoint') || desc.includes('multipoint')) return VAULT_SERVICES_ORDER_MAP.VAULT_MULTIPOINT
+  if (sType.includes('critical') || desc.includes('critical') || desc.includes('armed')) return VAULT_SERVICES_ORDER_MAP.VAULT_CRITICAL
+  if (sType.includes('exchange') || desc.includes('exchange')) return VAULT_SERVICES_ORDER_MAP.VAULT_EXCHANGE
+  if (sType.includes('return') || desc.includes('return') || order.requiresReturn) return VAULT_SERVICES_ORDER_MAP.VAULT_RETURN
+  if (sType.includes('hand carry') || desc.includes('hand carry')) return VAULT_SERVICES_ORDER_MAP.VAULT_HAND_CARRY
+  if (sType.includes('precise') || desc.includes('precise') || order.scheduleType === 'SCHEDULED') return VAULT_SERVICES_ORDER_MAP.VAULT_PRECISE
+  if (sType.includes('direct') || desc.includes('direct')) return VAULT_SERVICES_ORDER_MAP.VAULT_DIRECT
+  if (sType.includes('priority') || desc.includes('priority') || order.deliverySpeed === 'PRIORITY') return VAULT_SERVICES_ORDER_MAP.VAULT_PRIORITY
+  return VAULT_SERVICES_ORDER_MAP.VAULT_SECURE
+}
 
 const SERVICE_META = {
   'courier-delivery': { label: 'Personal Courier', icon: Truck, color: '#087fc1', bg: '#e9f6ff' },
@@ -530,8 +565,20 @@ export default function AdminOrderDetailView({
   }, [currentStatus])
 
   // Extract nested or normalized details
-  const pickupAddr = order?.addresses?.find((a) => a.kind === 'PICKUP') || {}
-  const dropoffAddr = order?.addresses?.find((a) => a.kind === 'DROPOFF') || {}
+  const pickupAddr =
+    order?.pickup ||
+    (Array.isArray(order?.addresses)
+      ? order.addresses.find((a) => a.kind === 'PICKUP' || a.type === 'PICKUP')
+      : null) ||
+    order?.addresses?.[0] ||
+    {}
+  const dropoffAddr =
+    order?.dropoff ||
+    (Array.isArray(order?.addresses)
+      ? order.addresses.find((a) => a.kind === 'DROPOFF' || a.type === 'DROPOFF')
+      : null) ||
+    order?.addresses?.[1] ||
+    {}
   const pDetails = order?.pickupDetails || {}
   const dDetails = order?.deliveryDetails || {}
   const pkg = order?.package || {}
@@ -544,11 +591,15 @@ export default function AdminOrderDetailView({
 
   // Pickup Details
   const senderName = pDetails.name || pickupAddr.contactName || order?.pickupContactName || customerName
-  const senderPhone = pDetails.phone || pickupAddr.phoneNumber || order?.pickupPhone || customerPhone
+  const senderPhone =
+    pDetails.phone ||
+    (pickupAddr.phoneNumber ? `${pickupAddr.countryCode || '+91'} ${pickupAddr.phoneNumber}`.trim() : null) ||
+    order?.pickupPhone ||
+    customerPhone
   const senderAddress =
     pDetails.address ||
     order?.pickupAddress ||
-    [pickupAddr.addressLine1, pickupAddr.landmark, pickupAddr.city, pickupAddr.state, pickupAddr.postalCode]
+    [pickupAddr.addressLine1, pickupAddr.addressLine2, pickupAddr.landmark, pickupAddr.city, pickupAddr.state, pickupAddr.postalCode, pickupAddr.country]
       .filter(Boolean)
       .join(', ') ||
     'Origin Address on file'
@@ -563,16 +614,16 @@ export default function AdminOrderDetailView({
     'Consignee Recipient'
   const recipientPhone =
     dDetails.phone ||
+    (dropoffAddr.phoneNumber ? `${dropoffAddr.countryCode || '+91'} ${dropoffAddr.phoneNumber}`.trim() : null) ||
     order?.recipientPhone ||
     order?.dropoffPhone ||
-    dropoffAddr.phoneNumber ||
     '—'
   const dropoffAddress =
     dDetails.address ||
     order?.destination ||
     order?.dropoffAddress ||
     order?.deliveryAddress ||
-    [dropoffAddr.addressLine1, dropoffAddr.landmark, dropoffAddr.city, dropoffAddr.state, dropoffAddr.postalCode]
+    [dropoffAddr.addressLine1, dropoffAddr.addressLine2, dropoffAddr.landmark, dropoffAddr.city, dropoffAddr.state, dropoffAddr.postalCode, dropoffAddr.country]
       .filter(Boolean)
       .join(', ') ||
     'Destination Address on file'
@@ -928,8 +979,32 @@ export default function AdminOrderDetailView({
                 <div className={styles.addressText}>{senderAddress}</div>
 
                 {/* Service specific metadata */}
-                {((sKey.includes('luggage') && (pDetails.terminal || pDetails.flightNumber || pDetails.pnr)) || order?.locationType || order?.pickupStoreName) && (
+                {((sKey.includes('luggage') && (pDetails.terminal || pDetails.flightNumber || pDetails.pnr)) || order?.locationType || order?.pickupStoreName || sKey.includes('confidential') || sKey.includes('vault') || order?.securityLevel) && (
                   <div className={styles.specialMetaGrid}>
+                    {(sKey.includes('confidential') || sKey.includes('vault') || order?.securityLevel) && (
+                      <>
+                        <div className={styles.specItem}>
+                          <label>Security Level</label>
+                          <strong style={{ color: '#d97706' }}>{String(order?.securityLevel || 'TAMPER_EVIDENT').replace(/_/g, ' ')}</strong>
+                        </div>
+                        <div className={styles.specItem}>
+                          <label>Pickup Proof</label>
+                          <strong>{order?.pickupProofRequired !== false ? 'Photo & ID Mandatory' : 'Standard'}</strong>
+                        </div>
+                        {pickupAddr?.label && (
+                          <div className={styles.specItem}>
+                            <label>Origin Entity</label>
+                            <strong>{pickupAddr.label}</strong>
+                          </div>
+                        )}
+                        {pickupAddr?.landmark && (
+                          <div className={styles.specItem} style={{ gridColumn: 'span 2' }}>
+                            <label>Pickup Access / Landmark</label>
+                            <strong>{pickupAddr.landmark}</strong>
+                          </div>
+                        )}
+                      </>
+                    )}
                     {pDetails.terminal && (
                       <div className={styles.specItem}>
                         <label>Airport Terminal</label>
@@ -983,8 +1058,34 @@ export default function AdminOrderDetailView({
                 <div className={styles.addressText}>{dropoffAddress}</div>
 
                 {/* Dropoff specific metadata */}
-                {((sKey.includes('luggage') && (dDetails.hotelName || dDetails.roomNumber)) || order?.deliverySlot || order?.destinationVendor) && (
+                {((sKey.includes('luggage') && (dDetails.hotelName || dDetails.roomNumber)) || order?.deliverySlot || order?.destinationVendor || sKey.includes('confidential') || sKey.includes('vault') || order?.handoverMethod) && (
                   <div className={styles.specialMetaGrid}>
+                    {(sKey.includes('confidential') || sKey.includes('vault') || order?.handoverMethod) && (
+                      <>
+                        <div className={styles.specItem}>
+                          <label>Handover Method</label>
+                          <strong style={{ color: '#059669' }}>{String(order?.handoverMethod || 'OTP_AND_SIGNATURE').replace(/_/g, ' ')}</strong>
+                        </div>
+                        <div className={styles.specItem}>
+                          <label>Recipient Govt ID</label>
+                          <strong style={{ color: order?.recipientIdRequired !== false ? '#dc2626' : '#64748b' }}>
+                            {order?.recipientIdRequired !== false ? 'Photo ID Check Mandatory' : 'Standard'}
+                          </strong>
+                        </div>
+                        {dropoffAddr?.label && (
+                          <div className={styles.specItem}>
+                            <label>Destination Entity</label>
+                            <strong>{dropoffAddr.label}</strong>
+                          </div>
+                        )}
+                        {dropoffAddr?.landmark && (
+                          <div className={styles.specItem} style={{ gridColumn: 'span 2' }}>
+                            <label>Delivery Instructions / Landmark</label>
+                            <strong>{dropoffAddr.landmark}</strong>
+                          </div>
+                        )}
+                      </>
+                    )}
                     {dDetails.hotelName && (
                       <div className={styles.specItem}>
                         <label>Hotel Name</label>
@@ -1026,12 +1127,146 @@ export default function AdminOrderDetailView({
             <div className={styles.cardHeader}>
               <h3><Box size={17} color="#087fc1" /> Consignment & Cargo Manifest</h3>
               <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 600 }}>
-                {totalBags} Items • {totalWeight} kg Total
+                {(sKey.includes('confidential') || sKey.includes('vault') || order?.documentType) ? 'Delivez Vault Security Manifest' : `${totalBags} Items • ${totalWeight} kg Total`}
               </span>
             </div>
 
-            {/* Gift items table if gift delivery */}
-            {Array.isArray(order?.items) && order.items.length > 0 ? (
+            {/* Confidential Vault Consignment View */}
+            {(sKey.includes('confidential') || sKey.includes('vault') || order?.documentType) ? (
+              <div>
+                {/* Vault Service Tier Highlight Banner */}
+                {(() => {
+                  const sMeta = resolveVaultOrderService(order)
+                  const SvcIcon = sMeta.icon
+                  return (
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 14,
+                      background: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)',
+                      border: '1.5px solid #FCD34D',
+                      borderRadius: 12,
+                      padding: '14px 18px',
+                      marginBottom: 16
+                    }}>
+                      <div style={{
+                        width: 44,
+                        height: 44,
+                        borderRadius: 10,
+                        background: '#FFFFFF',
+                        border: '1px solid #FDE68A',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0
+                      }}>
+                        <SvcIcon size={24} strokeWidth={2} color="#FAB800" />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: '0.72rem', color: '#92400E', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            VAULT SERVICE TIER
+                          </span>
+                          <strong style={{ fontSize: '1.05rem', color: '#0F172A' }}>
+                            {order?.serviceType || sMeta.title}
+                          </strong>
+                          <span style={{
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
+                            background: '#FFFFFF',
+                            color: '#B45309',
+                            border: '1px solid #FCD34D',
+                            padding: '2px 8px',
+                            borderRadius: 12,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4
+                          }}>
+                            <Clock size={11} color="#FAB800" strokeWidth={2} /> Turnaround: {order?.vaultServiceTime || sMeta.time}
+                          </span>
+                        </div>
+                        <p style={{ margin: '4px 0 0 0', fontSize: '0.82rem', color: '#78350F', lineHeight: 1.45 }}>
+                          {sMeta.desc}
+                        </p>
+                      </div>
+                    </div>
+                  )
+                })()}
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
+                  <div className={styles.subSectionBox}>
+                    <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>DOCUMENT CLASSIFICATION</div>
+                    <strong style={{ fontSize: '1rem', color: '#0f172a', display: 'block', marginTop: 4 }}>
+                      {String(order?.documentType || 'Confidential Cargo').replace(/_/g, ' ')}
+                    </strong>
+                    <span style={{ fontSize: '0.8rem', color: '#475569', marginTop: 3, display: 'block' }}>
+                      {order?.documentDescription || 'Official document consignment under Delivez Vault protocol'}
+                    </span>
+                  </div>
+
+                  <div className={styles.subSectionBox}>
+                    <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>SECURITY ENVELOPE & VOLUME</div>
+                    <strong style={{ fontSize: '1rem', color: '#059669', display: 'block', marginTop: 4 }}>
+                      {String(order?.envelopeSize || 'A4 Document Envelope').replace(/_/g, ' ')}
+                    </strong>
+                    <span style={{ fontSize: '0.8rem', color: '#475569', marginTop: 3, display: 'block' }}>
+                      Volume: <strong>{order?.pageCount || 1} Document Pages / Sheets</strong>
+                    </span>
+                  </div>
+
+                  <div className={styles.subSectionBox}>
+                    <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>ORIGINALS & REVERSE CUSTODY</div>
+                    <strong style={{ fontSize: '0.95rem', color: order?.containsOriginals ? '#dc2626' : '#0f172a', display: 'block', marginTop: 4 }}>
+                      {order?.containsOriginals ? '★ Contains Original Documents' : 'Certified Copies'}
+                    </strong>
+                    <span style={{ fontSize: '0.8rem', color: order?.requiresReturn ? '#d97706' : '#64748b', marginTop: 3, display: 'block', fontWeight: 600 }}>
+                      {order?.requiresReturn ? '✓ Reverse Return Leg Requested' : 'One-Way Direct Handover'}
+                    </span>
+                  </div>
+
+                  <div className={styles.subSectionBox}>
+                    <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>SECURITY PROTOCOL & COVER</div>
+                    <strong style={{ fontSize: '0.95rem', color: '#d97706', display: 'block', marginTop: 4 }}>
+                      {String(order?.securityLevel || 'TAMPER_EVIDENT').replace(/_/g, ' ')}
+                    </strong>
+                    <span style={{ fontSize: '0.8rem', color: '#059669', marginTop: 3, display: 'block', fontWeight: 700 }}>
+                      Declared Value: ₹{Number(order?.declaredValue || 0).toLocaleString('en-IN')} (Full Cover)
+                    </span>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: 14, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, padding: '10px 14px', display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: '0.8rem' }}>
+                  <div>
+                    <span style={{ color: '#64748b', display: 'block', fontSize: '0.7rem', fontWeight: 700 }}>HANDOVER VERIFICATION</span>
+                    <strong style={{ color: '#0f172a' }}>{String(order?.handoverMethod || 'OTP_AND_SIGNATURE').replace(/_/g, ' ')}</strong>
+                  </div>
+                  <div>
+                    <span style={{ color: '#64748b', display: 'block', fontSize: '0.7rem', fontWeight: 700 }}>RECIPIENT PHOTO ID</span>
+                    <strong style={{ color: order?.recipientIdRequired !== false ? '#dc2626' : '#64748b' }}>
+                      {order?.recipientIdRequired !== false ? 'Mandatory Govt Photo ID Check' : 'Standard Handover'}
+                    </strong>
+                  </div>
+                  <div>
+                    <span style={{ color: '#64748b', display: 'block', fontSize: '0.7rem', fontWeight: 700 }}>PICKUP PROOF</span>
+                    <strong style={{ color: order?.pickupProofRequired !== false ? '#059669' : '#64748b' }}>
+                      {order?.pickupProofRequired !== false ? 'Mandatory ID Proof & Photo' : 'Standard Pickup'}
+                    </strong>
+                  </div>
+                  {order?.complianceAcceptedAt && (
+                    <div>
+                      <span style={{ color: '#64748b', display: 'block', fontSize: '0.7rem', fontWeight: 700 }}>NDA / COMPLIANCE ACCEPTED</span>
+                      <span style={{ color: '#475569' }}>{formatTiming(order.complianceAcceptedAt)}</span>
+                    </div>
+                  )}
+                  {order?.distanceKm && (
+                    <div>
+                      <span style={{ color: '#64748b', display: 'block', fontSize: '0.7rem', fontWeight: 700 }}>TRANSIT DISTANCE</span>
+                      <strong style={{ color: '#2563eb' }}>{order.distanceKm} km</strong>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : Array.isArray(order?.items) && order.items.length > 0 ? (
               <div>
                 <table className={styles.itemsTable}>
                   <thead>
@@ -1378,22 +1613,61 @@ export default function AdminOrderDetailView({
             </div>
 
             <div className={styles.billingList}>
-              <div className={styles.billRow}>
-                <span>Base Service Rate</span>
-                <span>₹{(amountTotal * 0.7).toFixed(2)}</span>
-              </div>
-              <div className={styles.billRow}>
-                <span>Distance & Weight Tariff</span>
-                <span>₹{(amountTotal * 0.15).toFixed(2)}</span>
-              </div>
-              <div className={styles.billRow}>
-                <span>Tamper-Proof Seal & Safety</span>
-                <span>₹49.00</span>
-              </div>
-              <div className={styles.billRow}>
-                <span>GST (18% Integrated Tax)</span>
-                <span>₹{(amountTotal * 0.12).toFixed(2)}</span>
-              </div>
+              {(sKey.includes('confidential') || sKey.includes('vault') || order?.baseCharge !== undefined) ? (
+                <>
+                  <div className={styles.billRow}>
+                    <span>Base Vault Inception Rate</span>
+                    <span>₹{Number(order?.baseCharge ?? 49).toFixed(2)}</span>
+                  </div>
+                  <div className={styles.billRow}>
+                    <span>Distance Transit Tariff</span>
+                    <span>₹{Number(order?.distanceCharge ?? 0).toFixed(2)}</span>
+                  </div>
+                  <div className={styles.billRow}>
+                    <span>Security Protocol & Tamper Seal</span>
+                    <span>₹{Number(order?.securityCharge ?? 60).toFixed(2)}</span>
+                  </div>
+                  <div className={styles.billRow}>
+                    <span>Handover Verification Fee</span>
+                    <span>₹{Number(order?.handoverCharge ?? 90).toFixed(2)}</span>
+                  </div>
+                  {Number(order?.originalsCharge || 0) > 0 && (
+                    <div className={styles.billRow}>
+                      <span>Original Document Handling</span>
+                      <span>₹{Number(order.originalsCharge).toFixed(2)}</span>
+                    </div>
+                  )}
+                  {Number(order?.returnCharge || 0) > 0 && (
+                    <div className={styles.billRow}>
+                      <span>Return Consignment Guarantee</span>
+                      <span>₹{Number(order.returnCharge).toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className={styles.billRow}>
+                    <span>GST (18% Integrated Tax)</span>
+                    <span>₹{Number(order?.taxAmount ?? (amountTotal * 0.18)).toFixed(2)}</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className={styles.billRow}>
+                    <span>Base Service Rate</span>
+                    <span>₹{(amountTotal * 0.7).toFixed(2)}</span>
+                  </div>
+                  <div className={styles.billRow}>
+                    <span>Distance & Weight Tariff</span>
+                    <span>₹{(amountTotal * 0.15).toFixed(2)}</span>
+                  </div>
+                  <div className={styles.billRow}>
+                    <span>Tamper-Proof Seal & Safety</span>
+                    <span>₹49.00</span>
+                  </div>
+                  <div className={styles.billRow}>
+                    <span>GST (18% Integrated Tax)</span>
+                    <span>₹{(amountTotal * 0.12).toFixed(2)}</span>
+                  </div>
+                </>
+              )}
               {order?.discountAmount > 0 && (
                 <div className={styles.billRow} style={{ color: '#059669', fontWeight: 600 }}>
                   <span>Promo Coupon Discount</span>
@@ -1407,8 +1681,11 @@ export default function AdminOrderDetailView({
               </div>
 
               <div style={{ marginTop: 8, fontSize: '0.75rem', color: '#64748b' }}>
-                <div><strong>Payment Method:</strong> {paymentMethod}</div>
-                <div><strong>Transaction ID:</strong> <code>{order?.transactionId || order?.paymentId || 'TXN_DLV_8829374'}</code></div>
+                <div><strong>Payment Method:</strong> {order?.paymentMethod || paymentMethod}</div>
+                {order?.paymentProvider && (
+                  <div><strong>Payment Gateway:</strong> {order.paymentProvider}</div>
+                )}
+                <div><strong>Transaction ID:</strong> <code>{order?.paymentReference || order?.transactionId || order?.paymentId || 'TXN_DLV_8829374'}</code></div>
               </div>
 
               {onNavigate && (
