@@ -364,76 +364,401 @@ export default function ConfidentialDeliveryBookingPage() {
     setErrorMsg('')
 
     try {
-      const payload = {
-        serviceType: formData.serviceType,
-        itemType: formData.item.selectedItemType,
-        itemDescription: formData.item.itemName,
-        declaredValue: Number(formData.item.declaredValue) || 50000,
-        securityLevel: formData.security.securityLevel,
-        packaging: formData.packaging.packagingType,
-        verificationMethod: formData.verification.verificationMethod,
-        timeSlot: formData.pickup.timeWindow,
-        pickupSchedule: formData.pickup.pickupDate,
-        pickup: {
-          companyName: formData.pickup.companyName,
-          contactName: formData.pickup.contactName,
-          phoneNumber: formData.pickup.mobileNumber,
-          addressLine1: formData.pickup.completeAddress,
-          city: formData.pickup.city,
-          state: formData.pickup.state,
-          postalCode: formData.pickup.pinCode,
-          instructions: formData.pickup.specialInstructions,
-          accessRequirements: formData.pickup.accessRequirements,
+      const canonicalPayload = {
+        service_type: formData.serviceType,
+        step_0_service_type: {
+          selected_service: formData.serviceType,
+          available_services: (options.serviceTypes || []).map((st) => ({
+            service_type: st.name,
+            description: st.description,
+            estimated_time: st.expectedDelivery,
+            tag: st.badge || '',
+          })),
         },
-        delivery: {
-          companyName: formData.delivery.companyName,
-          contactName: formData.delivery.contactName,
-          phoneNumber: formData.delivery.mobileNumber,
-          email: formData.delivery.email,
-          designation: formData.delivery.designation,
-          addressLine1: formData.delivery.completeAddress,
-          city: formData.delivery.city,
-          state: formData.delivery.state,
-          postalCode: formData.delivery.pinCode,
-          instructions: formData.delivery.specialInstructions,
-          accessRequirements: formData.delivery.accessRequirements,
+        step_1_pickup_location: {
+          pickup_location: {
+            pickup_type: formData.pickup.pickupType || 'Business',
+            pickup_type_options: ['Business', 'Home'],
+            contact_name: formData.pickup.contactName,
+            mobile_number: formData.pickup.mobileNumber,
+            company_organization: formData.pickup.companyName || '',
+            gstin: formData.pickup.gstin || '',
+            complete_pickup_address: formData.pickup.completeAddress,
+            city: formData.pickup.city,
+            state: formData.pickup.state,
+            pin_code: formData.pickup.pinCode,
+            use_my_location: false,
+          },
+          pickup_contact_person: {
+            contact_person: formData.pickup.contactPerson || formData.pickup.contactName,
+            designation: formData.pickup.designation || 'Authorized Sender',
+            alternate_mobile: formData.pickup.alternateMobile || '',
+            email: formData.pickup.email || '',
+          },
+          pickup_timing: {
+            pickup_date: formData.pickup.pickupDate,
+            pickup_time_window: formData.pickup.timeWindow,
+            preferred_time: formData.pickup.preferredTime || '',
+          },
+          pickup_special_instructions: formData.pickup.specialInstructions || '',
+          pickup_access_requirements: {
+            security_check: formData.pickup.accessRequirements.includes('Security Check'),
+            visitor_pass: formData.pickup.accessRequirements.includes('Visitor Pass'),
+            lift_access: formData.pickup.accessRequirements.includes('Lift Access'),
+            id_proof: formData.pickup.accessRequirements.includes('ID Proof'),
+            parking: formData.pickup.accessRequirements.includes('Parking'),
+          },
         },
-        // Conditional service configuration matching exact serviceType
-        ...(formData.serviceType === 'Vault Return' ? { returnDetails: formData.setups.returnSetup, serviceConfiguration: formData.setups.returnSetup } : {}),
-        ...(formData.serviceType === 'Vault Exchange' ? { exchangeDetails: formData.setups.exchangeSetup, serviceConfiguration: formData.setups.exchangeSetup } : {}),
-        ...(formData.serviceType === 'Vault MultiPoint' ? { multipointDetails: formData.setups.multipointSetup, serviceConfiguration: formData.setups.multipointSetup } : {}),
-        ...(formData.serviceType === 'Vault Critical' ? { criticalDetails: formData.setups.criticalSetup, serviceConfiguration: formData.setups.criticalSetup } : {}),
-        ...(formData.serviceType === 'Vault Hand Carry' ? { handCarryDetails: formData.setups.handcarrySetup, serviceConfiguration: formData.setups.handcarrySetup } : {}),
-        ...(formData.serviceType === 'Vault Precise' ? { preciseDetails: formData.setups.preciseSetup, serviceConfiguration: formData.setups.preciseSetup } : {}),
-        ...(formData.serviceType === 'Vault Direct' ? { directDetails: formData.setups.directSetup, serviceConfiguration: formData.setups.directSetup } : {}),
-        paymentMethod: 'PAY_ON_DELIVERY',
+        step_2_recipient_and_delivery: {
+          delivery_location: {
+            delivery_type: formData.delivery.deliveryType || 'Business',
+            delivery_type_options: ['Business', 'Home'],
+            contact_name: formData.delivery.contactName,
+            mobile_number: formData.delivery.mobileNumber,
+            company_organization: formData.delivery.companyName || '',
+            gstin: formData.delivery.gstin || '',
+            complete_delivery_address: formData.delivery.completeAddress,
+            city: formData.delivery.city,
+            state: formData.delivery.state,
+            pin_code: formData.delivery.pinCode,
+            use_my_location: false,
+          },
+          delivery_contact_person: {
+            contact_person: formData.delivery.contactPerson || formData.delivery.contactName,
+            designation: formData.delivery.designation || 'Authorized Recipient',
+            alternate_mobile: formData.delivery.alternateMobile || '',
+            email: formData.delivery.email || '',
+          },
+          delivery_timing: {
+            preferred_delivery_date: formData.delivery.preferredDate,
+            preferred_time_window: formData.delivery.timeWindow,
+            customer_available: formData.delivery.customerAvailable || '',
+          },
+          delivery_special_instructions: formData.delivery.specialInstructions || '',
+          delivery_access_requirements: {
+            security_check: formData.delivery.accessRequirements.includes('Security Check'),
+            visitor_pass: formData.delivery.accessRequirements.includes('Visitor Pass'),
+            lift_access: formData.delivery.accessRequirements.includes('Lift Access'),
+            id_proof: formData.delivery.accessRequirements.includes('ID Proof'),
+            parking: formData.delivery.accessRequirements.includes('Parking'),
+          },
+          service_specific_setup: {
+            'Vault Secure': {
+              setup_present_in_source: false,
+              uses_common_booking_steps: true,
+            },
+            'Vault Priority': {
+              setup_present_in_source: false,
+              uses_common_booking_steps: true,
+            },
+            'Vault Direct': {
+              delivery_type: formData.setups.directSetup?.deliveryType || 'Direct Delivery',
+              delivery_type_options: ['Direct Delivery', 'Direct Express', 'Same Day Direct'],
+              pickup_location: {
+                pickup_address: formData.pickup.completeAddress,
+                use_current_location: false,
+              },
+              delivery_location: {
+                delivery_address: formData.delivery.completeAddress,
+                use_current_location: false,
+              },
+              delivery_preferences: {
+                preferred_delivery_date: formData.delivery.preferredDate,
+                preferred_time_window: formData.delivery.timeWindow,
+                timezone: 'IST (GMT +05:30)',
+                special_instructions: formData.setups.directSetup?.specialInstructions || '',
+              },
+              handling_options: {
+                single_point_handling: Boolean(formData.setups.directSetup?.singlePointHandling),
+                avoid_hubs_sorting: Boolean(formData.setups.directSetup?.avoidHubs),
+                sealed_secure: Boolean(formData.setups.directSetup?.sealedSecure),
+                delivery_alerts: Boolean(formData.setups.directSetup?.deliveryAlerts),
+              },
+              contact_and_verification: {
+                recipient_contact: formData.delivery.mobileNumber,
+                verification_method: formData.verification.verificationMethod,
+                alternate_contact: formData.delivery.alternateMobile || '',
+              },
+            },
+            'Vault Precise': {
+              delivery_precision: {
+                delivery_date: formData.setups.preciseSetup?.deliveryDate || formData.delivery.preferredDate,
+                preferred_time_window: formData.setups.preciseSetup?.timeWindow || formData.delivery.timeWindow,
+                timezone: 'IST (GMT +05:30)',
+                delivery_deadline_hard_cutoff: formData.setups.preciseSetup?.hardDeadline || '',
+                early_delivery_not_allowed: Boolean(formData.setups.preciseSetup?.earlyDeliveryNotAllowed),
+              },
+              delivery_location: {
+                delivery_address: formData.delivery.completeAddress,
+                edit_address: false,
+                delivery_instructions: formData.setups.preciseSetup?.deliveryInstructions || '',
+                landmark: formData.setups.preciseSetup?.landmark || '',
+              },
+              recipient_and_verification: {
+                recipient_name: formData.setups.preciseSetup?.recipientName || formData.delivery.contactName,
+                recipient_contact: formData.setups.preciseSetup?.recipientContact || formData.delivery.mobileNumber,
+                verification_method: formData.verification.verificationMethod,
+                recipient_must_be_available_within_time_window: Boolean(formData.setups.preciseSetup?.recipientMustBeAvailable),
+                alternate_contact: formData.setups.preciseSetup?.alternateContact || '',
+              },
+              handling_and_service_options: {
+                handling_option: formData.setups.preciseSetup?.handlingOption || 'Precise Delivery',
+                handling_option_options: ['Precise Delivery', 'Precise + Priority', 'Precise + Signature', 'Photo Proof'],
+              },
+              special_instructions: formData.setups.preciseSetup?.specialInstructions || '',
+            },
+            'Vault Hand Carry': {
+              hand_carry_details: {
+                hand_carry_type: formData.setups.handcarrySetup?.handCarryType || 'Confidential Documents',
+                hand_carry_type_options: ['Confidential Documents', 'High Value Item', 'Priority Delivery'],
+                executive_level: formData.setups.handcarrySetup?.executiveLevel || 'Verified Executive',
+                declared_value: formData.setups.handcarrySetup?.declaredValue || formData.item.declaredValue,
+                preferred_handover_slot: formData.setups.handcarrySetup?.handoverSlot || formData.pickup.timeWindow,
+              },
+              executive_and_handover_instructions: {
+                dedicated_executive: Boolean(formData.setups.handcarrySetup?.dedicatedExecutive),
+                id_check_on_pickup: Boolean(formData.setups.handcarrySetup?.idCheckPickup),
+                id_check_on_delivery: Boolean(formData.setups.handcarrySetup?.idCheckDelivery),
+                signature_at_handover: Boolean(formData.setups.handcarrySetup?.signatureHandover),
+                no_unattended_delivery: Boolean(formData.setups.handcarrySetup?.noUnattended),
+                recipient_must_be_present: Boolean(formData.setups.handcarrySetup?.recipientPresent),
+              },
+              monitoring_and_security: {
+                real_time_tracking_and_alerts: Boolean(formData.setups.handcarrySetup?.realTimeTracking),
+                chain_of_custody: Boolean(formData.setups.handcarrySetup?.chainOfCustody),
+                photo_proof_at_delivery: Boolean(formData.setups.handcarrySetup?.photoProof),
+                confidential_handling: Boolean(formData.setups.handcarrySetup?.confidentialHandling),
+                escalation_contact_required: Boolean(formData.setups.handcarrySetup?.escalationContact),
+              },
+              special_instructions: formData.setups.handcarrySetup?.specialInstructions || '',
+            },
+            'Vault Return': {
+              return_details: {
+                return_type: formData.setups.returnSetup?.returnType || 'Return to Sender',
+                return_type_options: ['Return to Sender', 'Return to Another Location'],
+                return_reason: formData.setups.returnSetup?.returnReason || '',
+                rma_reference_number: formData.setups.returnSetup?.rmaNumber || '',
+                return_instruction: formData.setups.returnSetup?.returnInstructions || '',
+                expected_return_date: formData.setups.returnSetup?.expectedReturnDate || '',
+              },
+              return_address: {
+                address_mode: formData.setups.returnSetup?.sameAsPickup ? 'Same as Pickup Address' : 'Use Different Address',
+                address_mode_options: ['Same as Pickup Address', 'Use Different Address'],
+                return_address_preview: formData.setups.returnSetup?.sameAsPickup ? formData.pickup.completeAddress : formData.setups.returnSetup?.customReturnAddress || '',
+                edit_address: false,
+              },
+              return_collection_preference: {
+                collection_date_preference: formData.setups.returnSetup?.collectionDatePreference || '',
+                collection_time_window: formData.setups.returnSetup?.collectionTimeWindow || '',
+                pickup_instructions_for_return: formData.setups.returnSetup?.pickupInstructionsForReturn || '',
+              },
+            },
+            'Vault Exchange': {
+              setup_present_in_source: true,
+              source_component_referenced: 'ExchangeSetupSection',
+              source_component_implementation_found: true,
+              fields: {
+                exchangeType: formData.setups.exchangeSetup?.exchangeType || 'Two-Way Document Exchange',
+                exchangeReason: formData.setups.exchangeSetup?.exchangeReason || '',
+                exchangeId: formData.setups.exchangeSetup?.exchangeId || '',
+                outgoingItem: formData.setups.exchangeSetup?.outgoingItem || '',
+                incomingItem: formData.setups.exchangeSetup?.incomingItem || '',
+                exchangeInstructions: formData.setups.exchangeSetup?.exchangeInstructions || '',
+                expectedExchangeDate: formData.setups.exchangeSetup?.expectedExchangeDate || '',
+                swapTimeWindow: formData.setups.exchangeSetup?.swapTimeWindow || '10:00 AM - 12:00 PM',
+                sameAsPickup: formData.setups.exchangeSetup?.sameAsPickup !== false,
+                customReturnAddress: formData.setups.exchangeSetup?.customReturnAddress || '',
+              },
+            },
+            'Vault Critical': {
+              critical_details: {
+                critical_shipment_type: formData.setups.criticalSetup?.shipmentType || 'High Value',
+                critical_shipment_type_options: ['High Value', 'Time Critical', 'Confidential'],
+                critical_level: formData.setups.criticalSetup?.criticalLevel || 'Level 1 - Highest',
+                declared_value: formData.setups.criticalSetup?.declaredValue || formData.item.declaredValue,
+                sla_delivery_commitment: formData.setups.criticalSetup?.slaCommitment || 'Strict 2-Hour SLA',
+              },
+              security_and_handling_instructions: {
+                tamper_proof_sealing: Boolean(formData.setups.criticalSetup?.tamperProof),
+                single_point_of_contact: Boolean(formData.setups.criticalSetup?.singlePointContact),
+                secure_storage_at_hubs: Boolean(formData.setups.criticalSetup?.secureStorage),
+                armed_escort_if_available: Boolean(formData.setups.criticalSetup?.armedEscort),
+                no_unattended_delivery: Boolean(formData.setups.criticalSetup?.noUnattended),
+                photo_proof_at_every_stage: Boolean(formData.setups.criticalSetup?.photoProof),
+              },
+              priority_and_monitoring: {
+                priority_handling: formData.setups.criticalSetup?.priorityHandling || 'Highest Priority',
+                real_time_tracking_and_alerts: Boolean(formData.setups.criticalSetup?.realTimeTracking),
+                delay_alert_threshold: formData.setups.criticalSetup?.delayAlertThreshold || '15 minutes',
+              },
+              special_instructions: formData.setups.criticalSetup?.specialInstructions || '',
+            },
+            'Vault MultiPoint': {
+              route_summary: {
+                total_stops: formData.setups.multipointSetup?.stops?.length || 1,
+                estimated_distance: '18.4 km',
+                estimated_time: '2-3 Hours',
+                service_type: 'Multi Point Delivery',
+              },
+              delivery_points: (formData.setups.multipointSetup?.stops || []).map((s, idx) => ({
+                stop_number: idx + 1,
+                stop_name: s.name || `Stop ${idx + 1}`,
+                subtitle: s.badge || '',
+                address: s.address || '',
+                contact_person: s.contact || '',
+                eta: s.time || '',
+              })),
+              delivery_point_actions: {
+                add_stop: true,
+                edit_stop: true,
+                delete_stop: true,
+                reorder_stops: true,
+                optimize_route: false,
+              },
+              additional_options: {
+                time_window_for_each_stop: Boolean(formData.setups.multipointSetup?.timeWindow),
+                notify_recipients: Boolean(formData.setups.multipointSetup?.notifyRecipients),
+                collect_pod_at_each_stop: Boolean(formData.setups.multipointSetup?.collectPod),
+                return_to_origin_if_undelivered: Boolean(formData.setups.multipointSetup?.returnOrigin),
+              },
+              special_instructions: formData.setups.multipointSetup?.specialInstructions || '',
+            },
+          },
+        },
+        step_3_item_type_and_information: {
+          selected_top_item_type: formData.item.selectedItemType || 'Confidential Documents',
+          top_item_type_options: [
+            'Confidential Documents',
+            'Legal Documents',
+            'Contracts / Agreements',
+            'Financial Documents',
+            'Official Documents',
+            'Original Certificates',
+            'Sealed Envelope',
+            'Sensitive Records',
+            'Secure Package',
+          ],
+          other_item_type: formData.item.customOtherDescription || '',
+          item_information: {
+            item_name_description: formData.item.itemName,
+            item_category: formData.item.itemCategory || 'Legal Documents',
+            item_type: formData.item.itemType || 'Document',
+            item_type_options: ['Document', 'Parcel', 'Other'],
+            number_of_pieces: Number(formData.item.pieces || 1),
+            weight_actual: String(formData.item.weightKg || '0.5'),
+            weight_unit: 'kg',
+            dimensions: {
+              length: String(formData.item.lengthCm || '30'),
+              width: String(formData.item.widthCm || '22'),
+              height: String(formData.item.heightCm || '2'),
+              unit: 'cm',
+            },
+            declared_value: String(formData.item.declaredValue || '50000'),
+            content_type: formData.item.contentType || '',
+            item_contents_description: formData.item.itemContents || '',
+          },
+          attachments: uploadedFiles.map((name) => ({
+            file_name: name,
+            file_path: `/uploads/vault/${name}`,
+            mime_type: 'application/pdf',
+            file_size: 1024 * 500,
+            document_type: 'ATTACHMENT',
+          })),
+          item_handling: {
+            fragile: formData.item.handlingTags.includes('Fragile'),
+            handle_with_care: formData.item.handlingTags.includes('Handle with Care'),
+            this_side_up: formData.item.handlingTags.includes('This Side Up'),
+            keep_dry: formData.item.handlingTags.includes('Keep Dry'),
+            do_not_stack: formData.item.handlingTags.includes('Do Not Stack'),
+            high_value: true,
+          },
+        },
+        step_4_packaging_options: {
+          selected_package: formData.packaging.packagingType === 'STANDARD_BOX' ? 'Standard Box' : (formData.packaging.packagingType || 'Standard Box'),
+          package_type_options: [
+            'Standard Box',
+            'Padded Envelope',
+            'Tamper Proof Pouch',
+            'Bubble Wrap',
+            'Heavy Duty Crate',
+            'Document Sleeve',
+            'My Own Package',
+          ],
+          add_on_protection: {
+            extra_bubble_wrap: formData.packaging.addonProtections.includes('EXTRA_BUBBLE_WRAP'),
+            corner_guard: formData.packaging.addonProtections.includes('CORNER_GUARD'),
+            waterproof_cover: formData.packaging.addonProtections.includes('WATERPROOF_COVER'),
+            fragile_sticker: formData.packaging.addonProtections.includes('FRAGILE_STICKER'),
+            seal_and_security_tape: formData.packaging.addonProtections.includes('SECURITY_TAPE'),
+          },
+          packaging_instructions: formData.packaging.packagingInstructions || '',
+          packaging_preview: {
+            selected_packaging: 'Standard Box',
+            protection_level: 'High Protection',
+            suitable_for: 'Confidential Documents and Valuables',
+          },
+        },
+        step_5_security_level: {
+          selected_security_level: formData.security.securityLevel === 'MAXIMUM_SECURITY' ? 'Maximum Security' : (formData.security.securityLevel === 'ENHANCED_SECURITY' ? 'Enhanced Security' : 'Standard Security'),
+          security_level_options: ['Standard Security', 'Enhanced Security', 'Maximum Security'],
+          security_features: {
+            real_time_gps_tracking: Boolean(formData.security.features?.realtimeGps),
+            delivery_alerts_and_notifications: Boolean(formData.security.features?.deliveryAlerts),
+            armed_escort: Boolean(formData.security.features?.armedEscort),
+            secure_storage_at_hubs: Boolean(formData.security.features?.secureStorageHubs),
+            restricted_access: Boolean(formData.security.features?.restrictedAccess),
+          },
+          additional_instructions: formData.security.additionalInstructions || '',
+        },
+        step_6_verification: {
+          selected_verification: formData.verification.verificationMethod === 'OTP' ? 'OTP Verification' : (formData.verification.verificationMethod || 'OTP Verification'),
+          verification_method_options: [
+            'OTP Verification',
+            'ID Proof Verification',
+            'Signature Verification',
+            'Face Verification',
+            'Authorized Person Verification',
+            'PIN Verification',
+          ],
+          capture_photo_of_recipient: Boolean(formData.verification.captureRecipientPhoto),
+          capture_photo_of_id_proof: Boolean(formData.verification.captureIdPhoto),
+        },
+        step_7_review_and_confirmation: {
+          shipment_summary: {
+            item_type: formData.item.itemType || 'Document',
+            security_level: formData.security.securityLevel,
+            packaging: formData.packaging.packagingType,
+          },
+          pickup_and_delivery_summary: {
+            pickup_date: formData.pickup.pickupDate,
+            pickup_time: formData.pickup.timeWindow,
+            delivery_date: formData.delivery.preferredDate,
+            delivery_time: formData.delivery.timeWindow,
+            pickup_details: formData.pickup.completeAddress,
+            delivery_details: formData.delivery.completeAddress,
+          },
+          recipient_summary: {
+            recipient_name: formData.delivery.contactName,
+            recipient_contact: formData.delivery.mobileNumber,
+            delivery_address: formData.delivery.completeAddress,
+          },
+          additional_services: {},
+          price_details: {
+            base_price: String(quote.baseFare),
+            additional_charges: String(quote.addOnServices || 0),
+            total_amount: String(quote.totalAmount),
+          },
+          agree_terms: Boolean(formData.termsAccepted),
+        },
       }
 
-      const booking = await createVaultBooking(payload)
+      const booking = await createVaultBooking(canonicalPayload)
       setCreatedBooking(booking)
       setCurrentStep(9)
       window.scrollTo({ top: 0, behavior: 'smooth' })
     } catch (err) {
-      console.warn('Booking API error, using optimistic local vault booking:', err)
-      const yy = String(new Date().getFullYear()).slice(2)
-      const mm = String(new Date().getMonth() + 1).padStart(2, '0')
-      const dd = String(new Date().getDate()).padStart(2, '0')
-      const rand = Math.random().toString(36).substring(2, 6).toUpperCase()
-      const fallbackVaultId = `DV-${yy}${mm}${dd}-${rand}`
-
-      const optimisticBooking = {
-        vaultId: fallbackVaultId,
-        bookingNumber: fallbackVaultId,
-        status: 'CONFIRMED',
-        pickupDate: formData.pickup.pickupDate,
-        timeSlot: formData.pickup.timeWindow,
-        securityLevel: formData.security.securityLevel === 'MAXIMUM_SECURITY' ? 'High' : 'High Tamper Evident',
-        encryption: 'AES-256',
-        totalAmount: quote.totalAmount,
-      }
-      setCreatedBooking(optimisticBooking)
-      setCurrentStep(9)
-      window.scrollTo({ top: 0, behavior: 'smooth' })
+      console.error('Booking creation error:', err)
+      setErrorMsg(err.message || 'Failed to create booking. Please verify all details and try again.')
     } finally {
       setSubmitting(false)
     }

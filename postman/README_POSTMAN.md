@@ -65,6 +65,9 @@ This folder contains the complete, production-grade Postman collection and envir
 - **Get Vault Booking by ID** (`GET {{baseUrl}}/confidential-delivery/bookings/{{bookingId}}`)
 - **Complete Sandbox Payment** (`POST {{baseUrl}}/confidential-delivery/bookings/{{bookingId}}/sandbox-payment`)
 - **Cancel Vault Booking** (`POST {{baseUrl}}/confidential-delivery/bookings/{{bookingId}}/cancel`)
+- **Order Review & Pre-Booking Fare Quote** (`POST {{baseUrl}}/confidential-delivery/order-review`): Pre-booking review and tariff calculation across all 9 Vault service types.
+- **Submit Order Review & Rating** (`POST {{baseUrl}}/confidential-delivery/bookings/{{bookingId}}/review`): Customer star rating (1-5) and feedback review.
+- **Get Order Review & Rating** (`GET {{baseUrl}}/confidential-delivery/bookings/{{bookingId}}/review`): Fetch submitted rating, feedback comment, and review timestamp.
 
 ### 4. Live Tracking & Milestones (4 Tabs & OTP Verification)
 - **Track Vault Shipment** (`GET {{baseUrl}}/confidential-delivery/track/{{bookingId}}`):

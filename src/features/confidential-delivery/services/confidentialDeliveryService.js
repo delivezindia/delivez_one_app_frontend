@@ -336,22 +336,79 @@ export async function calculateVaultQuote(details) {
 }
 
 export async function createVaultBooking(details, idempotencyKey) {
-  const response = await authorizedRequest('/confidential-delivery/bookings', {
+  const response = await authorizedRequest('/courier-delivery/bookings', {
     method: 'POST',
     headers: idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {},
     body: JSON.stringify(details),
   })
-  return response.data.booking
+  return response?.data?.booking || response?.data
 }
 
-export async function fetchVaultBookings() {
-  const response = await authorizedRequest('/confidential-delivery/bookings')
-  return response.data.bookings
+export async function fetchVaultBookings(serviceType) {
+  const url = serviceType
+    ? `/courier-delivery/bookings?service_type=${encodeURIComponent(serviceType)}`
+    : '/courier-delivery/bookings'
+  const response = await authorizedRequest(url)
+  return response?.data?.bookings || []
 }
 
 export async function fetchVaultBookingById(id) {
-  const response = await authorizedRequest(`/confidential-delivery/bookings/${id}`)
-  return response.data.booking
+  const response = await authorizedRequest(`/courier-delivery/bookings/${id}`)
+  return response?.data?.booking || response?.data
+}
+
+export async function updateVaultBooking(id, payload) {
+  const response = await authorizedRequest(`/courier-delivery/bookings/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  })
+  return response?.data?.booking || response?.data
+}
+
+export async function patchVaultBooking(id, patch) {
+  const response = await authorizedRequest(`/courier-delivery/bookings/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(patch),
+  })
+  return response?.data?.booking || response?.data
+}
+
+export async function deleteVaultBooking(id) {
+  const response = await authorizedRequest(`/courier-delivery/bookings/${id}`, {
+    method: 'DELETE',
+  })
+  return response?.data
+}
+
+export async function createVaultPayment(bookingId, paymentMethod = 'ONLINE') {
+  const response = await authorizedRequest('/courier-delivery/payments', {
+    method: 'POST',
+    body: JSON.stringify({ booking_id: bookingId, payment_method: paymentMethod }),
+  })
+  return response?.data
+}
+
+export async function verifyVaultPayment(paymentId, verificationData = {}) {
+  const response = await authorizedRequest(`/courier-delivery/payments/${paymentId}/verify`, {
+    method: 'POST',
+    body: JSON.stringify(verificationData),
+  })
+  return response?.data
+}
+
+export async function fetchVaultBookingPayment(bookingId) {
+  const response = await authorizedRequest(`/courier-delivery/bookings/${bookingId}/payment`)
+  return response?.data
+}
+
+export async function fetchVaultReceipt(receiptId) {
+  const response = await authorizedRequest(`/courier-delivery/receipts/${receiptId}`)
+  return response?.data
+}
+
+export async function fetchVaultBookingReceipt(bookingId) {
+  const response = await authorizedRequest(`/courier-delivery/bookings/${bookingId}/receipt`)
+  return response?.data
 }
 
 export async function trackVaultShipment(vaultId) {
@@ -368,17 +425,31 @@ export async function verifyVaultOtp(id, otp) {
 }
 
 export async function cancelVaultBooking(id, reason = 'Cancelled by user') {
-  const response = await authorizedRequest(`/confidential-delivery/bookings/${id}/cancel`, {
-    method: 'POST',
+  const response = await authorizedRequest(`/courier-delivery/bookings/${id}`, {
+    method: 'DELETE',
     body: JSON.stringify({ reason }),
   })
   return response.data
 }
 
 export async function completeVaultSandboxPayment(id, paymentPayload) {
-  const response = await authorizedRequest(`/confidential-delivery/bookings/${id}/payments/sandbox`, {
+  const response = await authorizedRequest(`/courier-delivery/payments`, {
     method: 'POST',
-    body: JSON.stringify(paymentPayload),
+    body: JSON.stringify({ booking_id: id, ...paymentPayload }),
   })
   return response.data
 }
+
+export async function submitBookingReview(id, { rating, reviewText }) {
+  const response = await authorizedRequest(`/confidential-delivery/bookings/${id}/review`, {
+    method: 'POST',
+    body: JSON.stringify({ rating, reviewText }),
+  })
+  return response.data
+}
+
+export async function fetchBookingReview(id) {
+  const response = await apiRequest(`/confidential-delivery/bookings/${id}/review`)
+  return response.data
+}
+

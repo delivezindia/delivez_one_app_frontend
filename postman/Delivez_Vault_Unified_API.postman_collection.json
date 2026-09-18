@@ -1,8 +1,8 @@
 {
   "info": {
-    "name": "Delivez - Confidential Delivery (Vault) - Production",
-    "_postman_id": "delivez-vault-production-unified-2026",
-    "description": "PRODUCTION POSTMAN COLLECTION for Delivez Confidential Courier / Vault Module.\n\nStrictly implements the unified 8-step canonical contract with zero separate APIs required across all 9 services.\n\nPre-configured for Production Server:\n- Base URL: http://40.81.244.167:3012/api/v1 (or https://api.delivez.com/api/v1)\n- Pre-loaded Credentials & Self-Contained Collection Variables: Can be imported and run immediately without an external environment file.\n- Auto-Variables: Login and booking creation automatically store tokens, booking IDs, payment IDs, and receipt IDs.\n- Includes 6 Folders:\n  0. Schema Discovery & Form Templates (No separate APIs needed)\n  1. Authentication (OTP & Password login)\n  2. Create Bookings (All 9 Canonical Services: Secure, Priority, Direct, Precise, Hand Carry, Return, Exchange, Critical, MultiPoint)\n  3. Booking Retrieval & Lifecycle Management\n  4. Payments API\n  5. Receipts API",
+    "name": "Delivez - Unified Confidential Courier (Vault) Enterprise API",
+    "_postman_id": "delivez-vault-unified-api-2026",
+    "description": "Single unified enterprise Postman collection for the Delivez Confidential Courier / Vault system. Adheres strictly to the canonical 8-step JSON structure with zero separate APIs required across all 9 services.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -269,8 +269,6 @@
                   "pm.expect(pm.response.code).to.equal(200);",
                   "if (json.data && json.data.accessToken) {",
                   "    pm.environment.set(\"accessToken\", json.data.accessToken);",
-                  "    pm.collectionVariables.set(\"accessToken\", json.data.accessToken);",
-                  "    pm.collectionVariables.set(\"token\", json.data.accessToken);",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -321,62 +319,6 @@
               "body": "{\n  \"status\": \"success\",\n  \"data\": {\n    \"user\": {\n      \"id\": \"usr_260918_1001\",\n      \"fullName\": \"Enterprise Vault User\",\n      \"mobileNumber\": \"9895226999\"\n    },\n    \"accessToken\": \"jwt_sample_token_eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"refreshToken\": \"refresh_sample_token_...\"\n  }\n}"
             }
           ]
-        },
-        {
-          "name": "3. Password Login (POST /auth/login-password)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json",
-                "type": "text"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"mobileNumber\": \"{{userMobile}}\",\n  \"countryCode\": \"{{countryCode}}\",\n  \"password\": \"{{userPassword}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{baseUrl}}/auth/login-password",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "login-password"
-              ]
-            },
-            "description": "Alternative password-based customer authentication for production environments."
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "const json = pm.response.json();",
-                  "if (pm.response.code === 200 || pm.response.code === 201) {",
-                  "    const t = (json.data && (json.data.accessToken || json.data.token)) || json.accessToken;",
-                  "    if (t) {",
-                  "        pm.collectionVariables.set(\"token\", t);",
-                  "        pm.collectionVariables.set(\"accessToken\", t);",
-                  "        pm.environment.set(\"token\", t);",
-                  "        pm.environment.set(\"accessToken\", t);",
-                  "    pm.collectionVariables.set(\"accessToken\", json.data.accessToken);",
-                  "    pm.collectionVariables.set(\"token\", json.data.accessToken);",
-                  "    }",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "response": []
         }
       ]
     },
@@ -432,7 +374,6 @@
                   "const b = json.data?.booking || json.data;",
                   "if (b && (b.booking_id || b.id)) {",
                   "    pm.environment.set(\"bookingId\", b.booking_id || b.id);",
-                  "    pm.collectionVariables.set(\"bookingId\", b.booking_id || b.id);",
                   "}",
                   "pm.expect(b.step_0_service_type).to.be.an(\"object\");",
                   "pm.expect(b.step_1_pickup_location).to.be.an(\"object\");",
@@ -546,7 +487,6 @@
                   "const b = json.data?.booking || json.data;",
                   "if (b && (b.booking_id || b.id)) {",
                   "    pm.environment.set(\"bookingId\", b.booking_id || b.id);",
-                  "    pm.collectionVariables.set(\"bookingId\", b.booking_id || b.id);",
                   "}",
                   "pm.expect(b.step_0_service_type).to.be.an(\"object\");",
                   "pm.expect(b.step_1_pickup_location).to.be.an(\"object\");",
@@ -660,7 +600,6 @@
                   "const b = json.data?.booking || json.data;",
                   "if (b && (b.booking_id || b.id)) {",
                   "    pm.environment.set(\"bookingId\", b.booking_id || b.id);",
-                  "    pm.collectionVariables.set(\"bookingId\", b.booking_id || b.id);",
                   "}",
                   "pm.expect(b.step_0_service_type).to.be.an(\"object\");",
                   "pm.expect(b.step_1_pickup_location).to.be.an(\"object\");",
@@ -774,7 +713,6 @@
                   "const b = json.data?.booking || json.data;",
                   "if (b && (b.booking_id || b.id)) {",
                   "    pm.environment.set(\"bookingId\", b.booking_id || b.id);",
-                  "    pm.collectionVariables.set(\"bookingId\", b.booking_id || b.id);",
                   "}",
                   "pm.expect(b.step_0_service_type).to.be.an(\"object\");",
                   "pm.expect(b.step_1_pickup_location).to.be.an(\"object\");",
@@ -888,7 +826,6 @@
                   "const b = json.data?.booking || json.data;",
                   "if (b && (b.booking_id || b.id)) {",
                   "    pm.environment.set(\"bookingId\", b.booking_id || b.id);",
-                  "    pm.collectionVariables.set(\"bookingId\", b.booking_id || b.id);",
                   "}",
                   "pm.expect(b.step_0_service_type).to.be.an(\"object\");",
                   "pm.expect(b.step_1_pickup_location).to.be.an(\"object\");",
@@ -1002,7 +939,6 @@
                   "const b = json.data?.booking || json.data;",
                   "if (b && (b.booking_id || b.id)) {",
                   "    pm.environment.set(\"bookingId\", b.booking_id || b.id);",
-                  "    pm.collectionVariables.set(\"bookingId\", b.booking_id || b.id);",
                   "}",
                   "pm.expect(b.step_0_service_type).to.be.an(\"object\");",
                   "pm.expect(b.step_1_pickup_location).to.be.an(\"object\");",
@@ -1116,7 +1052,6 @@
                   "const b = json.data?.booking || json.data;",
                   "if (b && (b.booking_id || b.id)) {",
                   "    pm.environment.set(\"bookingId\", b.booking_id || b.id);",
-                  "    pm.collectionVariables.set(\"bookingId\", b.booking_id || b.id);",
                   "}",
                   "pm.expect(b.step_0_service_type).to.be.an(\"object\");",
                   "pm.expect(b.step_1_pickup_location).to.be.an(\"object\");",
@@ -1230,7 +1165,6 @@
                   "const b = json.data?.booking || json.data;",
                   "if (b && (b.booking_id || b.id)) {",
                   "    pm.environment.set(\"bookingId\", b.booking_id || b.id);",
-                  "    pm.collectionVariables.set(\"bookingId\", b.booking_id || b.id);",
                   "}",
                   "pm.expect(b.step_0_service_type).to.be.an(\"object\");",
                   "pm.expect(b.step_1_pickup_location).to.be.an(\"object\");",
@@ -1344,7 +1278,6 @@
                   "const b = json.data?.booking || json.data;",
                   "if (b && (b.booking_id || b.id)) {",
                   "    pm.environment.set(\"bookingId\", b.booking_id || b.id);",
-                  "    pm.collectionVariables.set(\"bookingId\", b.booking_id || b.id);",
                   "}",
                   "pm.expect(b.step_0_service_type).to.be.an(\"object\");",
                   "pm.expect(b.step_1_pickup_location).to.be.an(\"object\");",
@@ -1560,7 +1493,6 @@
                   "const p = json.data?.payment || json.data;",
                   "if (p && (p.payment_id || p.id)) {",
                   "    pm.environment.set(\"paymentId\", p.payment_id || p.id);",
-                  "    pm.collectionVariables.set(\"paymentId\", p.payment_id || p.id);",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -1690,7 +1622,6 @@
                   "const r = json.data?.receipt || json.data;",
                   "if (r && (r.receipt_id || r.id)) {",
                   "    pm.environment.set(\"receiptId\", r.receipt_id || r.id);",
-                  "    pm.collectionVariables.set(\"receiptId\", r.receipt_id || r.id);",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -1753,58 +1684,6 @@
           "response": []
         }
       ]
-    }
-  ],
-  "variable": [
-    {
-      "key": "baseUrl",
-      "value": "http://40.81.244.167:3012/api/v1",
-      "type": "string"
-    },
-    {
-      "key": "userMobile",
-      "value": "9876543210",
-      "type": "string"
-    },
-    {
-      "key": "countryCode",
-      "value": "+91",
-      "type": "string"
-    },
-    {
-      "key": "userPassword",
-      "value": "Customer@1234",
-      "type": "string"
-    },
-    {
-      "key": "challengeId",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "token",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "accessToken",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "bookingId",
-      "value": "CV-260918-BDD9",
-      "type": "string"
-    },
-    {
-      "key": "paymentId",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "receiptId",
-      "value": "",
-      "type": "string"
     }
   ]
 }

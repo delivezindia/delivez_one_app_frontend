@@ -556,29 +556,29 @@
           "response": []
         },
         {
-          "name": "Get My Vault Bookings",
+          "name": "Get Order Review & Rating",
           "request": {
             "method": "GET",
             "header": [
               {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              },
-              {
                 "key": "Accept",
-                "value": "application/json"
+                "value": "application/json",
+                "type": "text"
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/confidential-delivery/bookings",
+              "raw": "{{baseUrl}}/confidential-delivery/bookings/{{bookingId}}/review",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "confidential-delivery",
-                "bookings"
+                "bookings",
+                "{{bookingId}}",
+                "review"
               ]
-            }
+            },
+            "description": "Fetch the submitted customer rating score, review comment, and timestamp for a confidential Vault booking."
           },
           "response": []
         },
@@ -695,6 +695,100 @@
               }
             }
           ]
+        },
+        {
+          "name": "Order Review & Pre-Booking Fare Quote",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceType\": \"Vault Secure\",\n  \"securityLevel\": \"ENHANCED_SECURITY\",\n  \"packaging\": \"STANDARD_BOX\",\n  \"addonProtections\": [\n    \"EXTRA_BUBBLE_WRAP\",\n    \"WATERPROOF_COVER\"\n  ],\n  \"declaredValue\": 50000,\n  \"pickupPostalCode\": \"560001\",\n  \"deliveryPostalCode\": \"560045\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/confidential-delivery/order-review",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "confidential-delivery",
+                "order-review"
+              ]
+            },
+            "description": "Pre-booking order review and fare calculation for Delivez Vault. Returns base charge, security tariffs, add-on protections, distance fee, and turnaround SLA."
+          },
+          "response": []
+        },
+        {
+          "name": "Submit Order Review & Rating (Feedback)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{userToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"reviewText\": \"Outstanding vault security! Courier was strictly on time and OTP handover was seamless.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/confidential-delivery/bookings/{{bookingId}}/review",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "confidential-delivery",
+                "bookings",
+                "{{bookingId}}",
+                "review"
+              ]
+            },
+            "description": "Submit customer star rating (1-5) and feedback review on a completed confidential consignment."
+          },
+          "response": []
+        },
+        {
+          "name": "Order Review & Quote Estimation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceType\": \"Vault Secure\",\n  \"securityLevel\": \"ENHANCED_SECURITY\",\n  \"packaging\": \"STANDARD_BOX\",\n  \"addonProtections\": [\n    \"EXTRA_BUBBLE_WRAP\",\n    \"WATERPROOF_COVER\"\n  ],\n  \"declaredValue\": 50000,\n  \"pickupPostalCode\": \"560001\",\n  \"deliveryPostalCode\": \"560045\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/confidential-delivery/order-review",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "confidential-delivery",
+                "order-review"
+              ]
+            },
+            "description": "Pre-booking order review and dynamic fare calculation across all 9 Vault service types."
+          },
+          "response": []
         }
       ]
     },
