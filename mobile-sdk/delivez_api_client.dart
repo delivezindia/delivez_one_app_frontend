@@ -2,9 +2,11 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'vault_courier_models.dart';
 import 'courier_models.dart';
+import 'luggage_delivery_models.dart';
 
 export 'vault_courier_models.dart';
 export 'courier_models.dart';
+export 'luggage_delivery_models.dart';
 
 /// Delivez Mobile API Client (Flutter / Dart)
 /// Ready-to-use production client for mobile apps.
@@ -489,6 +491,124 @@ class DelivezApiClient {
       Uri.parse('$baseUrl/admin/orders/${Uri.encodeComponent(orderId)}/cancel'),
       headers: _buildHeaders(),
       body: jsonEncode(body),
+    );
+    return _handleResponse(res);
+  }
+
+  // ==========================================
+  // 10. LUGGAGE DELIVERY (MASTER BOOKING FLOW)
+  // ==========================================
+  Future<Map<String, dynamic>> getLuggageOptions() async {
+    final res = await http.get(
+      Uri.parse('$baseUrl/luggage-delivery/options'),
+      headers: _buildHeaders(),
+    );
+    return _handleResponse(res);
+  }
+
+  Future<Map<String, dynamic>> getLuggageQuote(Map<String, dynamic> quotePayload) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/luggage-delivery/bookings/quote'),
+      headers: _buildHeaders(),
+      body: jsonEncode(quotePayload),
+    );
+    return _handleResponse(res);
+  }
+
+  Future<Map<String, dynamic>> validateLuggageCoupon(
+    String couponCode, {
+    num? subtotal,
+    Map<String, dynamic>? draftPayload,
+  }) async {
+    final body = {
+      'coupon_code': couponCode,
+      if (subtotal != null) 'subtotal': subtotal,
+      if (draftPayload != null) ...draftPayload,
+    };
+    final res = await http.post(
+      Uri.parse('$baseUrl/luggage-delivery/bookings/validate-coupon'),
+      headers: _buildHeaders(),
+      body: jsonEncode(body),
+    );
+    return _handleResponse(res);
+  }
+
+  Future<LuggageMasterBooking> createLuggageBooking(Map<String, dynamic> bookingPayload) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/luggage-delivery/bookings'),
+      headers: _buildHeaders(),
+      body: jsonEncode(bookingPayload),
+    );
+    final data = _handleResponse(res);
+    return LuggageMasterBooking.fromJson(data);
+  }
+
+  Future<LuggageMasterBooking> getLuggageBookingDetails(String bookingId) async {
+    final res = await http.get(
+      Uri.parse('$baseUrl/luggage-delivery/bookings/${Uri.encodeComponent(bookingId)}'),
+      headers: _buildHeaders(),
+    );
+    final data = _handleResponse(res);
+    return LuggageMasterBooking.fromJson(data);
+  }
+
+  Future<Map<String, dynamic>> listLuggageBookings({int page = 1, int limit = 10, String? status}) async {
+    String url = '$baseUrl/luggage-delivery/bookings?page=$page&limit=$limit';
+    if (status != null) url += '&status=${Uri.encodeComponent(status)}';
+    final res = await http.get(Uri.parse(url), headers: _buildHeaders());
+    return _handleResponse(res);
+  }
+
+  Future<Map<String, dynamic>> getLuggageReceipt(String bookingId) async {
+    final res = await http.get(
+      Uri.parse('$baseUrl/luggage-delivery/bookings/${Uri.encodeComponent(bookingId)}/receipt'),
+      headers: _buildHeaders(),
+    );
+    return _handleResponse(res);
+  }
+
+  Future<Map<String, dynamic>> getLuggageTracking(String trackingIdOrBookingNumber) async {
+    final res = await http.get(
+      Uri.parse('$baseUrl/luggage-delivery/tracking/${Uri.encodeComponent(trackingIdOrBookingNumber)}'),
+      headers: _buildHeaders(),
+    );
+    return _handleResponse(res);
+  }
+
+  Future<Map<String, dynamic>> createLuggagePayment(
+    String bookingId, {
+    String gateway = 'razorpay',
+    String paymentMethod = 'upi',
+  }) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/luggage-delivery/payments/create'),
+      headers: _buildHeaders(),
+      body: jsonEncode({
+        'booking_id': bookingId,
+        'gateway': gateway,
+        'payment_method': paymentMethod,
+      }),
+    );
+    return _handleResponse(res);
+  }
+
+  Future<Map<String, dynamic>> verifyLuggagePayment(Map<String, dynamic> verifyPayload) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/luggage-delivery/payments/verify'),
+      headers: _buildHeaders(),
+      body: jsonEncode(verifyPayload),
+    );
+    return _handleResponse(res);
+  }
+
+  Future<Map<String, dynamic>> cancelLuggageBooking(
+    String bookingId, [
+    String reason = 'Cancelled by user',
+  ]) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/luggage-delivery/bookings/${Uri.encodeComponent(bookingId)}/cancel'),
+      headers: _buildHeaders(),
+      body: jsonEncode({'reason': reason}),
     );
     return _handleResponse(res);
   }

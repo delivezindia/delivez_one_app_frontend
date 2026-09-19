@@ -278,6 +278,93 @@ export class DelivezApiClient {
       }),
     });
   }
+
+  // ==========================================
+  // 10. LUGGAGE DELIVERY (MASTER BOOKING FLOW)
+  // ==========================================
+  public getLuggageOptions() {
+    return this.request('/luggage-delivery/options');
+  }
+
+  public getLuggageQuote(quotePayload: Record<string, any>) {
+    return this.request('/luggage-delivery/bookings/quote', {
+      method: 'POST',
+      body: JSON.stringify(quotePayload),
+    });
+  }
+
+  public validateLuggageCoupon(
+    couponCode: string,
+    subtotal?: number,
+    draftPayload?: Record<string, any>
+  ) {
+    const body: Record<string, any> = {
+      coupon_code: couponCode,
+      ...(subtotal !== undefined ? { subtotal } : {}),
+      ...(draftPayload || {}),
+    };
+    return this.request('/luggage-delivery/bookings/validate-coupon', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+  }
+
+  public createLuggageBooking(bookingPayload: Record<string, any>) {
+    return this.request('/luggage-delivery/bookings', {
+      method: 'POST',
+      body: JSON.stringify(bookingPayload),
+    });
+  }
+
+  public getLuggageBookingDetails(bookingId: string) {
+    return this.request(`/luggage-delivery/bookings/${encodeURIComponent(bookingId)}`);
+  }
+
+  public listLuggageBookings(params: { page?: number; limit?: number; status?: string } = {}) {
+    const qs = new URLSearchParams();
+    if (params.page) qs.set('page', String(params.page));
+    if (params.limit) qs.set('limit', String(params.limit));
+    if (params.status) qs.set('status', params.status);
+    const query = qs.toString() ? `?${qs.toString()}` : '';
+    return this.request(`/luggage-delivery/bookings${query}`);
+  }
+
+  public getLuggageReceipt(bookingId: string) {
+    return this.request(`/luggage-delivery/bookings/${encodeURIComponent(bookingId)}/receipt`);
+  }
+
+  public getLuggageTracking(trackingIdOrBookingNumber: string) {
+    return this.request(`/luggage-delivery/tracking/${encodeURIComponent(trackingIdOrBookingNumber)}`);
+  }
+
+  public createLuggagePayment(
+    bookingId: string,
+    gateway: string = 'razorpay',
+    paymentMethod: string = 'upi'
+  ) {
+    return this.request('/luggage-delivery/payments/create', {
+      method: 'POST',
+      body: JSON.stringify({
+        booking_id: bookingId,
+        gateway,
+        payment_method: paymentMethod,
+      }),
+    });
+  }
+
+  public verifyLuggagePayment(verifyPayload: Record<string, any>) {
+    return this.request('/luggage-delivery/payments/verify', {
+      method: 'POST',
+      body: JSON.stringify(verifyPayload),
+    });
+  }
+
+  public cancelLuggageBooking(bookingId: string, reason: string = 'Cancelled by user') {
+    return this.request(`/luggage-delivery/bookings/${encodeURIComponent(bookingId)}/cancel`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    });
+  }
 }
 
 export class DelivezApiError extends Error {

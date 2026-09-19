@@ -53,6 +53,7 @@ import {
   createLuggageBooking,
   fetchLuggageOptions,
   fetchLuggageQuote,
+  validateLuggageCoupon,
   fetchLuggageTracking,
   verifyLuggageOtp,
   submitLuggagePod,
@@ -216,6 +217,53 @@ export default function LuggageDeliveryBookingPage() {
   // Payment Method
   const [paymentMethod, setPaymentMethod] = useState('wallet')
 
+  // Coupon State
+  const [couponCode, setCouponCode] = useState('')
+  const [appliedCoupon, setAppliedCoupon] = useState(null)
+  const [couponLoading, setCouponLoading] = useState(false)
+  const [couponMessage, setCouponMessage] = useState(null)
+
+  const handleApplyCoupon = async (codeToApply) => {
+    const code = (codeToApply || couponCode || '').trim().toUpperCase()
+    if (!code) return
+    try {
+      setCouponLoading(true)
+      setCouponMessage(null)
+      const res = await validateLuggageCoupon(code, quote?.subtotal || 0, {
+        serviceId,
+        routeType,
+        luggageItems,
+        selectedProtections,
+        selectedAddOns,
+        selectedAirportAssistance,
+        deliverySpeed: schedule.deliverySpeed,
+      })
+      if (res?.valid) {
+        setAppliedCoupon({
+          code: res.coupon_code || code,
+          discountAmount: res.discount_amount,
+          message: res.message,
+        })
+        setCouponCode(code)
+        setCouponMessage({ type: 'success', text: res.message || `Coupon ${code} applied!` })
+      } else {
+        setAppliedCoupon(null)
+        setCouponMessage({ type: 'error', text: res?.message || 'Invalid coupon code' })
+      }
+    } catch (err) {
+      setAppliedCoupon(null)
+      setCouponMessage({ type: 'error', text: err.message || 'Failed to apply coupon' })
+    } finally {
+      setCouponLoading(false)
+    }
+  }
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null)
+    setCouponCode('')
+    setCouponMessage(null)
+  }
+
   // Booking Result & Live Tracking Modal
   const [confirmedBooking, setConfirmedBooking] = useState(null)
   const [trackingData, setTrackingData] = useState(null)
@@ -265,6 +313,8 @@ export default function LuggageDeliveryBookingPage() {
           selectedAirportAssistance,
           deliverySpeed: schedule.deliverySpeed,
           distanceKm: 22,
+          applied_coupon: appliedCoupon ? { code: appliedCoupon.code } : null,
+          couponCode: appliedCoupon?.code,
         })
         if (active) {
           setQuote(q)
@@ -286,6 +336,7 @@ export default function LuggageDeliveryBookingPage() {
     selectedAddOns,
     selectedAirportAssistance,
     schedule.deliverySpeed,
+    appliedCoupon,
   ])
 
   // Helper to determine if service involves Airport
@@ -372,6 +423,8 @@ export default function LuggageDeliveryBookingPage() {
         gstInvoice: gstInvoice.requestInvoice ? gstInvoice : null,
         paymentMethod: paymentMethod.toUpperCase(),
         distanceKm: 22,
+        applied_coupon: appliedCoupon ? { code: appliedCoupon.code } : null,
+        couponCode: appliedCoupon?.code,
       }
 
       const booking = await createLuggageBooking(payload, makeIdempotencyKey())
@@ -1671,6 +1724,100 @@ export default function LuggageDeliveryBookingPage() {
                   )}
                 </div>
 
+                {/* Promo / Coupon Code Section */}
+                <div className={styles.fareCard} style={{ marginTop: '20px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                    <Tag size={18} style={{ color: '#6366f1' }} />
+                    <h3 style={{ margin: 0, fontSize: '15px' }}>Apply Promo / Coupon Code</h3>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input
+                      type="text"
+                      placeholder="e.g. DELIVEZ10, WELCOME50, AIRPORT100"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                      style={{
+                        flex: 1,
+                        padding: '10px 12px',
+                        borderRadius: '8px',
+                        border: '1px solid #cbd5e1',
+                        fontSize: '14px',
+                        textTransform: 'uppercase',
+                        fontWeight: '600',
+                      }}
+                      disabled={appliedCoupon !== null}
+                    />
+                    {appliedCoupon ? (
+                      <button
+                        type="button"
+                        onClick={handleRemoveCoupon}
+                        style={{
+                          padding: '0 16px',
+                          borderRadius: '8px',
+                          border: '1px solid #ef4444',
+                          background: '#fef2f2',
+                          color: '#ef4444',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Remove
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleApplyCoupon()}
+                        disabled={couponLoading || !couponCode.trim()}
+                        style={{
+                          padding: '0 16px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          background: '#6366f1',
+                          color: '#fff',
+                          fontWeight: '600',
+                          cursor: couponLoading ? 'wait' : 'pointer',
+                        }}
+                      >
+                        {couponLoading ? 'Checking...' : 'Apply'}
+                      </button>
+                    )}
+                  </div>
+                  {couponMessage && (
+                    <p
+                      style={{
+                        margin: '8px 0 0',
+                        fontSize: '12px',
+                        color: couponMessage.type === 'success' ? '#10b981' : '#ef4444',
+                        fontWeight: '500',
+                      }}
+                    >
+                      {couponMessage.text}
+                    </p>
+                  )}
+                  <div style={{ marginTop: '10px', display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <span style={{ fontSize: '11px', color: '#64748b' }}>Suggested:</span>
+                    {['DELIVEZ10', 'WELCOME50', 'AIRPORT100'].map((code) => (
+                      <button
+                        key={code}
+                        type="button"
+                        onClick={() => handleApplyCoupon(code)}
+                        style={{
+                          border: '1px dashed #cbd5e1',
+                          background: 'transparent',
+                          borderRadius: '4px',
+                          padding: '2px 8px',
+                          fontSize: '11px',
+                          fontWeight: '600',
+                          color: '#475569',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {code}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Price Breakdown */}
                 <div className={styles.fareCard} style={{ marginTop: '20px' }}>
                   <h3 style={{ margin: '0 0 14px', fontSize: '16px' }}>Detailed Fare Breakdown</h3>
@@ -1703,21 +1850,33 @@ export default function LuggageDeliveryBookingPage() {
                         <dd>+₹{quote.weightSurge}</dd>
                       </div>
                     )}
+                    {quote?.airportHandlingFee > 0 && (
+                      <div>
+                        <dt>Airport Terminal Coordination Fee</dt>
+                        <dd>+₹{quote.airportHandlingFee}</dd>
+                      </div>
+                    )}
+                    {quote?.hotelHandlingFee > 0 && (
+                      <div>
+                        <dt>Hotel Concierge Handover Fee</dt>
+                        <dd>+₹{quote.hotelHandlingFee}</dd>
+                      </div>
+                    )}
                     {quote?.protectionsFare > 0 && (
                       <div>
-                        <dt>Luggage Protections ({quote.protectionsList?.length} items)</dt>
+                        <dt>Luggage Protections ({quote.protectionsList?.length || 'selected'} items)</dt>
                         <dd>+₹{quote.protectionsFare}</dd>
                       </div>
                     )}
                     {quote?.addOnsFare > 0 && (
                       <div>
-                        <dt>Add-ons ({quote.addOnsList?.length} selected)</dt>
+                        <dt>Add-ons ({quote.addOnsList?.length || 'selected'} items)</dt>
                         <dd>+₹{quote.addOnsFare}</dd>
                       </div>
                     )}
                     {quote?.assistanceFare > 0 && (
                       <div>
-                        <dt>Airport Assistance ({quote.assistanceList?.length} services)</dt>
+                        <dt>Airport Assistance ({quote.assistanceList?.length || 'selected'} services)</dt>
                         <dd>+₹{quote.assistanceFare}</dd>
                       </div>
                     )}
@@ -1725,6 +1884,12 @@ export default function LuggageDeliveryBookingPage() {
                       <div>
                         <dt>Delivery Speed Surcharge</dt>
                         <dd>+₹{quote.deliverySpeedFare}</dd>
+                      </div>
+                    )}
+                    {quote?.discountAmount > 0 && (
+                      <div style={{ color: '#10b981' }}>
+                        <dt>Promo Discount ({appliedCoupon?.code || quote?.discount?.coupon_code})</dt>
+                        <dd>-₹{quote.discountAmount}</dd>
                       </div>
                     )}
                     <div>

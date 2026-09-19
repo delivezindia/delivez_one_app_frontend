@@ -1,0 +1,737 @@
+{
+  "info": {
+    "name": "Delivez - Luggage Delivery (Local)",
+    "description": "Complete Master Contract Luggage Delivery API collection for Local.\nStrictly adheres to Master Contract JSON. Covers Authentication, Discovery, Quotes for all 7 service types, Coupon validation, Booking creation, Payments, Receipt, and Tracking.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "challengeId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userMobile",
+      "value": "9876543210",
+      "type": "string"
+    },
+    {
+      "key": "booking_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "booking_number",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "order_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "0. Authentication (Get Token)",
+      "item": [
+        {
+          "name": "POST Send Login OTP",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var res = pm.response.json();",
+                  "if (res.data && res.data.challengeId) {",
+                  "  pm.collectionVariables.set('challengeId', res.data.challengeId);",
+                  "  try { pm.environment.set('challengeId', res.data.challengeId); } catch(e) {}",
+                  "  console.log('Saved challengeId:', res.data.challengeId);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"countryCode\": \"+91\",\n  \"mobileNumber\": \"{{userMobile}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST Verify OTP & Extract Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var res = pm.response.json();",
+                  "if (res.data && res.data.accessToken) {",
+                  "  pm.collectionVariables.set('authToken', res.data.accessToken);",
+                  "  try { pm.environment.set('authToken', res.data.accessToken); } catch(e) {}",
+                  "  console.log('Successfully saved authToken!');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"challengeId\": \"{{challengeId}}\",\n  \"otp\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/verify-otp",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "verify-otp"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. Discovery & Catalog",
+      "item": [
+        {
+          "name": "GET Service Options & Catalog",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/luggage-delivery/options",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "luggage-delivery",
+                "options"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Server-Side Quote Engine (All 7 Services)",
+      "item": [
+        {
+          "name": "POST Quote - Home to Airport",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"service_type\": \"home_airport\",\n  \"pickup\": {\n    \"location_type\": \"home\",\n    \"full_address\": \"Flat 402, Sunrise Heights, 12th Main Road, Indiranagar, Bengaluru\",\n    \"landmark\": \"Opposite Metro Pillar 104\",\n    \"city\": \"Bengaluru\",\n    \"state\": \"Karnataka\",\n    \"pincode\": \"560038\",\n    \"latitude\": 12.9784,\n    \"longitude\": 77.6408,\n    \"contact\": {\n      \"full_name\": \"Rahul Sharma\",\n      \"mobile\": \"+919876543210\",\n      \"email\": \"rahul.sharma@example.com\"\n    }\n  },\n  \"delivery\": {\n    \"location_type\": \"airport\",\n    \"full_address\": \"Kempegowda International Airport, Terminal 1 Departure Ramp, Devanahalli, Bengaluru\",\n    \"landmark\": \"Near Pillar 4 Departure Gate\",\n    \"city\": \"Bengaluru\",\n    \"state\": \"Karnataka\",\n    \"pincode\": \"560300\",\n    \"latitude\": 13.1986,\n    \"longitude\": 77.7066,\n    \"contact\": {\n      \"full_name\": \"Rahul Sharma\",\n      \"mobile\": \"+919876543210\",\n      \"email\": \"rahul.sharma@example.com\"\n    },\n    \"airport_specific\": {\n      \"terminal\": \"T1\",\n      \"departure_time\": \"2026-09-19T18:30:00.000Z\",\n      \"flight_number\": \"6E-2041\",\n      \"pnr\": \"AB12CD\",\n      \"airline_name\": \"IndiGo\",\n      \"gate_number\": \"Gate 4\",\n      \"meeting_point\": \"Departure Pillar 4\"\n    }\n  },\n  \"flight_details\": {\n    \"airline_name\": \"IndiGo\",\n    \"flight_number\": \"6E-2041\",\n    \"pnr\": \"AB12CD\",\n    \"departure_time\": \"2026-09-19T18:30:00.000Z\",\n    \"terminal\": \"T1\"\n  },\n  \"luggage_items\": [\n    {\n      \"item_id\": \"item_1\",\n      \"bag_type\": \"large\",\n      \"quantity\": 1,\n      \"declared_weight_kg\": 23,\n      \"dimensions\": {\n        \"length_cm\": 75,\n        \"width_cm\": 50,\n        \"height_cm\": 32\n      },\n      \"is_fragile\": false,\n      \"is_valuable\": false,\n      \"description\": \"Navy blue Samsonite hard trolley with number lock\"\n    },\n    {\n      \"item_id\": \"item_2\",\n      \"bag_type\": \"medium\",\n      \"quantity\": 1,\n      \"declared_weight_kg\": 15,\n      \"dimensions\": {\n        \"length_cm\": 65,\n        \"width_cm\": 42,\n        \"height_cm\": 26\n      },\n      \"is_fragile\": true,\n      \"is_valuable\": true,\n      \"description\": \"Delsey brown spinner with fragile electronics\"\n    }\n  ],\n  \"schedule\": {\n    \"pickup_type\": \"scheduled\",\n    \"pickup_time\": \"2026-09-19T13:00:00.000Z\",\n    \"delivery_speed\": {\n      \"type\": \"standard\",\n      \"label\": \"Standard (3-4 hrs)\"\n    }\n  },\n  \"luggage_protection\": {\n    \"enabled\": true,\n    \"selected_items\": [\n      {\n        \"id\": \"tamper_tag\",\n        \"title\": \"Tamper-proof Tag\",\n        \"price\": 99\n      }\n    ]\n  },\n  \"airport_assistance\": {\n    \"enabled\": true,\n    \"selected_services\": [\n      {\n        \"id\": \"meet_assist\",\n        \"title\": \"Meet & Assist\",\n        \"price\": 499\n      }\n    ]\n  },\n  \"add_ons\": {\n    \"selected_items\": [\n      {\n        \"code\": \"secure_luggage_tag\",\n        \"title\": \"Tamper-evident luggage tag\",\n        \"price\": 29\n      },\n      {\n        \"code\": \"photo_proof_delivery\",\n        \"title\": \"Photo proof of delivery\",\n        \"price\": 19\n      }\n    ]\n  },\n  \"applied_coupon\": {\n    \"code\": \"DELIVEZ10\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/luggage-delivery/bookings/quote",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "luggage-delivery",
+                "bookings",
+                "quote"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST Quote - Airport to Home",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"service_type\": \"airport_home\",\n  \"pickup\": {\n    \"location_type\": \"airport\",\n    \"full_address\": \"Kempegowda International Airport, Terminal 1 Departure Ramp, Devanahalli, Bengaluru\",\n    \"landmark\": \"Near Pillar 4 Departure Gate\",\n    \"city\": \"Bengaluru\",\n    \"state\": \"Karnataka\",\n    \"pincode\": \"560300\",\n    \"latitude\": 13.1986,\n    \"longitude\": 77.7066,\n    \"contact\": {\n      \"full_name\": \"Rahul Sharma\",\n      \"mobile\": \"+919876543210\",\n      \"email\": \"rahul.sharma@example.com\"\n    },\n    \"airport_specific\": {\n      \"terminal\": \"T1\",\n      \"departure_time\": \"2026-09-19T18:30:00.000Z\",\n      \"flight_number\": \"6E-2041\",\n      \"pnr\": \"AB12CD\",\n      \"airline_name\": \"IndiGo\",\n      \"gate_number\": \"Gate 4\",\n      \"meeting_point\": \"Departure Pillar 4\"\n    }\n  },\n  \"delivery\": {\n    \"location_type\": \"home\",\n    \"full_address\": \"Flat 402, Sunrise Heights, 12th Main Road, Indiranagar, Bengaluru\",\n    \"landmark\": \"Opposite Metro Pillar 104\",\n    \"city\": \"Bengaluru\",\n    \"state\": \"Karnataka\",\n    \"pincode\": \"560038\",\n    \"latitude\": 12.9784,\n    \"longitude\": 77.6408,\n    \"contact\": {\n      \"full_name\": \"Rahul Sharma\",\n      \"mobile\": \"+919876543210\",\n      \"email\": \"rahul.sharma@example.com\"\n    }\n  },\n  \"flight_details\": {\n    \"airline_name\": \"IndiGo\",\n    \"flight_number\": \"6E-2041\",\n    \"pnr\": \"AB12CD\",\n    \"departure_time\": \"2026-09-19T18:30:00.000Z\",\n    \"terminal\": \"T1\"\n  },\n  \"luggage_items\": [\n    {\n      \"bag_type\": \"large\",\n      \"quantity\": 2,\n      \"weight_kg\": 20\n    }\n  ],\n  \"schedule\": {\n    \"pickup_time\": \"2026-09-19T14:00:00.000Z\",\n    \"delivery_speed\": {\n      \"type\": \"express\"\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/luggage-delivery/bookings/quote",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "luggage-delivery",
+                "bookings",
+                "quote"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST Quote - Hotel to Airport",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"service_type\": \"hotel_airport\",\n  \"hotel_details\": {\n    \"hotel_name\": \"The Oberoi\",\n    \"room_number\": \"305\",\n    \"guest_name\": \"Rahul Sharma\"\n  },\n  \"luggage_items\": [\n    {\n      \"bag_type\": \"medium\",\n      \"quantity\": 1,\n      \"weight_kg\": 15\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/luggage-delivery/bookings/quote",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "luggage-delivery",
+                "bookings",
+                "quote"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST Quote - Airport to Hotel",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"service_type\": \"airport_hotel\",\n  \"hotel_details\": {\n    \"hotel_name\": \"The Oberoi\",\n    \"room_number\": \"305\",\n    \"guest_name\": \"Rahul Sharma\",\n    \"front_desk_handover\": true\n  },\n  \"luggage_items\": [\n    {\n      \"bag_type\": \"large\",\n      \"quantity\": 1,\n      \"weight_kg\": 22\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/luggage-delivery/bookings/quote",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "luggage-delivery",
+                "bookings",
+                "quote"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST Quote - Hotel to Home",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"service_type\": \"hotel_home\",\n  \"hotel_details\": {\n    \"hotel_name\": \"Taj West End\",\n    \"guest_name\": \"Rahul Sharma\"\n  },\n  \"luggage_items\": [\n    {\n      \"bag_type\": \"medium\",\n      \"quantity\": 2,\n      \"weight_kg\": 14\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/luggage-delivery/bookings/quote",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "luggage-delivery",
+                "bookings",
+                "quote"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST Quote - Home to Hotel",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"service_type\": \"home_hotel\",\n  \"hotel_details\": {\n    \"hotel_name\": \"ITC Gardenia\",\n    \"guest_name\": \"Rahul Sharma\"\n  },\n  \"luggage_items\": [\n    {\n      \"bag_type\": \"small\",\n      \"quantity\": 1,\n      \"weight_kg\": 7\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/luggage-delivery/bookings/quote",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "luggage-delivery",
+                "bookings",
+                "quote"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST Quote - Multi-Stop Route",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"service_type\": \"multi_stop\",\n  \"multi_stops\": [\n    {\n      \"stop_number\": 1,\n      \"full_address\": \"Indiranagar, Bengaluru\",\n      \"action\": \"pickup\"\n    },\n    {\n      \"stop_number\": 2,\n      \"full_address\": \"The Leela Palace, Bengaluru\",\n      \"action\": \"drop\"\n    },\n    {\n      \"stop_number\": 3,\n      \"full_address\": \"KIA Airport T1, Bengaluru\",\n      \"action\": \"drop\"\n    }\n  ],\n  \"luggage_items\": [\n    {\n      \"bag_type\": \"large\",\n      \"quantity\": 2,\n      \"weight_kg\": 20\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/luggage-delivery/bookings/quote",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "luggage-delivery",
+                "bookings",
+                "quote"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Coupon Engine",
+      "item": [
+        {
+          "name": "POST Validate Coupon DELIVEZ10 (10% OFF)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"coupon_code\": \"DELIVEZ10\",\n  \"subtotal\": 1200\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/luggage-delivery/bookings/validate-coupon",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "luggage-delivery",
+                "bookings",
+                "validate-coupon"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST Validate Coupon WELCOME50 (₹50 FLAT)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"coupon_code\": \"WELCOME50\",\n  \"subtotal\": 600\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/luggage-delivery/bookings/validate-coupon",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "luggage-delivery",
+                "bookings",
+                "validate-coupon"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST Validate Coupon AIRPORT100 (₹100 FLAT)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"coupon_code\": \"AIRPORT100\",\n  \"subtotal\": 1000\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/luggage-delivery/bookings/validate-coupon",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "luggage-delivery",
+                "bookings",
+                "validate-coupon"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Booking & Order Lifecycle",
+      "item": [
+        {
+          "name": "POST Create Master Booking (Strict JSON Contract)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data) {",
+                  "  var b = jsonData.data.booking || jsonData.data;",
+                  "  pm.collectionVariables.set('booking_id', b.booking_id || b.id);",
+                  "  pm.collectionVariables.set('booking_number', b.booking_number || b.bookingNumber);",
+                  "  try {",
+                  "    pm.environment.set('booking_id', b.booking_id || b.id);",
+                  "    pm.environment.set('booking_number', b.booking_number || b.bookingNumber);",
+                  "  } catch(e) {}",
+                  "  console.log('Saved booking:', b.booking_number);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "idemp_luggage_{{$timestamp}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"api_version\": \"1.0\",\n  \"client_request_id\": \"req_luggage_blr_001\",\n  \"payment_method\": \"UPI\",\n  \"service\": {\n    \"service_id\": \"home_airport\"\n  },\n  \"route\": {\n    \"route_type\": \"single_trip\"\n  },\n  \"pickup\": {\n    \"location_type\": \"home\",\n    \"full_address\": \"Flat 402, Sunrise Heights, 12th Main Road, Indiranagar, Bengaluru\",\n    \"landmark\": \"Opposite Metro Pillar 104\",\n    \"city\": \"Bengaluru\",\n    \"state\": \"Karnataka\",\n    \"pincode\": \"560038\",\n    \"latitude\": 12.9784,\n    \"longitude\": 77.6408,\n    \"contact\": {\n      \"full_name\": \"Rahul Sharma\",\n      \"mobile\": \"+919876543210\",\n      \"email\": \"rahul.sharma@example.com\"\n    }\n  },\n  \"delivery\": {\n    \"location_type\": \"airport\",\n    \"full_address\": \"Kempegowda International Airport, Terminal 1 Departure Ramp, Devanahalli, Bengaluru\",\n    \"landmark\": \"Near Pillar 4 Departure Gate\",\n    \"city\": \"Bengaluru\",\n    \"state\": \"Karnataka\",\n    \"pincode\": \"560300\",\n    \"latitude\": 13.1986,\n    \"longitude\": 77.7066,\n    \"contact\": {\n      \"full_name\": \"Rahul Sharma\",\n      \"mobile\": \"+919876543210\",\n      \"email\": \"rahul.sharma@example.com\"\n    },\n    \"airport_specific\": {\n      \"terminal\": \"T1\",\n      \"departure_time\": \"2026-09-19T18:30:00.000Z\",\n      \"flight_number\": \"6E-2041\",\n      \"pnr\": \"AB12CD\",\n      \"airline_name\": \"IndiGo\",\n      \"gate_number\": \"Gate 4\",\n      \"meeting_point\": \"Departure Pillar 4\"\n    }\n  },\n  \"flight_details\": {\n    \"airline_name\": \"IndiGo\",\n    \"flight_number\": \"6E-2041\",\n    \"pnr\": \"AB12CD\",\n    \"departure_time\": \"2026-09-19T18:30:00.000Z\",\n    \"terminal\": \"T1\"\n  },\n  \"luggage_items\": [\n    {\n      \"item_id\": \"item_1\",\n      \"bag_type\": \"large\",\n      \"quantity\": 1,\n      \"declared_weight_kg\": 23,\n      \"dimensions\": {\n        \"length_cm\": 75,\n        \"width_cm\": 50,\n        \"height_cm\": 32\n      },\n      \"is_fragile\": false,\n      \"is_valuable\": false,\n      \"description\": \"Navy blue Samsonite hard trolley with number lock\"\n    },\n    {\n      \"item_id\": \"item_2\",\n      \"bag_type\": \"medium\",\n      \"quantity\": 1,\n      \"declared_weight_kg\": 15,\n      \"dimensions\": {\n        \"length_cm\": 65,\n        \"width_cm\": 42,\n        \"height_cm\": 26\n      },\n      \"is_fragile\": true,\n      \"is_valuable\": true,\n      \"description\": \"Delsey brown spinner with fragile electronics\"\n    }\n  ],\n  \"schedule\": {\n    \"pickup_type\": \"scheduled\",\n    \"pickup_time\": \"2026-09-19T13:00:00.000Z\",\n    \"delivery_speed\": {\n      \"type\": \"standard\",\n      \"label\": \"Standard (3-4 hrs)\"\n    }\n  },\n  \"luggage_protection\": {\n    \"enabled\": true,\n    \"selected_items\": [\n      {\n        \"id\": \"tamper_tag\",\n        \"title\": \"Tamper-proof Tag\",\n        \"price\": 99\n      }\n    ]\n  },\n  \"airport_assistance\": {\n    \"enabled\": true,\n    \"selected_services\": [\n      {\n        \"id\": \"meet_assist\",\n        \"title\": \"Meet & Assist\",\n        \"price\": 499\n      }\n    ]\n  },\n  \"add_ons\": {\n    \"selected_items\": [\n      {\n        \"code\": \"secure_luggage_tag\",\n        \"title\": \"Tamper-evident luggage tag\",\n        \"price\": 29\n      },\n      {\n        \"code\": \"photo_proof_delivery\",\n        \"title\": \"Photo proof of delivery\",\n        \"price\": 19\n      }\n    ]\n  },\n  \"applied_coupon\": {\n    \"code\": \"DELIVEZ10\"\n  },\n  \"gst_invoice\": {\n    \"required\": true,\n    \"company_name\": \"TechCorp Global Solutions Pvt Ltd\",\n    \"gstin\": \"29ABCDE1234F1Z5\",\n    \"billing_address\": \"Embassy TechVillage, Bellandur, Bengaluru\",\n    \"state_code\": \"29\"\n  },\n  \"special_instructions\": \"Please call 15 minutes before reaching Indiranagar residence.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/luggage-delivery/bookings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "luggage-delivery",
+                "bookings"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET Booking Details (Master Contract JSON)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/luggage-delivery/bookings/{{booking_id}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "luggage-delivery",
+                "bookings",
+                "{{booking_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET List User Bookings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/luggage-delivery/bookings?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "luggage-delivery",
+                "bookings"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET GST Invoice & Receipt",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/luggage-delivery/bookings/{{booking_id}}/receipt",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "luggage-delivery",
+                "bookings",
+                "{{booking_id}}",
+                "receipt"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST Cancel Booking",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Flight rescheduled by airline\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/luggage-delivery/bookings/{{booking_id}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "luggage-delivery",
+                "bookings",
+                "{{booking_id}}",
+                "cancel"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Payment Gateway Lifecycle",
+      "item": [
+        {
+          "name": "POST Create Payment Order (Gateway Init)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var res = pm.response.json();",
+                  "if (res.data && (res.data.order_id || res.data.gateway_order_id)) {",
+                  "  var oid = res.data.order_id || res.data.gateway_order_id;",
+                  "  pm.collectionVariables.set('order_id', oid);",
+                  "  try { pm.environment.set('order_id', oid); } catch(e) {}",
+                  "  console.log('Saved order_id:', oid);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"booking_id\": \"{{booking_id}}\",\n  \"gateway\": \"razorpay\",\n  \"payment_method\": \"upi\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/luggage-delivery/payments/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "luggage-delivery",
+                "payments",
+                "create"
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST Verify Payment (Gateway Verification)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"booking_id\": \"{{booking_id}}\",\n  \"gateway\": \"razorpay\",\n  \"payment_id\": \"pay_sample_123456\",\n  \"order_id\": \"{{order_id}}\",\n  \"signature\": \"sample_signature_hash\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/luggage-delivery/payments/verify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "luggage-delivery",
+                "payments",
+                "verify"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Tracking & Milestones",
+      "item": [
+        {
+          "name": "GET Live Tracking by Tracking ID / Booking Number",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/luggage-delivery/tracking/{{booking_number}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "luggage-delivery",
+                "tracking",
+                "{{booking_number}}"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

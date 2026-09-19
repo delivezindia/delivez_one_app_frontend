@@ -857,86 +857,220 @@ Fetches everything needed for the home view in a single high-performance payload
 
 ---
 
-### SERVICE FLOW 2: Luggage Delivery (Airport & Hotel)
+### SERVICE FLOW 2: Luggage Delivery (Master Contract Architecture)
 
-Specialized for airport arrival luggage belt collection, terminal handoff, and hotel front desk luggage delivery.
+Dedicated end-to-end booking lifecycle for airport transfers, hotel transfers, home doorsteps, and multi-stop baggage transit.
+This flow strictly enforces the **Master Booking Contract JSON** across all 7 canonical service types:
+- `home_airport` (Home to Airport Terminal)
+- `airport_home` (Airport Terminal to Home)
+- `hotel_airport` (Hotel Front Desk to Airport)
+- `airport_hotel` (Airport Terminal to Hotel)
+- `hotel_home` (Hotel to Home)
+- `home_hotel` (Home to Hotel)
+- `multi_stop` (Multi-stop route up to 5 points)
 
-#### Step 1: Fetch Luggage Options
+#### Mobile Architecture: One Shared Booking State (Draft Pattern)
+The Flutter mobile application maintains **one shared draft state** (`LuggageBookingDraft`) across Steps 1 through 6. Navigating backward or forward never resets or destroys user inputs.
+
+```dart
+// Flutter State Pattern
+final draft = LuggageBookingDraft.initial();
+
+// Step 1: Select Service & Addresses
+draft.serviceType = 'home_airport';
+draft.pickup = LuggageAddressPoint(...);
+draft.delivery = LuggageAddressPoint(...);
+
+// Step 2: Luggage Items & Dimensions
+draft.luggageItems = [
+  LuggageItem(
+    itemId: 'item_1',
+    bagType: 'large',
+    quantity: 1,
+    declaredWeightKg: 23,
+    dimensions: LuggageItemDimensions(lengthCm: 75, widthCm: 50, heightCm: 32),
+  ),
+];
+
+// Step 3: Protections, Add-ons & Airport Assistance
+draft.selectedProtections = [LuggageProtectionItem(id: 'tamper_tag', title: 'Tamper-proof Tag', price: 99)];
+draft.selectedAirportAssistance = [AirportAssistanceItem(id: 'meet_assist', title: 'Meet & Assist', price: 499)];
+draft.selectedAddOns = [LuggageAddOnItem(code: 'secure_luggage_tag', title: 'Tamper tag', price: 29)];
+
+// Step 4: Schedule & Delivery Speed
+draft.schedule = LuggageSchedule(
+  scheduledPickupTime: '2026-09-19T13:00:00.000Z',
+  deliverySpeed: LuggageDeliverySpeed(type: 'standard', label: 'Standard (3-4 hrs)'),
+);
+
+// Step 5: Fetch Server-Side Quote & Apply Coupon
+final quote = await apiClient.getLuggageQuote(draft.toQuotePayload());
+draft.quote = LuggagePricingBreakdown.fromJson(quote['pricing']);
+
+// Validate Coupon
+final couponResult = await apiClient.validateLuggageCoupon('DELIVEZ10', subtotal: draft.quote!.subtotal);
+if (couponResult['valid']) {
+  draft.couponCode = 'DELIVEZ10';
+  // Re-quote with coupon applied
+}
+
+// Step 6: Create Booking & Gateway Payment
+final booking = await apiClient.createLuggageBooking(draft.toBookingCreatePayload());
+final paymentOrder = await apiClient.createLuggagePayment(booking.bookingId, gateway: 'razorpay', paymentMethod: 'upi');
+```
+
+---
+
+#### Step 1: Fetch Luggage Catalog & Service Options
+Fetch real-time service categories, add-ons (tamper tags, sanitization, proof of delivery), protections, airport assistance packages, and payment methods.
 * **Method**: `GET`
 * **Endpoint**: `/luggage-delivery/options`
-* **UI Action**: Renders bag counters (Check-in Bags, Cabin Bags), Airport Terminal lists, Luggage Belt collection option.
+* **Auth**: None
 
-#### Step 2: Calculate Luggage Quote
+---
+
+#### Step 2: Calculate Server-Side Pricing Quote
+Always calculate fares on the server. The client must never calculate its own final charges.
 * **Method**: `POST`
-* **Endpoint**: `/luggage-delivery/quote`
+* **Endpoint**: `/luggage-delivery/bookings/quote`
 * **Request Body**:
 ```json
 {
+  "service_type": "home_airport",
   "pickup": {
-    "addressLine1": "Terminal 2, Kempegowda International Airport",
-    "addressLine2": "Luggage Belt 04",
+    "location_type": "home",
+    "full_address": "Flat 402, Sunrise Heights, Indiranagar, Bengaluru",
     "city": "Bengaluru",
-    "state": "Karnataka",
-    "postalCode": "560300",
-    "latitude": 13.1986,
-    "longitude": 77.7066
+    "pincode": "560038"
   },
-  "dropoff": {
-    "addressLine1": "The Leela Palace, Old Airport Road",
+  "delivery": {
+    "location_type": "airport",
+    "full_address": "Kempegowda International Airport, Terminal 1, Bengaluru",
     "city": "Bengaluru",
-    "state": "Karnataka",
-    "postalCode": "560008",
-    "latitude": 12.9606,
-    "longitude": 77.6484
+    "pincode": "560300"
   },
-  "pickupOption": "luggage_belt",
-  "luggageBelt": "04",
-  "terminal": "T2",
-  "flightNumber": "6E-2041",
-  "luggageList": [
-    { "id": "bag-1", "type": "Check-in Bag", "size": "Large", "weight": 23 },
-    { "id": "bag-2", "type": "Cabin Trolley", "size": "Medium", "weight": 10 }
+  "flight_details": {
+    "airline_name": "IndiGo",
+    "flight_number": "6E-2041",
+    "pnr": "AB12CD",
+    "departure_time": "2026-09-19T18:30:00.000Z",
+    "terminal": "T1"
+  },
+  "luggage_items": [
+    { "bag_type": "large", "quantity": 1, "declared_weight_kg": 23 },
+    { "bag_type": "medium", "quantity": 1, "declared_weight_kg": 15 }
   ],
-  "hotelFrontDeskDrop": true
+  "schedule": {
+    "pickup_time": "2026-09-19T13:00:00.000Z",
+    "delivery_speed": { "type": "standard" }
+  },
+  "add_ons": {
+    "selected_items": [{ "code": "secure_luggage_tag", "price": 29 }]
+  },
+  "luggage_protection": {
+    "enabled": true,
+    "selected_items": [{ "id": "tamper_tag", "price": 99 }]
+  },
+  "airport_assistance": {
+    "enabled": true,
+    "selected_services": [{ "id": "meet_assist", "price": 499 }]
+  },
+  "applied_coupon": {
+    "code": "DELIVEZ10"
+  }
+}
+```
+* **Response Body (Pricing Envelope)**:
+```json
+{
+  "status": "success",
+  "data": {
+    "quote_id": "quote_1726723200",
+    "pricing": {
+      "currency": "INR",
+      "distance_km": 18.4,
+      "base_fare": 499,
+      "distance_fee": 51,
+      "luggage_handling_fee": 100,
+      "airport_handling_fee": 50,
+      "hotel_handling_fee": 0,
+      "delivery_speed_fee": 0,
+      "luggage_protection_fee": 99,
+      "airport_assistance_fee": 499,
+      "add_on_fee": 29,
+      "subtotal": 1327,
+      "tax": {
+        "tax_type": "GST",
+        "tax_rate": 18,
+        "cgst_rate": 9,
+        "sgst_rate": 9,
+        "igst_rate": 0,
+        "cgst_amount": 107.49,
+        "sgst_amount": 107.49,
+        "igst_amount": 0,
+        "total_tax": 214.98
+      },
+      "discount": {
+        "coupon_code": "DELIVEZ10",
+        "discount_type": "percentage",
+        "discount_amount": 132.7
+      },
+      "total_amount": 1409.28
+    },
+    "expires_at": "2026-09-19T11:45:00.000Z"
+  }
 }
 ```
 
-#### Step 3: Create Luggage Booking
+---
+
+#### Step 3: Validate Promo / Coupon Code
+* **Method**: `POST`
+* **Endpoint**: `/luggage-delivery/bookings/validate-coupon`
+* **Request**:
+```json
+{
+  "coupon_code": "DELIVEZ10",
+  "subtotal": 1327
+}
+```
+* **Supported Coupons**:
+  - `DELIVEZ10`: 10% off up to ₹235 (min subtotal ₹499)
+  - `WELCOME50`: Flat ₹50 off (min subtotal ₹399)
+  - `AIRPORT100`: Flat ₹100 off on airport transfers (min subtotal ₹799)
+
+---
+
+#### Step 4: Create Master Luggage Booking
 * **Method**: `POST`
 * **Endpoint**: `/luggage-delivery/bookings`
-* **Headers**: `Authorization: Bearer <accessToken>`
-* **Request Body**:
-```json
-{
-  "pickup": {
-    "contactName": "Vikram Malhotra",
-    "phoneNumber": "+919876543212",
-    "addressLine1": "Terminal 2, Kempegowda International Airport",
-    "addressLine2": "Belt 04, International Arrival",
-    "city": "Bengaluru",
-    "state": "Karnataka",
-    "postalCode": "560300"
-  },
-  "dropoff": {
-    "contactName": "Vikram Malhotra (Front Desk)",
-    "phoneNumber": "+919876543212",
-    "addressLine1": "The Leela Palace, 23 Old Airport Road",
-    "addressLine2": "Leave with Reception under guest Vikram Malhotra",
-    "city": "Bengaluru",
-    "state": "Karnataka",
-    "postalCode": "560008"
-  },
-  "pickupOption": "luggage_belt",
-  "flightNumber": "6E-2041",
-  "terminal": "T2",
-  "luggageBelt": "04",
-  "luggageList": [
-    { "type": "Check-in Bag", "size": "Large", "weight": 23, "tagNumber": "BLR-6E-9941" }
-  ],
-  "hotelFrontDeskDrop": true,
-  "paymentMethod": "UPI"
-}
-```
+* **Headers**: `Authorization: Bearer <token>`, `Idempotency-Key: <uuid>`
+* **Response**: Returns the complete **MASTER BOOKING CONTRACT JSON** with `booking_id`, `booking_number`, `timeline`, `pricing`, `gst_invoice`, and `payment`.
+
+---
+
+#### Step 5: Payment Gateway Integration
+* **Create Payment Order**: `POST /luggage-delivery/payments/create`
+  ```json
+  { "booking_id": "booking_id_or_number", "gateway": "razorpay", "payment_method": "upi" }
+  ```
+* **Verify Payment**: `POST /luggage-delivery/payments/verify`
+  ```json
+  {
+    "booking_id": "booking_id",
+    "gateway": "razorpay",
+    "payment_id": "pay_123456",
+    "order_id": "order_789012",
+    "signature": "razorpay_signature"
+  }
+  ```
+
+---
+
+#### Step 6: Receipts & Tracking
+* **Tax Invoice / Receipt**: `GET /luggage-delivery/bookings/:id/receipt`
+* **Real-Time Tracking**: `GET /luggage-delivery/tracking/:trackingId`
+* **Cancel Booking**: `POST /luggage-delivery/bookings/:id/cancel`
 
 ---
 

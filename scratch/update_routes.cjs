@@ -1,38 +1,70 @@
 const fs = require('fs');
-const routesPath = 'C:/Users/Rax/Desktop/Delivery_app_site_backend/src/routes.ts';
-let routes = fs.readFileSync(routesPath, 'utf8');
+const path = require('path');
 
-// 1. Add imports if not present
-if (!routes.includes('courierDeliveryDispatcherRouter')) {
-  routes = `import { courierDeliveryDispatcherRouter } from './modules/confidential-courier/courier-delivery-dispatcher.router.js';\nimport { vaultCourierRouter } from './modules/confidential-courier/vault-courier.routes.js';\n` + routes;
-}
+const routesPath = 'C:/Users/Rax/Desktop/Delivery_app_site_backend/src/modules/luggage-delivery/luggage-delivery.routes.ts';
 
-// 2. Replace the route bindings for courier-delivery and confidential
-routes = routes.replace(
-  "apiRouter.use('/courier-delivery', personalCourierRouter);",
-  "apiRouter.use('/courier-delivery', courierDeliveryDispatcherRouter);"
-);
+const content = `// luggage-delivery.routes.ts
+import { Router } from 'express';
+import { authenticate } from '../../middleware/auth.middleware.js';
+import { requireUser } from '../../middleware/user.middleware.js';
+import {
+  getLuggageDeliveryOptionsHandler,
+  getLuggageDeliveryQuoteHandler,
+  validateCouponHandler,
+  createLuggageDeliveryBookingHandler,
+  listLuggageDeliveryBookingsHandler,
+  getLuggageDeliveryBookingDetailsHandler,
+  getLuggageDeliveryReceiptHandler,
+  getLuggageDeliveryPaymentHandler,
+  getLuggageDeliveryTrackingHandler,
+  createLuggagePaymentHandler,
+  verifyLuggagePaymentHandler,
+  verifyLuggageDeliveryOtpHandler,
+  submitLuggageDeliveryPodHandler,
+  advanceLuggageDeliveryMilestoneHandler,
+  cancelLuggageDeliveryBookingHandler,
+  processLuggageDeliverySandboxPaymentHandler,
+} from './luggage-delivery.controller.js';
 
-if (!routes.includes("apiRouter.use('/confidential-delivery', vaultCourierRouter);")) {
-  routes = routes.replace(
-    "apiRouter.use('/confidential-delivery', confidentialDeliveryRouter);",
-    "apiRouter.use('/confidential-delivery', vaultCourierRouter);\napiRouter.use('/confidential-delivery', confidentialDeliveryRouter);"
-  );
-}
+export const luggageDeliveryRouter = Router();
 
-if (!routes.includes("apiRouter.use('/confidential-courier', vaultCourierRouter);")) {
-  routes = routes.replace(
-    "apiRouter.use('/confidential-courier', confidentialCourierRouter);",
-    "apiRouter.use('/confidential-courier', vaultCourierRouter);\napiRouter.use('/confidential-courier', confidentialCourierRouter);"
-  );
-}
+// 1. Discovery, Quote & Coupon endpoints
+luggageDeliveryRouter.get('/options', getLuggageDeliveryOptionsHandler);
+luggageDeliveryRouter.post('/quote', getLuggageDeliveryQuoteHandler);
+luggageDeliveryRouter.post('/bookings/quote', getLuggageDeliveryQuoteHandler);
+luggageDeliveryRouter.post('/validate-coupon', validateCouponHandler);
+luggageDeliveryRouter.post('/bookings/validate-coupon', validateCouponHandler);
 
-if (!routes.includes("apiRouter.use('/vault', vaultCourierRouter);")) {
-  routes = routes.replace(
-    "apiRouter.use('/vault', confidentialDeliveryRouter);",
-    "apiRouter.use('/vault', vaultCourierRouter);\napiRouter.use('/vault', confidentialDeliveryRouter);"
-  );
-}
+// 2. Tracking endpoints
+luggageDeliveryRouter.get('/tracking/:trackingId', getLuggageDeliveryTrackingHandler);
+luggageDeliveryRouter.get('/track/:trackingId', getLuggageDeliveryTrackingHandler);
 
-fs.writeFileSync(routesPath, routes, 'utf8');
-console.log('Successfully updated backend routes.ts');
+// 3. Authenticated Booking lifecycle endpoints
+luggageDeliveryRouter.post('/bookings', authenticate, requireUser, createLuggageDeliveryBookingHandler);
+luggageDeliveryRouter.get('/bookings', authenticate, requireUser, listLuggageDeliveryBookingsHandler);
+luggageDeliveryRouter.get('/bookings/:id', authenticate, requireUser, getLuggageDeliveryBookingDetailsHandler);
+luggageDeliveryRouter.get('/bookings/:id/receipt', authenticate, requireUser, getLuggageDeliveryReceiptHandler);
+luggageDeliveryRouter.get('/bookings/:id/payment', authenticate, requireUser, getLuggageDeliveryPaymentHandler);
+luggageDeliveryRouter.get('/bookings/:id/tracking', getLuggageDeliveryTrackingHandler);
+luggageDeliveryRouter.post('/bookings/:id/cancel', authenticate, requireUser, cancelLuggageDeliveryBookingHandler);
+
+// 4. Payment endpoints (Production gateway create/verify & sandbox)
+luggageDeliveryRouter.post('/payments/create', authenticate, requireUser, createLuggagePaymentHandler);
+luggageDeliveryRouter.post('/payments/verify', authenticate, requireUser, verifyLuggagePaymentHandler);
+luggageDeliveryRouter.post('/bookings/:id/payments/create', authenticate, requireUser, createLuggagePaymentHandler);
+luggageDeliveryRouter.post('/bookings/:id/payments/verify', authenticate, requireUser, verifyLuggagePaymentHandler);
+luggageDeliveryRouter.post('/bookings/:id/pay', processLuggageDeliverySandboxPaymentHandler);
+luggageDeliveryRouter.post('/bookings/:id/payments/sandbox', processLuggageDeliverySandboxPaymentHandler);
+
+// 5. Delivery milestone, OTP, and POD endpoints
+luggageDeliveryRouter.post('/bookings/:id/verify-otp', verifyLuggageDeliveryOtpHandler);
+luggageDeliveryRouter.post('/bookings/:id/pod', submitLuggageDeliveryPodHandler);
+luggageDeliveryRouter.post('/bookings/:id/advance-milestone', advanceLuggageDeliveryMilestoneHandler);
+
+// 6. Top level aliases
+luggageDeliveryRouter.get('/:id', getLuggageDeliveryBookingDetailsHandler);
+luggageDeliveryRouter.get('/:id/receipt', getLuggageDeliveryReceiptHandler);
+`;
+
+fs.writeFileSync(routesPath, content, 'utf8');
+console.log('Successfully updated luggage-delivery.routes.ts');
