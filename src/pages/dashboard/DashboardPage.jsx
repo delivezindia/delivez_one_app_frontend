@@ -350,6 +350,7 @@ export default function DashboardPage() {
       fromTab: currentOriginTab,
     })
     navigateTo(`/admin/orders/${sKey}/${encodeURIComponent(id)}`)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const handleBackFromOrderDetail = (targetTab) => {
@@ -357,6 +358,7 @@ export default function DashboardPage() {
     setViewingOrder(null)
     setActiveNav(tabToReturn)
     navigateTo(`/admin/dashboard?tab=${tabToReturn}`)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   // Dashboard Stats update timing tracking
@@ -1188,6 +1190,7 @@ export default function DashboardPage() {
                     <h4>Lifetime Bookings ({
                       (customerDetails?.giftDeliveryBookings?.length || 0) +
                       (customerDetails?.courierBookings?.length || 0) +
+                      (customerDetails?.luggageDeliveryBookings?.length || 0) +
                       (customerDetails?.confidentialCourierBookings?.length || 0) +
                       (customerDetails?.forgotSomethingBookings?.length || 0) +
                       (customerDetails?.returnPickupBookings?.length || 0)
@@ -1237,6 +1240,28 @@ export default function DashboardPage() {
                             <div style={{ textAlign: 'right' }}>
                               <strong>₹{c.totalAmount}</strong>
                               <small style={{ display: 'block', color: '#64748B' }}>{c.status}</small>
+                            </div>
+                          </div>
+                        ))}
+
+                        {(customerDetails?.luggageDeliveryBookings || []).map(lg => (
+                          <div
+                            key={lg.id}
+                            className={styles.orderHistoryItem}
+                            style={{ cursor: 'pointer' }}
+                            onClick={() => {
+                              setSelectedCustomer(null)
+                              handleOpenOrderDetail(lg, 'luggage-delivery')
+                            }}
+                            title="Open Single Order Details"
+                          >
+                            <div>
+                              <strong style={{ color: '#D97706', display: 'block' }}>Luggage: #{lg.bookingNumber}</strong>
+                              <small>{(lg.serviceId || 'Airport Luggage').replace(/_/g, ' ')}</small>
+                            </div>
+                            <div style={{ textAlign: 'right' }}>
+                              <strong>₹{lg.totalAmount}</strong>
+                              <small style={{ display: 'block', color: '#64748B' }}>{lg.status}</small>
                             </div>
                           </div>
                         ))}

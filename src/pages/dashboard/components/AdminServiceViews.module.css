@@ -187,8 +187,11 @@
 .modalOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.4);
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(3px);
   z-index: 100;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .drawer {
@@ -197,13 +200,39 @@
   right: 0;
   bottom: 0;
   width: 100%;
-  max-width: 400px;
+  max-width: 640px;
   background: #FFFFFF;
-  padding: 24px;
-  box-shadow: -4px 0 24px rgba(0,0,0,0.15);
+  box-shadow: -6px 0 30px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  z-index: 101;
+  overflow: hidden;
+  animation: slideInRight 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.vaultDrawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  max-width: 680px;
+  background: #FFFFFF;
+  box-shadow: -6px 0 30px rgba(0, 0, 0, 0.22);
+  display: flex;
+  flex-direction: column;
+  z-index: 101;
+  overflow: hidden;
+  animation: slideInRight 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
 }
 
 .drawerHead {
@@ -211,7 +240,10 @@
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid #E2E8F0;
-  padding-bottom: 12px;
+  padding: 18px 24px;
+  background: #FFFFFF;
+  flex-shrink: 0;
+  z-index: 2;
 }
 
 .drawerHead h3 { margin: 0; font-size: 16px; }
@@ -220,8 +252,30 @@
 .drawerBody {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   font-size: 13px;
+  padding: 20px 24px 60px;
+  overflow-y: auto !important;
+  overflow-x: hidden;
+  flex: 1;
+  min-height: 0;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.drawerBody::-webkit-scrollbar {
+  width: 6px;
+}
+.drawerBody::-webkit-scrollbar-track {
+  background: transparent;
+}
+.drawerBody::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 6px;
+}
+.drawerBody::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8;
 }
 
 .supportGrid {

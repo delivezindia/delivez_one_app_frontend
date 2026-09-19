@@ -132,6 +132,52 @@ export async function fetchAdminAnalytics({ signal } = {}) {
 }
 
 
+export async function fetchAdminLuggageBookings(params = {}, { signal } = {}) {
+  const accessToken = requireAdminToken()
+  const query = new URLSearchParams()
+  Object.entries(params).forEach(([k, v]) => { if (v) query.append(k, v) })
+  try {
+    const res = await apiRequest(`/admin/luggage/bookings?${query.toString()}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      signal,
+    })
+    return res?.data
+  } catch (error) {
+    handleAuthenticationError(error)
+  }
+}
+
+export async function fetchAdminLuggageBookingById(id, { signal } = {}) {
+  const accessToken = requireAdminToken()
+  try {
+    const res = await apiRequest(`/admin/luggage/bookings/${encodeURIComponent(id)}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      signal,
+    })
+    return res?.data?.booking
+  } catch (error) {
+    handleAuthenticationError(error)
+  }
+}
+
+export async function updateAdminLuggageStatus(id, status, metadata = {}) {
+  const accessToken = requireAdminToken()
+  const payload = buildStatusTimingPayload(status, metadata)
+  try {
+    const res = await apiRequest(`/admin/luggage/bookings/${id}/status`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    })
+    return res?.data?.booking
+  } catch (error) {
+    handleAuthenticationError(error)
+  }
+}
+
 export async function fetchAdminConfidentialBookings(params = {}, { signal } = {}) {
   const accessToken = requireAdminToken()
   const query = new URLSearchParams()
@@ -1002,10 +1048,26 @@ export async function fetchAdminOrderFullDetails(serviceKey, orderId, { signal }
         detailedData = { ...res.data.order, serviceKey: 'gift-delivery', serviceName: 'Gift & Surprise Delivery' }
       }
     } else if (
+      sKey === 'luggage-delivery' ||
+      sKey === 'airport-luggage' ||
+      sKey === 'luggage' ||
+      String(orderId).startsWith('DLVZ')
+    ) {
+      const res = await apiRequest(`/admin/luggage/bookings/${encodeURIComponent(orderId)}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        signal,
+      })
+      if (res?.data?.booking) {
+        detailedData = {
+          ...res.data.booking,
+          serviceKey: 'luggage-delivery',
+          serviceName: 'Luggage Delivery',
+        }
+      }
+    } else if (
       sKey === 'personal-courier' ||
       sKey === 'courier-delivery' ||
-      sKey === 'luggage-delivery' ||
-      sKey === 'airport-luggage'
+      sKey === 'courier'
     ) {
       const res = await apiRequest(`/admin/courier/bookings/${encodeURIComponent(orderId)}`, {
         headers: { Authorization: `Bearer ${accessToken}` },
@@ -1014,14 +1076,15 @@ export async function fetchAdminOrderFullDetails(serviceKey, orderId, { signal }
       if (res?.data?.booking) {
         detailedData = {
           ...res.data.booking,
-          serviceKey: sKey.includes('luggage') ? 'luggage-delivery' : 'personal-courier',
-          serviceName: sKey.includes('luggage') ? 'Luggage Delivery' : 'Personal Courier',
+          serviceKey: 'personal-courier',
+          serviceName: 'Personal Courier',
         }
       }
     } else if (
       sKey === 'confidential-delivery' ||
       sKey === 'confidential-courier' ||
       sKey === 'vault' ||
+      String(orderId).startsWith('CV') ||
       String(orderId).startsWith('DV') ||
       String(orderId).includes('VAULT') ||
       String(orderId).startsWith('DLZ-VLT')

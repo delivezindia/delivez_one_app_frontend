@@ -51,6 +51,10 @@ import {
   Repeat,
   ShieldAlert,
   Share2,
+  Key,
+  FileSpreadsheet,
+  Paperclip,
+  CheckSquare,
 } from 'lucide-react'
 import {
   fetchAdminOrderFullDetails,
@@ -62,15 +66,16 @@ import {
   saveAdminOrderNote,
   updateAdminCourierStatus,
   updateAdminConfidentialStatus,
+  updateAdminLuggageStatus,
   updateAdminForgotStatus,
   updateAdminReturnStatus,
   recordOrderStatusTimingApi,
   updateOrderStatusByOrderId,
-  cancelOrderByOrderId
+  cancelOrderByOrderId,
 } from '@/features/admin-management/services/adminManagementService.js'
 import {
   updateAdminGiftOrderStatus,
-  cancelAdminGiftOrder
+  cancelAdminGiftOrder,
 } from '@/features/admin-gift-delivery/services/adminGiftDeliveryService.js'
 import styles from './AdminOrderDetailView.module.css'
 
@@ -90,9 +95,9 @@ export function resolveVaultOrderService(order) {
   if (!order) return VAULT_SERVICES_ORDER_MAP.VAULT_SECURE
   const sKey = String(order.vaultServiceKey || '').toUpperCase()
   if (VAULT_SERVICES_ORDER_MAP[sKey]) return VAULT_SERVICES_ORDER_MAP[sKey]
-
-  const sType = String(order.serviceType || '').toLowerCase()
+  const sType = String(order.serviceType || order.vaultServiceType || '').toLowerCase()
   const desc = String(order.documentDescription || '').toLowerCase()
+
   if (sType.includes('multipoint') || desc.includes('multipoint')) return VAULT_SERVICES_ORDER_MAP.VAULT_MULTIPOINT
   if (sType.includes('critical') || desc.includes('critical') || desc.includes('armed')) return VAULT_SERVICES_ORDER_MAP.VAULT_CRITICAL
   if (sType.includes('exchange') || desc.includes('exchange')) return VAULT_SERVICES_ORDER_MAP.VAULT_EXCHANGE
@@ -105,17 +110,15 @@ export function resolveVaultOrderService(order) {
 }
 
 const SERVICE_META = {
-  'courier-delivery': { label: 'Personal Courier', icon: Truck, color: '#087fc1', bg: '#e9f6ff' },
-  'personal-courier': { label: 'Personal Courier', icon: Truck, color: '#087fc1', bg: '#e9f6ff' },
+  'gift-delivery': { label: 'Gift & Surprise Delivery', icon: Gift, color: '#e11d48', bg: '#ffe4e6' },
+  'personal-courier': { label: 'Personal Courier', icon: Truck, color: '#2563eb', bg: '#eff6ff' },
+  'courier-delivery': { label: 'Personal Courier', icon: Truck, color: '#2563eb', bg: '#eff6ff' },
   'luggage-delivery': { label: 'Luggage Delivery', icon: Luggage, color: '#d97706', bg: '#fef3c7' },
   'airport-luggage': { label: 'Luggage Delivery', icon: Luggage, color: '#d97706', bg: '#fef3c7' },
   'confidential-delivery': { label: 'Delivez Vault (Confidential)', icon: ShieldCheck, color: '#dc2626', bg: '#fef2f2' },
   'confidential-courier': { label: 'Delivez Vault (Confidential)', icon: ShieldCheck, color: '#dc2626', bg: '#fef2f2' },
-  'forgot-something': { label: 'Forgot Something Retrieval', icon: ShoppingBag, color: '#7c3aed', bg: '#f5f3ff' },
-  'return-pickup': { label: 'Return & Exchange Pickup', icon: RotateCcw, color: '#059669', bg: '#ecfdf5' },
-  'personal-return-pickup': { label: 'Return & Exchange Pickup', icon: RotateCcw, color: '#059669', bg: '#ecfdf5' },
-  'gift-delivery': { label: 'Gift & Surprise Delivery', icon: Gift, color: '#ef4444', bg: '#fef2f2' },
-  'gift-and-surprise': { label: 'Gift & Surprise Delivery', icon: Gift, color: '#ef4444', bg: '#fef2f2' },
+  'forgot-something': { label: 'Forgot Something', icon: ShoppingBag, color: '#7c3aed', bg: '#f5f3ff' },
+  'return-pickup': { label: 'Return Pickup', icon: RotateCcw, color: '#059669', bg: '#ecfdf5' },
 }
 
 const LIFECYCLE_STEPS = [
@@ -127,7 +130,6 @@ const LIFECYCLE_STEPS = [
   { key: 'DELIVERED', label: 'Delivered' },
 ]
 
-// Timing formatters
 function formatTiming(isoString) {
   if (!isoString) return '—'
   const date = new Date(isoString)
@@ -154,7 +156,6 @@ function formatCompactTiming(isoString) {
   })
 }
 
-// Local persistent timing storage
 function getStoredTimings(id) {
   if (!id) return {}
   try {
@@ -179,69 +180,74 @@ function saveStoredTimings(id, timingsObj, historyArray) {
 }
 
 export default function AdminOrderDetailView({
-  orderId,
-  serviceKey,
-  initialOrder = null,
-  fromTab = null,
-  onBack = () => {},
-  onNavigate = null,
+  order: initialOrder,
+  orderId: propOrderId,
+  serviceKey: propServiceKey,
+  onBack,
+  onNavigate,
+  fromTab,
 }) {
-  const [order, setOrder] = useState(initialOrder)
+  const rawId = initialOrder?.id || initialOrder?.bookingNumber || propOrderId
+  const orderId = rawId
+  const serviceKey = propServiceKey || initialOrder?.serviceKey || 'courier-delivery'
+
+  const [order, setOrder] = useState(initialOrder || null)
   const [loading, setLoading] = useState(!initialOrder)
   const [refreshing, setRefreshing] = useState(false)
   const [toast, setToast] = useState('')
-  const [copied, setCopied] = useState(false)
-
-  // Normalized Booking Number & Order ID
-  const bookingNumber = order?.bookingNumber || order?.orderNumber || order?.id || orderId
-  const rawId = order?.id || orderId
-
-  // Fleet Partners & Assign Modal
+  const [copied, setCopied] = useState('')
   const [partners, setPartners] = useState([])
   const [assignModalOpen, setAssignModalOpen] = useState(false)
   const [selectedPartnerId, setSelectedPartnerId] = useState('')
   const [assigning, setAssigning] = useState(false)
   const [autoAssigning, setAutoAssigning] = useState(false)
-
-  // Dispatcher Notes
   const [newNote, setNewNote] = useState('')
   const [notesList, setNotesList] = useState([])
 
-  // Status Change Timings & Audit History
+  const bookingNumber = order?.bookingNumber || initialOrder?.bookingNumber || orderId
+
+  // Live status timing tracking
   const [statusTimings, setStatusTimings] = useState(() => {
-    const rawKey = order?.id || orderId
-    const stored = getStoredTimings(rawKey) || getStoredTimings(order?.bookingNumber)
-    const initialTimestamps = order?.statusTimestamps || {}
-    const created = order?.createdAt || stored.CONFIRMED || new Date().toISOString()
+    const fromOrder = order?.statusTimestamps || {}
+    const stored = getStoredTimings(rawId) || getStoredTimings(bookingNumber)
     return {
-      CONFIRMED: created,
+      CONFIRMED: order?.createdAt || stored.CONFIRMED || new Date().toISOString(),
       ...stored,
-      ...initialTimestamps,
+      ...fromOrder,
     }
   })
 
+  // Status audit history list
   const [statusHistory, setStatusHistory] = useState(() => {
-    const rawKey = order?.id || orderId
-    const stored = getStoredTimings(rawKey) || getStoredTimings(order?.bookingNumber)
-    if (Array.isArray(stored.history) && stored.history.length > 0) {
-      return stored.history
-    }
     if (Array.isArray(order?.statusHistory) && order.statusHistory.length > 0) {
       return order.statusHistory
     }
+    const stored = getStoredTimings(rawId) || getStoredTimings(bookingNumber)
+    if (Array.isArray(stored?.history)) {
+      return stored.history
+    }
     return [
       {
-        status: 'CONFIRMED',
+        status: order?.status || 'CONFIRMED',
         timestamp: order?.createdAt || new Date().toISOString(),
-        actor: 'Customer Checkout',
-        note: 'Order consignment placed and initial booking confirmed.'
-      }
+        actor: 'System Inception',
+        note: 'Consignment booking created in PostgreSQL database',
+      },
     ]
   })
 
   const showToast = (msg) => {
     setToast(msg)
     setTimeout(() => setToast(''), 4000)
+  }
+
+  const handleCopyId = (val, key = 'id') => {
+    const textToCopy = val || bookingNumber
+    if (!textToCopy) return
+    navigator.clipboard.writeText(String(textToCopy))
+    setCopied(key)
+    showToast(`Copied ${textToCopy} to clipboard`)
+    setTimeout(() => setCopied(''), 2000)
   }
 
   // Load Order Details
@@ -289,15 +295,6 @@ export default function AdminOrderDetailView({
   }
   const ServiceIcon = sMeta.icon
 
-  // Copy booking number
-  const handleCopyId = () => {
-    if (!bookingNumber) return
-    navigator.clipboard.writeText(bookingNumber)
-    setCopied(true)
-    showToast(`Copied ${bookingNumber} to clipboard`)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
   // Handle Status Update
   const handleStatusUpdate = async (newStatus) => {
     try {
@@ -307,7 +304,7 @@ export default function AdminOrderDetailView({
         status: newStatus,
         timestamp: nowIso,
         actor: 'Admin Dispatcher',
-        note: `Operational status manually marked as ${newStatus}`
+        note: `Consignment operational status updated to ${newStatus}`,
       }
       const newHistoryList = [newHistoryItem, ...statusHistory]
 
@@ -315,17 +312,27 @@ export default function AdminOrderDetailView({
         serviceKey: sKey,
         status: newStatus,
         timestamp: nowIso,
+        statusChangedAt: nowIso,
         statusTimestamps: newTimingMap,
         statusHistory: newHistoryList,
-        statusChangedAt: nowIso,
-        updatedAt: nowIso,
-        notes: `Operational status manually marked as ${newStatus}`,
-        note: `Operational status manually marked as ${newStatus}`,
-        actor: 'Admin Dispatcher',
+        notes: `Operational status updated to ${newStatus}`,
       }
 
-      // Universal API status change with orderId
-      await updateOrderStatusByOrderId(rawId, newStatus, timingPayload)
+      if (sKey === 'gift-delivery' || sKey === 'gift-and-surprise') {
+        await updateAdminGiftOrderStatus(rawId, newStatus)
+      } else if (sKey === 'luggage-delivery' || sKey === 'airport-luggage' || sKey === 'luggage' || String(bookingNumber).startsWith('DLVZ')) {
+        await updateAdminLuggageStatus(rawId, newStatus, timingPayload)
+      } else if (sKey === 'confidential-delivery' || sKey === 'confidential-courier' || sKey === 'vault' || String(bookingNumber).startsWith('CV') || String(bookingNumber).startsWith('DV')) {
+        await updateAdminConfidentialStatus(rawId, newStatus, timingPayload)
+      } else if (sKey === 'forgot-something' || sKey === 'forgot') {
+        await updateAdminForgotStatus(rawId, newStatus, timingPayload)
+      } else if (sKey === 'return-pickup' || sKey === 'returns') {
+        await updateAdminReturnStatus(rawId, newStatus, timingPayload)
+      } else if (sKey === 'personal-courier' || sKey === 'courier-delivery' || sKey === 'courier') {
+        await updateAdminCourierStatus(rawId, newStatus, timingPayload)
+      } else {
+        await updateOrderStatusUnified(sKey, rawId, newStatus, timingPayload)
+      }
 
       setStatusTimings(newTimingMap)
       setStatusHistory(newHistoryList)
@@ -338,28 +345,19 @@ export default function AdminOrderDetailView({
         statusTimestamps: newTimingMap,
         statusHistory: newHistoryList,
       }))
-      showToast(`Consignment #${bookingNumber} marked as ${newStatus}`)
-
-      // Add to internal audit notes
-      setNotesList((prev) => [
-        {
-          note: `Operational status manually updated to ${newStatus} by Dispatcher at ${formatTiming(nowIso)}.`,
-          timestamp: nowIso,
-          by: 'Admin Dispatcher',
-        },
-        ...prev,
-      ])
+      showToast(`Consignment status updated to ${newStatus}`)
     } catch (err) {
       alert(err.message || 'Failed to update order status.')
     }
   }
 
   // Handle Assign Partner
-  const handleConfirmAssign = async () => {
-    if (!selectedPartnerId) return
+  const handleAssignPartner = async () => {
+    if (!selectedPartnerId) {
+      alert('Please select a verified partner rider.')
+      return
+    }
     const partner = partners.find((p) => p.id === selectedPartnerId)
-    if (!partner) return
-
     setAssigning(true)
     try {
       const nowIso = new Date().toISOString()
@@ -367,63 +365,51 @@ export default function AdminOrderDetailView({
       const newHistoryItem = {
         status: 'AGENT_ASSIGNED',
         timestamp: nowIso,
-        actor: 'Fleet Manager',
-        note: `Assigned rider ${partner.name} (${partner.vehicle} • ${partner.phone})`
+        actor: 'Admin Dispatcher',
+        note: `Allocated to courier executive: ${partner?.name || partner?.fullName || 'Verified Rider'}`,
       }
       const newHistoryList = [newHistoryItem, ...statusHistory]
 
       const timingPayload = {
-        partnerId: partner.id,
-        partnerName: partner.name,
-        partnerPhone: partner.phone,
-        partnerVehicle: partner.vehicle,
-        assignedAt: nowIso,
-        timestamp: nowIso,
+        partnerId: selectedPartnerId,
+        partnerName: partner?.name || partner?.fullName || 'Allocated Partner',
+        partnerPhone: partner?.phone || partner?.mobileNumber || '+91 98765 43210',
+        partnerVehicle: partner?.vehicle || 'Delivery Van KA-01-EA-5542',
+        status: 'AGENT_ASSIGNED',
         statusTimestamps: newTimingMap,
         statusHistory: newHistoryList,
-        statusChangedAt: nowIso,
-        updatedAt: nowIso,
+        timestamp: nowIso,
+        actor: 'Admin Dispatcher',
+        note: `Manually dispatched verified partner ${partner?.name || partner?.fullName}`,
       }
 
-      await assignPartnerToOrder(sKey, rawId, timingPayload, timingPayload)
-      recordOrderStatusTimingApi(sKey, rawId, 'AGENT_ASSIGNED', timingPayload).catch(() => {})
-      saveAdminOrderNote(sKey, rawId, `Assigned partner ${partner.name} (${partner.phone})`, timingPayload).catch(() => {})
+      await assignPartnerToOrder(sKey, rawId, partner || {}, timingPayload)
 
       setStatusTimings(newTimingMap)
       setStatusHistory(newHistoryList)
       saveStoredTimings(rawId, newTimingMap, newHistoryList)
       saveStoredTimings(bookingNumber, newTimingMap, newHistoryList)
 
-      const updatedInfo = {
-        assignedPartner: partner.name,
-        partnerPhone: partner.phone,
-        partnerVehicle: partner.vehicle,
-        status: order?.status === 'CONFIRMED' ? 'AGENT_ASSIGNED' : order?.status,
+      setOrder((prev) => ({
+        ...prev,
+        assignedPartner: partner?.name || partner?.fullName || 'Allocated Partner',
+        partnerPhone: partner?.phone || partner?.mobileNumber,
+        partnerVehicle: partner?.vehicle,
+        status: 'AGENT_ASSIGNED',
         statusTimestamps: newTimingMap,
         statusHistory: newHistoryList,
-      }
+      }))
 
-      setOrder((prev) => ({ ...prev, ...updatedInfo }))
-      showToast(`Assigned ${partner.name} to order #${bookingNumber}`)
       setAssignModalOpen(false)
-      setSelectedPartnerId('')
-
-      setNotesList((prev) => [
-        {
-          note: `Assigned delivery partner ${partner.name} (${partner.vehicle} • ${partner.phone}) at ${formatTiming(nowIso)}`,
-          timestamp: nowIso,
-          by: 'Fleet Manager',
-        },
-        ...prev,
-      ])
+      showToast(`Assigned partner ${partner?.name || partner?.fullName} to order #${bookingNumber}`)
     } catch (err) {
-      alert(err.message || 'Failed to assign rider.')
+      alert(err.message || 'Failed to assign delivery partner.')
     } finally {
       setAssigning(false)
     }
   }
 
-  // Handle Auto-Assign
+  // Handle Smart Auto Assign
   const handleAutoAssign = async () => {
     setAutoAssigning(true)
     try {
@@ -433,30 +419,29 @@ export default function AdminOrderDetailView({
         status: 'AGENT_ASSIGNED',
         timestamp: nowIso,
         actor: 'Smart Auto-Dispatch Engine',
-        note: 'Auto-dispatched nearest verified rider'
+        note: 'Auto-dispatched nearest verified fleet partner via GPS routing',
       }
       const newHistoryList = [newHistoryItem, ...statusHistory]
 
       const timingPayload = {
+        status: 'AGENT_ASSIGNED',
         timestamp: nowIso,
-        assignedAt: nowIso,
-        statusChangedAt: nowIso,
+        actor: 'Smart Auto-Dispatch Engine',
         statusTimestamps: newTimingMap,
         statusHistory: newHistoryList,
       }
 
-      const data = await autoAssignOrderUnified(sKey, rawId, timingPayload)
+      const res = await autoAssignOrderUnified(sKey, rawId, timingPayload)
+      const data = res?.data || {}
+
       const updated = {
-        assignedPartner: data?.assignedPartner || 'Fleet Rider Dispatched',
-        partnerPhone: data?.partnerPhone || '+91 98765 00000',
-        partnerVehicle: data?.partnerVehicle || 'Motorcycle DL-01',
+        assignedPartner: data?.partnerName || data?.assignedPartner || 'Fleet Partner',
+        partnerPhone: data?.partnerPhone || '+91 98765 43210',
+        partnerVehicle: data?.partnerVehicle || 'Delivery Van',
         status: data?.updatedStatus || 'AGENT_ASSIGNED',
         statusTimestamps: newTimingMap,
         statusHistory: newHistoryList,
       }
-
-      recordOrderStatusTimingApi(sKey, rawId, 'AGENT_ASSIGNED', timingPayload).catch(() => {})
-      saveAdminOrderNote(sKey, rawId, `Auto-dispatched rider ${updated.assignedPartner}`, timingPayload).catch(() => {})
 
       setStatusTimings(newTimingMap)
       setStatusHistory(newHistoryList)
@@ -465,14 +450,6 @@ export default function AdminOrderDetailView({
 
       setOrder((prev) => ({ ...prev, ...updated }))
       showToast(`⚡ Auto-dispatched ${updated.assignedPartner} to order #${bookingNumber}`)
-      setNotesList((prev) => [
-        {
-          note: `⚡ System automated dispatch allocated nearest rider: ${updated.assignedPartner} at ${formatTiming(nowIso)}`,
-          timestamp: nowIso,
-          by: 'Smart Auto-Dispatch Engine',
-        },
-        ...prev,
-      ])
     } catch (err) {
       alert(err.message || 'Smart auto-dispatch failed.')
     } finally {
@@ -523,14 +500,6 @@ export default function AdminOrderDetailView({
         statusHistory: newHistoryList,
       }))
       showToast(`Order #${bookingNumber} cancelled.`)
-      setNotesList((prev) => [
-        {
-          note: `Consignment CANCELLED at ${formatTiming(nowIso)}. Reason: ${reason}`,
-          timestamp: nowIso,
-          by: 'Admin Dispatcher',
-        },
-        ...prev,
-      ])
     } catch (err) {
       alert(err.message || 'Failed to cancel order.')
     }
@@ -584,42 +553,75 @@ export default function AdminOrderDetailView({
   const pkg = order?.package || {}
   const agent = order?.agent || {}
 
+  // Luggage & Vault rich objects
+  const flight = order?.flightDetails || pDetails.airport_specific || dDetails.airport_specific || {}
+  const hotel = order?.hotelDetails || pDetails.hotel_specific || dDetails.hotel_specific || {}
+  const vaultObj = order?.vault || null
+  const pricing = order?.pricingBreakdown || order?.pricing || null
+  const gst = order?.gstInvoice || (vaultObj?.pickup?.gstin ? { gstin: vaultObj.pickup.gstin, company_name: vaultObj.pickup.companyOrganization } : null)
+  const pickupOtp = order?.pickupOtp || order?.pickup_otp || null
+  const deliveryOtp = order?.deliveryOtp || order?.delivery_otp || null
+
   // Customer details
-  const customerName = order?.user?.fullName || order?.customerName || pDetails.name || pickupAddr.contactName || 'Valued Customer'
-  const customerPhone = order?.user?.mobileNumber || order?.customerPhone || pDetails.phone || pickupAddr.phoneNumber || '—'
-  const customerEmail = order?.user?.email || order?.customerEmail || '—'
+  const customerName = order?.user?.fullName || order?.customerName || pDetails.contact?.full_name || pDetails.name || pickupAddr.contactName || 'Valued Customer'
+  const customerPhone = order?.user?.mobileNumber || order?.customerPhone || pDetails.contact?.mobile || pDetails.phone || pickupAddr.phoneNumber || '—'
+  const customerEmail = order?.user?.email || order?.customerEmail || pDetails.contact?.email || '—'
 
   // Pickup Details
-  const senderName = pDetails.name || pickupAddr.contactName || order?.pickupContactName || customerName
+  const senderName =
+    pDetails.contact?.full_name ||
+    pDetails.name ||
+    vaultObj?.pickup?.contactName ||
+    pickupAddr.contactName ||
+    order?.pickupContactName ||
+    customerName
+
   const senderPhone =
+    pDetails.contact?.mobile ||
     pDetails.phone ||
+    vaultObj?.pickup?.mobileNumber ||
     (pickupAddr.phoneNumber ? `${pickupAddr.countryCode || '+91'} ${pickupAddr.phoneNumber}`.trim() : null) ||
     order?.pickupPhone ||
     customerPhone
+
   const senderAddress =
+    pDetails.full_address ||
     pDetails.address ||
+    vaultObj?.pickup?.completePickupAddress ||
     order?.pickupAddress ||
     [pickupAddr.addressLine1, pickupAddr.addressLine2, pickupAddr.landmark, pickupAddr.city, pickupAddr.state, pickupAddr.postalCode, pickupAddr.country]
       .filter(Boolean)
       .join(', ') ||
     'Origin Address on file'
-  const pickupCity = pDetails.city || pickupAddr.city || order?.pickupCity || 'Delhi Hub'
+  const pickupCity = pDetails.city || vaultObj?.pickup?.city || pickupAddr.city || order?.pickupCity || 'Bengaluru Hub'
 
   // Dropoff Details
   const recipientName =
+    dDetails.contact?.full_name ||
     dDetails.name ||
+    hotel.guestName ||
+    hotel.guest_name ||
+    vaultObj?.delivery?.contactName ||
     order?.recipientName ||
     order?.dropoffRecipientName ||
     dropoffAddr.contactName ||
     'Consignee Recipient'
+
   const recipientPhone =
+    dDetails.contact?.mobile ||
     dDetails.phone ||
+    vaultObj?.delivery?.mobileNumber ||
     (dropoffAddr.phoneNumber ? `${dropoffAddr.countryCode || '+91'} ${dropoffAddr.phoneNumber}`.trim() : null) ||
     order?.recipientPhone ||
     order?.dropoffPhone ||
     '—'
+
   const dropoffAddress =
+    dDetails.full_address ||
     dDetails.address ||
+    hotel.hotelName ||
+    hotel.hotel_name ||
+    vaultObj?.delivery?.completeDeliveryAddress ||
     order?.destination ||
     order?.dropoffAddress ||
     order?.deliveryAddress ||
@@ -627,7 +629,7 @@ export default function AdminOrderDetailView({
       .filter(Boolean)
       .join(', ') ||
     'Destination Address on file'
-  const dropoffCity = dDetails.city || dropoffAddr.city || order?.deliveryCity || order?.dropoffCity || 'Hub'
+  const dropoffCity = dDetails.city || vaultObj?.delivery?.city || dropoffAddr.city || order?.deliveryCity || order?.dropoffCity || 'Hub'
 
   // Financials
   const amountTotal = Number(
@@ -636,26 +638,32 @@ export default function AdminOrderDetailView({
   const paymentMethod = order?.paymentMethod || 'Online (UPI / Razorpay)'
   const paymentStatus = (order?.paymentStatus || 'PAID').toUpperCase()
 
-  // Weight / Bags / Package
-  const totalBags = order?.totalBags || (Array.isArray(order?.luggage) ? order.luggage.length : 1)
-  const totalWeight = order?.totalWeightKg || pkg.actualWeightKg || order?.weightKg || 12
+  // Baggage & Weight Specs
+  const luggageItemsList = Array.isArray(order?.luggageItems)
+    ? order.luggageItems
+    : (Array.isArray(order?.luggage) ? order.luggage : [])
+  const totalBags = order?.totalBags || (luggageItemsList.length > 0 ? luggageItemsList.reduce((acc, it) => acc + (Number(it.quantity) || 1), 0) : 1)
+  const totalWeight = order?.totalWeightKg || (luggageItemsList.length > 0 ? luggageItemsList.reduce((acc, it) => acc + (Number(it.declared_weight_kg || it.weight || 0) * (Number(it.quantity) || 1)), 0) : (pkg.actualWeightKg || order?.weightKg || 15))
   const sealNumber = order?.sealNumber || order?.tamperSealNumber || 'DLV-SEAL-88492'
+
+  // Assigned Driver details
+  const driverName = order?.driverDetails?.name || order?.assignedPartner || agent.name || null
+  const driverPhone = order?.driverDetails?.phone || order?.partnerPhone || agent.phone || null
+  const driverVehicle = order?.driverDetails?.vehicle_number || order?.driverDetails?.vehicle_type || order?.partnerVehicle || agent.vehicle || null
 
   // Live Tracking Link
   const publicTrackingUrl = useMemo(() => {
     const rawNum = String(bookingNumber || orderId || '').replace(/^#/, '')
     if (!rawNum) return '/track'
     if (sKey.includes('gift')) return `/track/gift-delivery/${encodeURIComponent(rawNum)}`
-    if (sKey.includes('confidential')) return `/vault/track/${encodeURIComponent(rawNum)}`
-    if (sKey.includes('return')) return `/track/return-pickup/${encodeURIComponent(rawNum)}`
-    if (sKey.includes('forgot')) return `/track/forgot-something/${encodeURIComponent(rawNum)}`
+    if (sKey.includes('confidential') || sKey.includes('vault')) return `/vault/track/${encodeURIComponent(rawNum)}`
     return `/track/${encodeURIComponent(rawNum)}`
   }, [bookingNumber, orderId, sKey])
 
   const targetTab = useMemo(() => {
     if (sKey.includes('courier')) return 'courier'
     if (sKey.includes('luggage')) return 'luggage'
-    if (sKey.includes('confidential')) return 'confidential'
+    if (sKey.includes('confidential') || sKey.includes('vault')) return 'confidential'
     if (sKey.includes('forgot')) return 'forgot'
     if (sKey.includes('return')) return 'returns'
     if (sKey.includes('gift')) return 'gifts'
@@ -783,21 +791,53 @@ export default function AdminOrderDetailView({
             <div className={styles.titleArea}>
               <h1>
                 <span>Order #{bookingNumber}</span>
-                <button type="button" className={styles.copyBtn} onClick={handleCopyId} title="Copy Order ID">
-                  {copied ? <Check size={12} color="#10b981" /> : <Copy size={12} />}
-                  <span>{copied ? 'Copied' : 'Copy'}</span>
+                <button type="button" className={styles.copyBtn} onClick={() => handleCopyId(bookingNumber, 'orderId')} title="Copy Order ID">
+                  {copied === 'orderId' ? <Check size={12} color="#10b981" /> : <Copy size={12} />}
+                  <span>{copied === 'orderId' ? 'Copied' : 'Copy'}</span>
                 </button>
               </h1>
 
               <div className={styles.badgesRow}>
                 <span className={styles.servicePill} style={{ background: sMeta.bg, color: sMeta.color }}>
-                  <ServiceIcon size={12} /> {sMeta.label}
+                  <ServiceIcon size={12} /> {order?.routeTitle || sMeta.label}
                 </span>
 
-                {order?.speed && (
-                  <span className={styles.speedBadge}>
-                    <Zap size={11} /> {order.speed.replace(/_/g, ' ')}
-                  </span>
+                {/* Luggage specific badges */}
+                {sKey.includes('luggage') && (
+                  <>
+                    {flight.flight_number && (
+                      <span className={styles.speedBadge} style={{ background: '#EFF6FF', color: '#1D4ED8', borderColor: '#BFDBFE' }}>
+                        <Plane size={11} /> {flight.airline_name ? `${flight.airline_name} ` : ''}{flight.flight_number}
+                      </span>
+                    )}
+                    {flight.pnr && (
+                      <span className={styles.speedBadge} style={{ background: '#F8FAFC', color: '#0F172A', borderColor: '#E2E8F0' }}>
+                        PNR: {flight.pnr}
+                      </span>
+                    )}
+                    {flight.terminal && (
+                      <span className={styles.speedBadge} style={{ background: '#FEF3C7', color: '#B45309', borderColor: '#FDE68A' }}>
+                        {flight.terminal}
+                      </span>
+                    )}
+                    <span className={styles.sealBadge} title="Baggage Count & Total Weight">
+                      <Luggage size={12} /> {totalBags} Bag{totalBags > 1 ? 's' : ''} ({totalWeight} kg)
+                    </span>
+                  </>
+                )}
+
+                {/* Vault specific badges */}
+                {(sKey.includes('confidential') || sKey.includes('vault')) && (
+                  <>
+                    <span className={styles.speedBadge} style={{ background: '#FEF3C7', color: '#92400E', borderColor: '#FDE68A' }}>
+                      <Shield size={11} /> {order?.vaultServiceType || 'Vault Priority'}
+                    </span>
+                    {vaultObj?.security?.armedEscort && (
+                      <span className={styles.speedBadge} style={{ background: '#FEE2E2', color: '#DC2626', borderColor: '#FECACA' }}>
+                        <ShieldAlert size={11} /> Armed Escort Active
+                      </span>
+                    )}
+                  </>
                 )}
 
                 {sealNumber && (
@@ -844,9 +884,12 @@ export default function AdminOrderDetailView({
                   value={currentStatus}
                   onChange={(e) => handleStatusUpdate(e.target.value)}
                 >
+                  <option value="BOOKING_CONFIRMED">BOOKING CONFIRMED</option>
                   <option value="CONFIRMED">CONFIRMED</option>
                   <option value="AGENT_ASSIGNED">AGENT ASSIGNED</option>
+                  <option value="PICKUP_IN_PROGRESS">PICKUP IN PROGRESS</option>
                   <option value="PICKED_UP">PICKED UP</option>
+                  <option value="LUGGAGE_PICKED">LUGGAGE PICKED</option>
                   <option value="IN_TRANSIT">IN TRANSIT</option>
                   <option value="OUT_FOR_DELIVERY">OUT FOR DELIVERY</option>
                   <option value="DELIVERED">DELIVERED</option>
@@ -937,9 +980,7 @@ export default function AdminOrderDetailView({
                       {formatCompactTiming(statusTimings[step.key])}
                     </span>
                   ) : (
-                    <span className={styles.stepTimePending}>
-                      {isDone ? 'Recorded' : isActive ? 'Current' : '—'}
-                    </span>
+                    <span className={styles.stepTimePending}>Pending</span>
                   )}
                 </div>
               )
@@ -949,19 +990,19 @@ export default function AdminOrderDetailView({
       </div>
 
       {/* -------------------------------------------------------------------- */}
-      {/* 4. MAIN DETAILS 2-COLUMN GRID                                        */}
+      {/* 4. MAIN TWO-COLUMN WORKSPACE                                         */}
       {/* -------------------------------------------------------------------- */}
       <div className={styles.mainGrid}>
         {/* ================================================================= */}
-        {/* LEFT COLUMN: ORIGIN, DESTINATION, CARGO ITEMS                     */}
+        {/* LEFT COLUMN: ROUTE, CARGO MANIFEST, ACTIVITY LOG, AUDIT TIMELINE  */}
         {/* ================================================================= */}
         <div className={styles.leftColumn}>
-          {/* Card A: Origin & Destination Route */}
+          {/* Card A: Route & Transit Addresses */}
           <div className={styles.detailCard}>
             <div className={styles.cardHeader}>
               <h3><MapPin size={17} color="#2563eb" /> Route & Transit Addresses</h3>
               <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 600 }}>
-                {sKey.includes('luggage') ? 'Airport & Luggage Route' : 'Express Point-to-Point'}
+                {sKey.includes('luggage') ? 'Airport & Luggage Route' : (sKey.includes('confidential') || sKey.includes('vault') ? 'Vault Secure Chain' : 'Express Point-to-Point')}
               </span>
             </div>
 
@@ -979,68 +1020,75 @@ export default function AdminOrderDetailView({
                 <div className={styles.addressText}>{senderAddress}</div>
 
                 {/* Service specific metadata */}
-                {((sKey.includes('luggage') && (pDetails.terminal || pDetails.flightNumber || pDetails.pnr)) || order?.locationType || order?.pickupStoreName || sKey.includes('confidential') || sKey.includes('vault') || order?.securityLevel) && (
-                  <div className={styles.specialMetaGrid}>
-                    {(sKey.includes('confidential') || sKey.includes('vault') || order?.securityLevel) && (
-                      <>
-                        <div className={styles.specItem}>
-                          <label>Security Level</label>
-                          <strong style={{ color: '#d97706' }}>{String(order?.securityLevel || 'TAMPER_EVIDENT').replace(/_/g, ' ')}</strong>
-                        </div>
-                        <div className={styles.specItem}>
-                          <label>Pickup Proof</label>
-                          <strong>{order?.pickupProofRequired !== false ? 'Photo & ID Mandatory' : 'Standard'}</strong>
-                        </div>
-                        {pickupAddr?.label && (
-                          <div className={styles.specItem}>
-                            <label>Origin Entity</label>
-                            <strong>{pickupAddr.label}</strong>
-                          </div>
-                        )}
-                        {pickupAddr?.landmark && (
-                          <div className={styles.specItem} style={{ gridColumn: 'span 2' }}>
-                            <label>Pickup Access / Landmark</label>
-                            <strong>{pickupAddr.landmark}</strong>
-                          </div>
-                        )}
-                      </>
-                    )}
-                    {pDetails.terminal && (
-                      <div className={styles.specItem}>
-                        <label>Airport Terminal</label>
-                        <strong>{pDetails.terminal}</strong>
-                      </div>
-                    )}
-                    {pDetails.flightNumber && (
-                      <div className={styles.specItem}>
-                        <label>Flight No.</label>
-                        <strong>{pDetails.flightNumber}</strong>
-                      </div>
-                    )}
-                    {pDetails.pnr && (
-                      <div className={styles.specItem}>
-                        <label>PNR / Booking</label>
-                        <strong>{pDetails.pnr}</strong>
-                      </div>
-                    )}
-                    {pDetails.luggageBelt && (
-                      <div className={styles.specItem}>
-                        <label>Baggage Belt</label>
-                        <strong>Belt {pDetails.luggageBelt}</strong>
-                      </div>
-                    )}
-                    {order?.locationType && (
-                      <div className={styles.specItem}>
-                        <label>Origin Type</label>
-                        <strong>{order.locationType}</strong>
-                      </div>
-                    )}
-                    {order?.pickupStoreName && (
-                      <div className={styles.specItem}>
-                        <label>Pickup Store</label>
-                        <strong>{order.pickupStoreName}</strong>
-                      </div>
-                    )}
+                <div className={styles.specialMetaGrid} style={{ marginTop: 8 }}>
+                  {/* Airport specific markers */}
+                  {flight.terminal && (
+                    <div className={styles.specItem}>
+                      <label>Airport Terminal</label>
+                      <strong style={{ color: '#0F172A' }}>{flight.terminal}</strong>
+                    </div>
+                  )}
+                  {flight.flight_number && (
+                    <div className={styles.specItem}>
+                      <label>Flight Number</label>
+                      <strong style={{ color: '#2563EB' }}>{flight.airline_name ? `${flight.airline_name} ` : ''}{flight.flight_number}</strong>
+                    </div>
+                  )}
+                  {flight.pnr && (
+                    <div className={styles.specItem}>
+                      <label>PNR Booking</label>
+                      <strong>{flight.pnr}</strong>
+                    </div>
+                  )}
+                  {flight.belt_number && (
+                    <div className={styles.specItem}>
+                      <label>Baggage Belt</label>
+                      <strong>Belt {flight.belt_number}</strong>
+                    </div>
+                  )}
+                  {flight.meeting_point && (
+                    <div className={styles.specItem}>
+                      <label>Meeting Point</label>
+                      <strong>{flight.meeting_point}</strong>
+                    </div>
+                  )}
+
+                  {/* Corporate Vault metadata */}
+                  {vaultObj?.pickup?.companyOrganization && (
+                    <div className={styles.specItem}>
+                      <label>Company / Org</label>
+                      <strong>{vaultObj.pickup.companyOrganization}</strong>
+                    </div>
+                  )}
+                  {vaultObj?.pickup?.gstin && (
+                    <div className={styles.specItem}>
+                      <label>Pickup GSTIN</label>
+                      <code>{vaultObj.pickup.gstin}</code>
+                    </div>
+                  )}
+                  {pDetails.location_type && (
+                    <div className={styles.specItem}>
+                      <label>Location Type</label>
+                      <strong style={{ textTransform: 'capitalize' }}>{pDetails.location_type}</strong>
+                    </div>
+                  )}
+                </div>
+
+                {/* Access Requirements badges */}
+                {(vaultObj?.pickup?.securityCheck || vaultObj?.pickup?.visitorPass || vaultObj?.pickup?.liftAccess || vaultObj?.pickup?.idProof || vaultObj?.pickup?.parking) && (
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
+                    {vaultObj.pickup.securityCheck && <span className={styles.speedBadge} style={{ fontSize: '0.68rem' }}>Security Check</span>}
+                    {vaultObj.pickup.visitorPass && <span className={styles.speedBadge} style={{ fontSize: '0.68rem' }}>Visitor Pass Req</span>}
+                    {vaultObj.pickup.liftAccess && <span className={styles.speedBadge} style={{ fontSize: '0.68rem' }}>Lift Access</span>}
+                    {vaultObj.pickup.idProof && <span className={styles.speedBadge} style={{ fontSize: '0.68rem' }}>ID Proof Req</span>}
+                    {vaultObj.pickup.parking && <span className={styles.speedBadge} style={{ fontSize: '0.68rem' }}>Parking Available</span>}
+                  </div>
+                )}
+
+                {/* Special Instructions */}
+                {(pDetails.special_instructions || vaultObj?.pickup?.specialInstructions) && (
+                  <div style={{ marginTop: 8, fontSize: '0.78rem', color: '#475569', background: '#F8FAFC', padding: '6px 10px', borderRadius: 6 }}>
+                    <strong>Pickup Instructions:</strong> {pDetails.special_instructions || vaultObj?.pickup?.specialInstructions}
                   </div>
                 )}
               </div>
@@ -1057,87 +1105,301 @@ export default function AdminOrderDetailView({
                 </a>
                 <div className={styles.addressText}>{dropoffAddress}</div>
 
-                {/* Dropoff specific metadata */}
-                {((sKey.includes('luggage') && (dDetails.hotelName || dDetails.roomNumber)) || order?.deliverySlot || order?.destinationVendor || sKey.includes('confidential') || sKey.includes('vault') || order?.handoverMethod) && (
-                  <div className={styles.specialMetaGrid}>
-                    {(sKey.includes('confidential') || sKey.includes('vault') || order?.handoverMethod) && (
-                      <>
-                        <div className={styles.specItem}>
-                          <label>Handover Method</label>
-                          <strong style={{ color: '#059669' }}>{String(order?.handoverMethod || 'OTP_AND_SIGNATURE').replace(/_/g, ' ')}</strong>
-                        </div>
-                        <div className={styles.specItem}>
-                          <label>Recipient Govt ID</label>
-                          <strong style={{ color: order?.recipientIdRequired !== false ? '#dc2626' : '#64748b' }}>
-                            {order?.recipientIdRequired !== false ? 'Photo ID Check Mandatory' : 'Standard'}
-                          </strong>
-                        </div>
-                        {dropoffAddr?.label && (
-                          <div className={styles.specItem}>
-                            <label>Destination Entity</label>
-                            <strong>{dropoffAddr.label}</strong>
-                          </div>
-                        )}
-                        {dropoffAddr?.landmark && (
-                          <div className={styles.specItem} style={{ gridColumn: 'span 2' }}>
-                            <label>Delivery Instructions / Landmark</label>
-                            <strong>{dropoffAddr.landmark}</strong>
-                          </div>
-                        )}
-                      </>
-                    )}
-                    {dDetails.hotelName && (
-                      <div className={styles.specItem}>
-                        <label>Hotel Name</label>
-                        <strong>{dDetails.hotelName}</strong>
-                      </div>
-                    )}
-                    {dDetails.roomNumber && (
-                      <div className={styles.specItem}>
-                        <label>Room Number</label>
-                        <strong>Room {dDetails.roomNumber}</strong>
-                      </div>
-                    )}
-                    {order?.deliverySlot && (
-                      <div className={styles.specItem}>
-                        <label>Delivery Slot</label>
-                        <strong>{order.deliverySlot}</strong>
-                      </div>
-                    )}
-                    {order?.destinationVendor && (
-                      <div className={styles.specItem}>
-                        <label>Destination Hub</label>
-                        <strong>{order.destinationVendor}</strong>
-                      </div>
-                    )}
+                {/* Hotel specific metadata */}
+                <div className={styles.specialMetaGrid} style={{ marginTop: 8 }}>
+                  {(hotel.hotelName || hotel.hotel_name) && (
+                    <div className={styles.specItem}>
+                      <label>Hotel Name</label>
+                      <strong style={{ color: '#059669' }}>{hotel.hotelName || hotel.hotel_name}</strong>
+                    </div>
+                  )}
+                  {(hotel.roomNumber || hotel.room_number) && (
+                    <div className={styles.specItem}>
+                      <label>Room Number</label>
+                      <strong>{hotel.roomNumber || hotel.room_number}</strong>
+                    </div>
+                  )}
+                  {(hotel.guestName || hotel.guest_name) && (
+                    <div className={styles.specItem}>
+                      <label>Guest Name</label>
+                      <strong>{hotel.guestName || hotel.guest_name}</strong>
+                    </div>
+                  )}
+                  {(hotel.bookingReference || hotel.booking_reference) && (
+                    <div className={styles.specItem}>
+                      <label>Hotel Booking Ref</label>
+                      <strong>{hotel.bookingReference || hotel.booking_reference}</strong>
+                    </div>
+                  )}
+
+                  {/* Corporate Vault metadata */}
+                  {vaultObj?.delivery?.companyOrganization && (
+                    <div className={styles.specItem}>
+                      <label>Company / Org</label>
+                      <strong>{vaultObj.delivery.companyOrganization}</strong>
+                    </div>
+                  )}
+                  {vaultObj?.delivery?.gstin && (
+                    <div className={styles.specItem}>
+                      <label>Delivery GSTIN</label>
+                      <code>{vaultObj.delivery.gstin}</code>
+                    </div>
+                  )}
+                  {dDetails.location_type && (
+                    <div className={styles.specItem}>
+                      <label>Location Type</label>
+                      <strong style={{ textTransform: 'capitalize' }}>{dDetails.location_type}</strong>
+                    </div>
+                  )}
+                </div>
+
+                {/* Access Requirements badges */}
+                {(vaultObj?.delivery?.securityCheck || vaultObj?.delivery?.visitorPass || vaultObj?.delivery?.liftAccess || vaultObj?.delivery?.idProof || vaultObj?.delivery?.parking) && (
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
+                    {vaultObj.delivery.securityCheck && <span className={styles.speedBadge} style={{ fontSize: '0.68rem' }}>Security Check</span>}
+                    {vaultObj.delivery.visitorPass && <span className={styles.speedBadge} style={{ fontSize: '0.68rem' }}>Visitor Pass Req</span>}
+                    {vaultObj.delivery.liftAccess && <span className={styles.speedBadge} style={{ fontSize: '0.68rem' }}>Lift Access</span>}
+                    {vaultObj.delivery.idProof && <span className={styles.speedBadge} style={{ fontSize: '0.68rem' }}>ID Proof Req</span>}
+                    {vaultObj.delivery.parking && <span className={styles.speedBadge} style={{ fontSize: '0.68rem' }}>Parking Available</span>}
                   </div>
                 )}
 
-                {order?.deliveryInstructions && (
-                  <div style={{ marginTop: 10, fontSize: '0.78rem', background: '#fff', padding: '8px 10px', borderRadius: 6, border: '1px solid #e2e8f0' }}>
-                    <strong style={{ color: '#475569' }}>Delivery Instructions:</strong> {order.deliveryInstructions}
+                {/* Special Instructions */}
+                {(dDetails.special_instructions || vaultObj?.delivery?.specialInstructions) && (
+                  <div style={{ marginTop: 8, fontSize: '0.78rem', color: '#475569', background: '#F8FAFC', padding: '6px 10px', borderRadius: 6 }}>
+                    <strong>Delivery Instructions:</strong> {dDetails.special_instructions || vaultObj?.delivery?.specialInstructions}
                   </div>
                 )}
               </div>
             </div>
+
+            {/* MultiPoint / Multi-Stop Itinerary if present */}
+            {((Array.isArray(order?.multiStops) && order.multiStops.length > 0) ||
+              (Array.isArray(vaultObj?.multipointStops) && vaultObj.multipointStops.length > 0) ||
+              (Array.isArray(order?.multipointStops) && order.multipointStops.length > 0)) && (
+              <div style={{ marginTop: 14, background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 10, padding: 12 }}>
+                <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#1E40AF', textTransform: 'uppercase', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Share2 size={13} /> Authorized Multi-Stop Transit Itinerary
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {((order?.multiStops?.length > 0 ? order.multiStops : null) || vaultObj?.multipointStops || order?.multipointStops || []).map((stop, sIdx) => (
+                    <div key={stop.id || sIdx} style={{ background: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: 6, padding: '8px 12px', fontSize: '0.78rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <strong style={{ color: '#0F172A' }}>Stop {stop.stopNumber || stop.stop_sequence || sIdx + 1}: {stop.stopName || stop.name || `Point ${sIdx + 1}`}</strong>
+                        {stop.timeWindow && <span style={{ color: '#2563EB', fontWeight: 600 }}>{stop.timeWindow}</span>}
+                      </div>
+                      <div style={{ color: '#475569', marginTop: 2 }}>{stop.address || stop.full_address}</div>
+                      {stop.contactPerson && <div style={{ color: '#64748B', fontSize: '0.72rem', marginTop: 2 }}>Contact: {stop.contactPerson}</div>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Card B: Consignment, Items & Cargo Specifications */}
+          {/* Card B: Consignment & Cargo Manifest */}
           <div className={styles.detailCard}>
             <div className={styles.cardHeader}>
               <h3><Box size={17} color="#087fc1" /> Consignment & Cargo Manifest</h3>
               <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 600 }}>
-                {(sKey.includes('confidential') || sKey.includes('vault') || order?.documentType) ? 'Delivez Vault Security Manifest' : `${totalBags} Items • ${totalWeight} kg Total`}
+                {sKey.includes('luggage') ? `${totalBags} Luggage Pieces • ${totalWeight} kg Total` : (sKey.includes('confidential') || sKey.includes('vault') ? 'Delivez Vault Security Manifest' : 'Express Cargo')}
               </span>
             </div>
 
-            {/* Confidential Vault Consignment View */}
-            {(sKey.includes('confidential') || sKey.includes('vault') || order?.documentType) ? (
+            {/* 1. LUGGAGE MODULE DEDICATED MANIFEST */}
+            {sKey.includes('luggage') ? (
+              <div>
+                {/* Flight & Airport Banner */}
+                {(flight.airline_name || flight.flight_number || flight.pnr || flight.terminal) && (
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 14,
+                    background: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)',
+                    border: '1.5px solid #FCD34D',
+                    borderRadius: 12,
+                    padding: '12px 16px',
+                    marginBottom: 16
+                  }}>
+                    <div style={{
+                      width: 42,
+                      height: 42,
+                      borderRadius: 10,
+                      background: '#FFFFFF',
+                      border: '1px solid #FDE68A',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}>
+                      <Plane size={22} color="#D97706" />
+                    </div>
+                    <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 8 }}>
+                      <div>
+                        <span style={{ fontSize: '0.68rem', color: '#92400E', fontWeight: 700, textTransform: 'uppercase' }}>Airline & Flight</span>
+                        <strong style={{ fontSize: '0.88rem', color: '#0F172A', display: 'block' }}>
+                          {flight.airline_name || ''} {flight.flight_number || 'Scheduled Flight'}
+                        </strong>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: '0.68rem', color: '#92400E', fontWeight: 700, textTransform: 'uppercase' }}>Passenger PNR</span>
+                        <strong style={{ fontSize: '0.88rem', color: '#2563EB', display: 'block' }}>{flight.pnr || '—'}</strong>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: '0.68rem', color: '#92400E', fontWeight: 700, textTransform: 'uppercase' }}>Terminal / Belt</span>
+                        <strong style={{ fontSize: '0.88rem', color: '#0F172A', display: 'block' }}>
+                          {flight.terminal || 'Terminal'} {flight.belt_number ? `• Belt ${flight.belt_number}` : ''}
+                        </strong>
+                      </div>
+                      {flight.departure_time && (
+                        <div>
+                          <span style={{ fontSize: '0.68rem', color: '#92400E', fontWeight: 700, textTransform: 'uppercase' }}>Departure Time</span>
+                          <strong style={{ fontSize: '0.82rem', color: '#475569', display: 'block' }}>{formatTiming(flight.departure_time)}</strong>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Hotel Banner if applicable */}
+                {(hotel.hotelName || hotel.hotel_name) && (
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 14,
+                    background: '#F0FDF4',
+                    border: '1.5px solid #BBF7D0',
+                    borderRadius: 12,
+                    padding: '12px 16px',
+                    marginBottom: 16
+                  }}>
+                    <div style={{
+                      width: 42,
+                      height: 42,
+                      borderRadius: 10,
+                      background: '#FFFFFF',
+                      border: '1px solid #86EFAC',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}>
+                      <Building size={22} color="#15803D" />
+                    </div>
+                    <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 8 }}>
+                      <div>
+                        <span style={{ fontSize: '0.68rem', color: '#166534', fontWeight: 700, textTransform: 'uppercase' }}>Hotel Destination</span>
+                        <strong style={{ fontSize: '0.88rem', color: '#0F172A', display: 'block' }}>{hotel.hotelName || hotel.hotel_name}</strong>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: '0.68rem', color: '#166534', fontWeight: 700, textTransform: 'uppercase' }}>Room & Guest</span>
+                        <strong style={{ fontSize: '0.88rem', color: '#15803D', display: 'block' }}>
+                          {hotel.roomNumber || hotel.room_number ? `Room ${hotel.roomNumber || hotel.room_number}` : 'Front Desk Handover'} ({hotel.guestName || customerName})
+                        </strong>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: '0.68rem', color: '#166534', fontWeight: 700, textTransform: 'uppercase' }}>Booking Reference</span>
+                        <strong style={{ fontSize: '0.88rem', color: '#0F172A', display: 'block' }}>{hotel.bookingReference || hotel.booking_reference || '—'}</strong>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Baggage Inventory Cards */}
+                <div style={{ marginBottom: 16 }}>
+                  <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#475569', textTransform: 'uppercase', marginBottom: 8, display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Detailed Baggage Pieces Inventory ({luggageItemsList.length || 1} Bag{luggageItemsList.length > 1 ? 's' : ''})</span>
+                    <span style={{ color: '#D97706' }}>Verified Weight: {totalWeight} kg</span>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 10 }}>
+                    {luggageItemsList.map((item, idx) => (
+                      <div key={item.item_id || idx} style={{ background: '#FFFFFF', border: '1.5px solid #E2E8F0', borderRadius: 10, padding: 12 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <strong style={{ color: '#0F172A', fontSize: '0.88rem' }}>
+                            {idx + 1}. {(item.bag_type || 'Luggage').toUpperCase()} BAG
+                            {item.quantity > 1 ? ` (Qty: ${item.quantity})` : ''}
+                          </strong>
+                          <span style={{ background: '#FEF3C7', color: '#92400E', padding: '2px 8px', borderRadius: 12, fontWeight: 800, fontSize: '0.75rem' }}>
+                            {item.declared_weight_kg || item.weight || 15} kg
+                          </span>
+                        </div>
+
+                        {item.description && (
+                          <div style={{ color: '#475569', fontSize: '0.78rem', marginTop: 4 }}>
+                            {item.description}
+                          </div>
+                        )}
+
+                        {item.dimensions?.length_cm && (
+                          <div style={{ color: '#64748B', fontSize: '0.72rem', marginTop: 4 }}>
+                            Dimensions: {item.dimensions.length_cm} × {item.dimensions.width_cm} × {item.dimensions.height_cm} cm
+                          </div>
+                        )}
+
+                        <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
+                          {item.is_fragile && (
+                            <span style={{ background: '#FEE2E2', color: '#DC2626', padding: '2px 6px', borderRadius: 4, fontSize: '0.68rem', fontWeight: 700 }}>
+                              FRAGILE
+                            </span>
+                          )}
+                          {item.is_valuable && (
+                            <span style={{ background: '#FEF3C7', color: '#B45309', padding: '2px 6px', borderRadius: 4, fontSize: '0.68rem', fontWeight: 700 }}>
+                              HIGH VALUE
+                            </span>
+                          )}
+                          <span style={{ background: '#DCFCE7', color: '#15803D', padding: '2px 6px', borderRadius: 4, fontSize: '0.68rem', fontWeight: 700 }}>
+                            SEALED & TAGGED
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Protections, Add-ons & Assistance */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10, fontSize: '0.78rem' }}>
+                  <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 8, padding: 10 }}>
+                    <span style={{ color: '#64748B', fontWeight: 700, display: 'block', fontSize: '0.68rem' }}>LUGGAGE PROTECTION</span>
+                    <strong style={{ color: order?.protections?.enabled ? '#15803D' : '#475569', display: 'block', marginTop: 2 }}>
+                      {order?.protections?.enabled ? '✓ Comprehensive Baggage Protection' : 'Standard Protection'}
+                    </strong>
+                    {order?.protections?.selected_items?.map((p, i) => (
+                      <span key={i} style={{ color: '#059669', display: 'block', fontSize: '0.72rem' }}>• {p.title} (₹{p.price})</span>
+                    ))}
+                  </div>
+
+                  <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 8, padding: 10 }}>
+                    <span style={{ color: '#64748B', fontWeight: 700, display: 'block', fontSize: '0.68rem' }}>AIRPORT ASSISTANCE</span>
+                    <strong style={{ color: order?.airportAssistance?.enabled ? '#1D4ED8' : '#475569', display: 'block', marginTop: 2 }}>
+                      {order?.airportAssistance?.enabled ? '✓ Meet & Assist Service Active' : 'Curbside Handover'}
+                    </strong>
+                    {order?.airportAssistance?.selected_services?.map((a, i) => (
+                      <span key={i} style={{ color: '#2563EB', display: 'block', fontSize: '0.72rem' }}>• {a.title} (₹{a.price})</span>
+                    ))}
+                  </div>
+
+                  <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 8, padding: 10 }}>
+                    <span style={{ color: '#64748B', fontWeight: 700, display: 'block', fontSize: '0.68rem' }}>SELECTED ADD-ONS</span>
+                    {Array.isArray(order?.addOns?.selected_items) && order.addOns.selected_items.length > 0 ? (
+                      order.addOns.selected_items.map((ao, i) => (
+                        <span key={i} style={{ color: '#0F172A', display: 'block', fontSize: '0.72rem' }}>
+                          • {ao.title} (₹{ao.price})
+                        </span>
+                      ))
+                    ) : (
+                      <span style={{ color: '#64748B' }}>No extra add-ons</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (sKey.includes('confidential') || sKey.includes('vault') || order?.documentType) ? (
+              /* 2. CONFIDENTIAL VAULT DEDICATED MANIFEST */
               <div>
                 {/* Vault Service Tier Highlight Banner */}
                 {(() => {
-                  const sMeta = resolveVaultOrderService(order)
-                  const SvcIcon = sMeta.icon
+                  const sMetaVault = resolveVaultOrderService(order)
+                  const SvcIcon = sMetaVault.icon
                   return (
                     <div style={{
                       display: 'flex',
@@ -1168,7 +1430,7 @@ export default function AdminOrderDetailView({
                             VAULT SERVICE TIER
                           </span>
                           <strong style={{ fontSize: '1.05rem', color: '#0F172A' }}>
-                            {order?.serviceType || sMeta.title}
+                            {order?.vaultServiceType || order?.serviceType || sMetaVault.title}
                           </strong>
                           <span style={{
                             fontSize: '0.75rem',
@@ -1182,11 +1444,11 @@ export default function AdminOrderDetailView({
                             alignItems: 'center',
                             gap: 4
                           }}>
-                            <Clock size={11} color="#FAB800" strokeWidth={2} /> Turnaround: {order?.vaultServiceTime || sMeta.time}
+                            <Clock size={11} color="#FAB800" strokeWidth={2} /> Turnaround: {order?.vaultServiceTime || sMetaVault.time}
                           </span>
                         </div>
                         <p style={{ margin: '4px 0 0 0', fontSize: '0.82rem', color: '#78350F', lineHeight: 1.45 }}>
-                          {sMeta.desc}
+                          {sMetaVault.desc}
                         </p>
                       </div>
                     </div>
@@ -1197,27 +1459,27 @@ export default function AdminOrderDetailView({
                   <div className={styles.subSectionBox}>
                     <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>DOCUMENT CLASSIFICATION</div>
                     <strong style={{ fontSize: '1rem', color: '#0f172a', display: 'block', marginTop: 4 }}>
-                      {String(order?.documentType || 'Confidential Cargo').replace(/_/g, ' ')}
+                      {String(order?.categoryTitle || order?.documentClassification || order?.documentType || 'Confidential Cargo').replace(/_/g, ' ')}
                     </strong>
                     <span style={{ fontSize: '0.8rem', color: '#475569', marginTop: 3, display: 'block' }}>
-                      {order?.documentDescription || 'Official document consignment under Delivez Vault protocol'}
+                      {order?.documentDescription || vaultObj?.item?.itemNameDescription || 'Official document consignment under Delivez Vault protocol'}
                     </span>
                   </div>
 
                   <div className={styles.subSectionBox}>
                     <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>SECURITY ENVELOPE & VOLUME</div>
                     <strong style={{ fontSize: '1rem', color: '#059669', display: 'block', marginTop: 4 }}>
-                      {String(order?.envelopeSize || 'A4 Document Envelope').replace(/_/g, ' ')}
+                      {String(order?.envelopeTitle || order?.envelopeSize || vaultObj?.packaging?.selectedPackage || 'A4 Document Envelope').replace(/_/g, ' ')}
                     </strong>
                     <span style={{ fontSize: '0.8rem', color: '#475569', marginTop: 3, display: 'block' }}>
-                      Volume: <strong>{order?.pageCount || 1} Document Pages / Sheets</strong>
+                      Volume: <strong>{order?.pageCount || vaultObj?.item?.numberOfPieces || 1} Document Pages / Items</strong>
                     </span>
                   </div>
 
                   <div className={styles.subSectionBox}>
                     <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>ORIGINALS & REVERSE CUSTODY</div>
                     <strong style={{ fontSize: '0.95rem', color: order?.containsOriginals ? '#dc2626' : '#0f172a', display: 'block', marginTop: 4 }}>
-                      {order?.containsOriginals ? '★ Contains Original Documents' : 'Certified Copies'}
+                      {order?.containsOriginals ? '★ Contains Original Documents' : 'Certified Copies / Sensitive Records'}
                     </strong>
                     <span style={{ fontSize: '0.8rem', color: order?.requiresReturn ? '#d97706' : '#64748b', marginTop: 3, display: 'block', fontWeight: 600 }}>
                       {order?.requiresReturn ? '✓ Reverse Return Leg Requested' : 'One-Way Direct Handover'}
@@ -1227,92 +1489,83 @@ export default function AdminOrderDetailView({
                   <div className={styles.subSectionBox}>
                     <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>SECURITY PROTOCOL & COVER</div>
                     <strong style={{ fontSize: '0.95rem', color: '#d97706', display: 'block', marginTop: 4 }}>
-                      {String(order?.securityLevel || 'TAMPER_EVIDENT').replace(/_/g, ' ')}
+                      {String(order?.securityTitle || order?.securityLevel || vaultObj?.security?.selectedSecurityLevel || 'TAMPER_EVIDENT').replace(/_/g, ' ')}
                     </strong>
                     <span style={{ fontSize: '0.8rem', color: '#059669', marginTop: 3, display: 'block', fontWeight: 700 }}>
-                      Declared Value: ₹{Number(order?.declaredValue || 0).toLocaleString('en-IN')} (Full Cover)
+                      Declared Value: ₹{Number(order?.declaredValue || vaultObj?.item?.declaredValue || 0).toLocaleString('en-IN')} (Full Loss Cover)
                     </span>
                   </div>
                 </div>
 
-                <div style={{ marginTop: 14, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, padding: '10px 14px', display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: '0.8rem' }}>
-                  <div>
-                    <span style={{ color: '#64748b', display: 'block', fontSize: '0.7rem', fontWeight: 700 }}>HANDOVER VERIFICATION</span>
-                    <strong style={{ color: '#0f172a' }}>{String(order?.handoverMethod || 'OTP_AND_SIGNATURE').replace(/_/g, ' ')}</strong>
+                {/* Vault Advanced Packaging & Security Specs */}
+                <div style={{ marginTop: 14, background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 10, padding: 12 }}>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#DC2626', textTransform: 'uppercase', marginBottom: 8 }}>
+                    🛡️ Vault Packaging & Armed Protocol Specifications
                   </div>
-                  <div>
-                    <span style={{ color: '#64748b', display: 'block', fontSize: '0.7rem', fontWeight: 700 }}>RECIPIENT PHOTO ID</span>
-                    <strong style={{ color: order?.recipientIdRequired !== false ? '#dc2626' : '#64748b' }}>
-                      {order?.recipientIdRequired !== false ? 'Mandatory Govt Photo ID Check' : 'Standard Handover'}
-                    </strong>
-                  </div>
-                  <div>
-                    <span style={{ color: '#64748b', display: 'block', fontSize: '0.7rem', fontWeight: 700 }}>PICKUP PROOF</span>
-                    <strong style={{ color: order?.pickupProofRequired !== false ? '#059669' : '#64748b' }}>
-                      {order?.pickupProofRequired !== false ? 'Mandatory ID Proof & Photo' : 'Standard Pickup'}
-                    </strong>
-                  </div>
-                  {order?.complianceAcceptedAt && (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10, fontSize: '0.78rem' }}>
                     <div>
-                      <span style={{ color: '#64748b', display: 'block', fontSize: '0.7rem', fontWeight: 700 }}>NDA / COMPLIANCE ACCEPTED</span>
-                      <span style={{ color: '#475569' }}>{formatTiming(order.complianceAcceptedAt)}</span>
+                      <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>CONTAINER PACKAGING</span>
+                      <strong>{vaultObj?.packaging?.selectedPackage || order?.envelopeSize || 'Standard Box'}</strong>
+                      <small style={{ display: 'block', color: '#475569' }}>
+                        {[
+                          vaultObj?.packaging?.waterproofCover ? 'Waterproof' : null,
+                          vaultObj?.packaging?.cornerGuard ? 'Corner Guards' : null,
+                          vaultObj?.packaging?.extraBubbleWrap ? 'Bubble Wrap' : null,
+                        ].filter(Boolean).join(' • ') || 'Tamper-Evident Tape Active'}
+                      </small>
                     </div>
-                  )}
-                  {order?.distanceKm && (
-                    <div>
-                      <span style={{ color: '#64748b', display: 'block', fontSize: '0.7rem', fontWeight: 700 }}>TRANSIT DISTANCE</span>
-                      <strong style={{ color: '#2563eb' }}>{order.distanceKm} km</strong>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : Array.isArray(order?.items) && order.items.length > 0 ? (
-              <div>
-                <table className={styles.itemsTable}>
-                  <thead>
-                    <tr>
-                      <th>Product</th>
-                      <th>Qty</th>
-                      <th>Unit Price</th>
-                      <th>Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {order.items.map((item, idx) => (
-                      <tr key={item.id || idx}>
-                        <td>
-                          <div className={styles.giftItemCell}>
-                            {item.image && <img src={item.image} alt="" className={styles.giftItemThumb} />}
-                            <div className={styles.giftItemInfo}>
-                              <strong>{item.name || item.title || 'Gift Item'}</strong>
-                              <span>{item.variant || item.serves || 'Standard'}</span>
-                            </div>
-                          </div>
-                        </td>
-                        <td><strong>{item.quantity || 1}</strong></td>
-                        <td>₹{item.price || 0}</td>
-                        <td><strong>₹{(item.price || 0) * (item.quantity || 1)}</strong></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
 
-                {order.giftMessage && (
-                  <div className={styles.giftMessageCallout}>
-                    <strong>💌 Personalized Greeting Card Message:</strong>
-                    <p>"{order.giftMessage}"</p>
-                    {order.cardDesignName && <small style={{ color: '#9f1239' }}>Card Style: {order.cardDesignName}</small>}
+                    <div>
+                      <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>ARMED SECURITY ESCORT</span>
+                      <strong style={{ color: vaultObj?.security?.armedEscort ? '#DC2626' : '#15803D' }}>
+                        {vaultObj?.security?.armedEscort ? 'YES — Armed Escort Protection' : 'Standard Armed Guard Protocol'}
+                      </strong>
+                    </div>
+
+                    <div>
+                      <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>HANDOVER VERIFICATION</span>
+                      <strong>{vaultObj?.verification?.selectedVerification || order?.handoverMethod || 'OTP Verification'}</strong>
+                      <small style={{ display: 'block', color: '#475569' }}>
+                        {[
+                          vaultObj?.verification?.capturePhotoOfRecipient ? 'Recipient Photo' : null,
+                          vaultObj?.verification?.capturePhotoOfIdProof ? 'Govt ID Photo' : null,
+                        ].filter(Boolean).join(' • ')}
+                      </small>
+                    </div>
+
+                    <div>
+                      <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>COMPLIANCE & E-SIGN</span>
+                      <span style={{ color: '#475569' }}>{formatTiming(order?.complianceAcceptedAt || order?.createdAt)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Uploaded Attachments */}
+                {(Array.isArray(order?.attachments) && order.attachments.length > 0 || Array.isArray(vaultObj?.attachments) && vaultObj.attachments.length > 0) && (
+                  <div style={{ marginTop: 14, background: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: 8, padding: 12 }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#334155', textTransform: 'uppercase', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <Paperclip size={13} /> Attached Confidential Documents ({(order?.attachments || vaultObj?.attachments || []).length})
+                    </div>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      {(order?.attachments || vaultObj?.attachments || []).map((att, aIdx) => (
+                        <div key={att.id || aIdx} style={{ background: '#F1F5F9', padding: '6px 10px', borderRadius: 6, fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <FileText size={13} color="#2563EB" />
+                          <span>{att.fileName || att.name || `Document_${aIdx + 1}.pdf`}</span>
+                          {att.fileSize && <span style={{ color: '#64748B' }}>({Math.round(att.fileSize / 1024)} KB)</span>}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
             ) : (
+              /* Standard / Personal Courier Manifest */
               <div>
-                {/* Standard / Courier / Luggage Cargo Details */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
                   <div className={styles.subSectionBox}>
                     <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>DECLARED ITEM CATEGORY</div>
                     <strong style={{ fontSize: '1rem', color: '#0f172a', display: 'block', marginTop: 4 }}>
-                      {order?.category || order?.itemCategory || order?.package?.category || pkg.category || (sKey.includes('luggage') ? 'Baggage / Luggage' : 'General Courier Cargo')}
+                      {order?.category || order?.itemCategory || order?.package?.category || pkg.category || 'General Courier Cargo'}
                     </strong>
                     <span style={{ fontSize: '0.8rem', color: '#475569', marginTop: 3, display: 'block' }}>
                       {order?.contentDescription || order?.itemDescription || pkg.contentDescription || pkg.description || 'Declared items verified for express transit'}
@@ -1322,22 +1575,18 @@ export default function AdminOrderDetailView({
                   <div className={styles.subSectionBox}>
                     <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>WEIGHT & VOLUMETRIC SPECS</div>
                     <strong style={{ fontSize: '1rem', color: '#0f172a', display: 'block', marginTop: 4 }}>
-                      {order?.actualWeightKg ?? totalWeight} kg <span style={{ fontSize: '0.8rem', fontWeight: 500, color: '#64748b' }}>(Actual)</span> • {order?.chargeableWeightKg ?? pkg.chargeableWeightKg ?? totalWeight} kg <span style={{ fontSize: '0.8rem', fontWeight: 500, color: '#64748b' }}>(Chargeable)</span>
+                      {order?.actualWeightKg ?? totalWeight} kg <span style={{ fontSize: '0.8rem', fontWeight: 500, color: '#64748b' }}>(Actual)</span>
                     </strong>
                     <span style={{ fontSize: '0.8rem', color: '#475569', marginTop: 3, display: 'block' }}>
-                      {order?.dimensions?.lengthCm ? `Dimensions: ${order.dimensions.lengthCm} × ${order.dimensions.widthCm} × ${order.dimensions.heightCm} cm` : (pkg.lengthCm ? `Dimensions: ${pkg.lengthCm} × ${pkg.widthCm} × ${pkg.heightCm} cm` : 'Standard Consignment Dimensions')}
+                      {order?.dimensions?.lengthCm ? `Dimensions: ${order.dimensions.lengthCm} × ${order.dimensions.widthCm} × ${order.dimensions.heightCm} cm` : 'Standard Consignment Dimensions'}
                     </span>
                   </div>
 
                   <div className={styles.subSectionBox}>
-                    <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>PACKAGING & BOX TYPE</div>
+                    <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700 }}>PACKAGING TYPE</div>
                     <strong style={{ fontSize: '1rem', color: '#059669', display: 'block', marginTop: 4 }}>
-                      {order?.packagingName || (order?.packagingType ? order.packagingType.replace(/_/g, ' ') : (pkg.packagingType ? pkg.packagingType.replace(/_/g, ' ') : 'Standard Packaging'))}
+                      {order?.packagingName || 'Standard Secure Packaging'}
                     </strong>
-                    <span style={{ fontSize: '0.8rem', color: '#475569', marginTop: 3, display: 'block' }}>
-                      {order?.boxSize || pkg.boxSize || (order?.boxCapacity ? `Box Size: ${order.boxCapacity}` : 'Standard Box')}
-                      {(order?.isCustomBox || pkg.isCustomBox) ? ' • Custom Box Spec' : ''}
-                    </span>
                   </div>
 
                   <div className={styles.subSectionBox}>
@@ -1345,76 +1594,97 @@ export default function AdminOrderDetailView({
                     <strong style={{ fontSize: '0.95rem', color: '#0f172a', display: 'block', marginTop: 4, fontFamily: 'monospace' }}>
                       {sealNumber}
                     </strong>
-                    <span style={{ fontSize: '0.8rem', color: '#d97706', marginTop: 3, display: 'block', fontWeight: 600 }}>
-                      {(order?.fragile || pkg.fragile) ? '✓ Fragile Handled • ' : ''}
-                      {(order?.secureHandling || pkg.secureHandling) ? '✓ High Security Seal • ' : ''}
-                      {((order?.declaredValue || pkg.declaredValue) ? `Cover: ₹${order?.declaredValue || pkg.declaredValue}` : 'Protected')}
-                    </span>
                   </div>
                 </div>
-
-                {/* Baggage individual tags only if luggage service */}
-                {sKey.includes('luggage') && Array.isArray(order?.luggage) && order.luggage.length > 0 && (
-                  <div style={{ marginTop: 14 }}>
-                    <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569', marginBottom: 6 }}>
-                      INDIVIDUAL BAG TAGS & SPECIFICATIONS:
-                    </div>
-                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                      {order.luggage.map((b, i) => (
-                        <div key={i} style={{ background: '#f1f5f9', padding: '6px 12px', borderRadius: 8, fontSize: '0.8rem' }}>
-                          <strong>{b.bagType || `Bag #${i + 1}`}</strong>: {b.weightKg || '14'} kg • Tag: <code>{b.tagNumber || `DLZ-TAG-${i + 101}`}</code>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}              </div>
+              </div>
             )}
           </div>
 
-          {/* Card C: Dispatcher Operational Notes & Audit Log */}
+          {/* Card C: Dispatcher Operational Notes & Activity Log */}
           <div className={styles.detailCard}>
             <div className={styles.cardHeader}>
               <h3><FileText size={17} color="#475569" /> Internal Dispatcher Notes & Activity Log</h3>
-              <span style={{ fontSize: '0.78rem', color: '#64748b' }}>Operations Audit Trail</span>
             </div>
 
-            <form onSubmit={handleAddNote} className={styles.noteInputWrap}>
+            <form onSubmit={handleAddNote} className={styles.addNoteRow}>
               <input
                 type="text"
-                placeholder="Write an internal operational dispatcher note or handover log..."
+                placeholder="Log internal note, terminal update, PNR change, or operational notice..."
                 value={newNote}
                 onChange={(e) => setNewNote(e.target.value)}
               />
-              <button type="submit">Add Note</button>
+              <button type="submit">Log Note</button>
             </form>
 
-            <div className={styles.notesTimeline} style={{ marginTop: 14 }}>
+            <div className={styles.notesList}>
               {notesList.length === 0 ? (
-                <div style={{ fontSize: '0.8rem', color: '#94a3b8', fontStyle: 'italic', textAlign: 'center', padding: '10px' }}>
-                  No internal notes recorded yet. Dispatcher notes added here are preserved for audit.
+                <div style={{ color: '#94a3b8', fontSize: '0.82rem', padding: '8px 0' }}>
+                  No internal dispatcher notes recorded yet for consignment #{bookingNumber}.
                 </div>
               ) : (
-                notesList.map((n, i) => (
-                  <div key={i} className={styles.noteItem}>
-                    <div className={styles.noteItemHead}>
-                      <strong>{n.by || 'Dispatcher'}</strong>
-                      <span>{new Date(n.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                    </div>
-                    <div className={styles.noteItemText}>{n.note}</div>
+                notesList.map((n, idx) => (
+                  <div key={idx} className={styles.noteItem}>
+                    <div>{n.note}</div>
+                    <small>
+                      {formatTiming(n.timestamp)} • by <strong>{n.by || 'Admin Dispatcher'}</strong>
+                    </small>
                   </div>
                 ))
               )}
             </div>
           </div>
 
-          {/* Card D: Status Change Timing & Milestone Audit Trail */}
+          {/* Card D: Status Change Timing & Milestone Audit */}
           <div className={styles.detailCard}>
             <div className={styles.cardHeader}>
               <h3><History size={17} color="#2563eb" /> Status Change Timing & Milestone Audit</h3>
               <span style={{ fontSize: '0.78rem', color: '#64748b', fontWeight: 600 }}>
-                {statusHistory.length} Milestones Tracked
+                {statusHistory.length} Audit Events Logged
               </span>
             </div>
+
+            {/* Milestones Checklist if 10 canonical milestones present */}
+            {Array.isArray(order?.milestones) && order.milestones.length > 0 && (
+              <div style={{ marginBottom: 14, background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 10, padding: 12 }}>
+                <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#2563EB', textTransform: 'uppercase', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <CheckSquare size={14} /> Full Operational Tracking Milestones ({order.milestones.length} Steps)
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 8 }}>
+                  {order.milestones.map((ms, msIdx) => {
+                    const activeIdx = order.currentMilestoneIndex || 0
+                    const isPassed = msIdx <= activeIdx
+                    return (
+                      <div key={ms.id || msIdx} style={{
+                        background: isPassed ? '#F0FDF4' : '#FFFFFF',
+                        border: `1px solid ${isPassed ? '#86EFAC' : '#E2E8F0'}`,
+                        borderRadius: 8,
+                        padding: '8px 10px',
+                        fontSize: '0.75rem'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span style={{
+                            width: 18,
+                            height: 18,
+                            borderRadius: '50%',
+                            background: isPassed ? '#15803D' : '#CBD5E1',
+                            color: '#FFFFFF',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '0.65rem',
+                            fontWeight: 800
+                          }}>
+                            {isPassed ? '✓' : msIdx + 1}
+                          </span>
+                          <strong style={{ color: isPassed ? '#15803D' : '#475569' }}>{ms.title}</strong>
+                        </div>
+                        {ms.subtitle && <div style={{ color: '#64748B', fontSize: '0.68rem', marginTop: 2, paddingLeft: 24 }}>{ms.subtitle}</div>}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
 
             <div style={{ overflowX: 'auto' }}>
               <table className={styles.statusHistoryTable}>
@@ -1461,10 +1731,70 @@ export default function AdminOrderDetailView({
         </div>
 
         {/* ================================================================= */}
-        {/* RIGHT COLUMN: CUSTOMER, DRIVER, FINANCIALS, POD                   */}
+        {/* RIGHT COLUMN: SECURITY OTPS, CUSTOMER, DRIVER, FINANCIALS, POD    */}
         {/* ================================================================= */}
         <div className={styles.rightColumn}>
-          {/* Card 1: Customer Account */}
+          {/* Card 0: Dedicated Security OTP Credentials Card */}
+          {(pickupOtp || deliveryOtp || sKey.includes('luggage') || sKey.includes('confidential') || sKey.includes('vault')) && (
+            <div className={styles.detailCard} style={{ border: '1.5px solid #CBD5E1', background: '#FFFFFF' }}>
+              <div className={styles.cardHeader}>
+                <h3><Key size={16} color="#D97706" /> Security Credentials & Verification</h3>
+                <span style={{ fontSize: '0.72rem', background: '#FEF3C7', color: '#92400E', padding: '2px 8px', borderRadius: 10, fontWeight: 700 }}>
+                  CHAIN OF CUSTODY
+                </span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 4 }}>
+                <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 8, padding: '10px 12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <small style={{ color: '#166534', fontWeight: 700 }}>PICKUP OTP</small>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyId(pickupOtp, 'pickupOtp')}
+                      style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#166534' }}
+                    >
+                      {copied === 'pickupOtp' ? <Check size={12} /> : <Copy size={12} />}
+                    </button>
+                  </div>
+                  <strong style={{ fontSize: 18, color: '#15803D', letterSpacing: 2, display: 'block', marginTop: 2 }}>
+                    {pickupOtp || '—'}
+                  </strong>
+                </div>
+
+                <div style={{ background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 8, padding: '10px 12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <small style={{ color: '#1E40AF', fontWeight: 700 }}>DELIVERY OTP</small>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyId(deliveryOtp, 'deliveryOtp')}
+                      style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#1E40AF' }}
+                    >
+                      {copied === 'deliveryOtp' ? <Check size={12} /> : <Copy size={12} />}
+                    </button>
+                  </div>
+                  <strong style={{ fontSize: 18, color: '#1D4ED8', letterSpacing: 2, display: 'block', marginTop: 2 }}>
+                    {deliveryOtp || '—'}
+                  </strong>
+                </div>
+              </div>
+
+              <div style={{ marginTop: 10, fontSize: '0.78rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <div>
+                  <strong>Security Tamper Seal:</strong>{' '}
+                  <code style={{ background: '#F1F5F9', padding: '2px 6px', borderRadius: 4 }}>
+                    {sealNumber}
+                  </code>
+                </div>
+                <div>
+                  <strong>Handover Protocol:</strong>{' '}
+                  <span style={{ color: '#0F172A', fontWeight: 600 }}>
+                    {order?.handoverMethod ? String(order.handoverMethod).replace(/_/g, ' ') : 'OTP & Digital Signature Verification'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Card 1: Customer Account & GST Invoice */}
           <div className={styles.detailCard}>
             <div className={styles.cardHeader}>
               <h3><User size={16} color="#087fc1" /> Customer Account</h3>
@@ -1487,6 +1817,20 @@ export default function AdminOrderDetailView({
                   User UID: <code>{order.user.id}</code>
                 </div>
               )}
+
+              {/* Corporate GST Tax Invoice Box if available */}
+              {gst?.gstin && (
+                <div style={{ marginTop: 8, background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 8, padding: 10, fontSize: '0.78rem' }}>
+                  <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#0F172A', textTransform: 'uppercase', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <FileSpreadsheet size={13} color="#059669" /> Business GST Invoice
+                  </div>
+                  <div><strong>GSTIN:</strong> <code>{gst.gstin}</code></div>
+                  {gst.company_name && <div><strong>Entity:</strong> {gst.company_name}</div>}
+                  {gst.state_code && <div><strong>State Code:</strong> {gst.state_code}</div>}
+                  {gst.billing_address && <div style={{ color: '#64748B', marginTop: 2 }}>{gst.billing_address}</div>}
+                </div>
+              )}
+
               {onNavigate && (
                 <button
                   type="button"
@@ -1510,100 +1854,76 @@ export default function AdminOrderDetailView({
                   fontWeight: 700,
                   padding: '2px 8px',
                   borderRadius: 10,
-                  background: order?.assignedPartner && order.assignedPartner !== 'Unassigned' ? '#ecfdf5' : '#fef2f2',
-                  color: order?.assignedPartner && order.assignedPartner !== 'Unassigned' ? '#059669' : '#dc2626',
+                  background: (driverName && driverName !== 'Unassigned') ? '#ecfdf5' : '#fef2f2',
+                  color: (driverName && driverName !== 'Unassigned') ? '#059669' : '#dc2626',
                 }}
               >
-                {order?.assignedPartner && order.assignedPartner !== 'Unassigned' ? 'DISPATCHED' : 'UNASSIGNED'}
+                {(driverName && driverName !== 'Unassigned') ? 'DISPATCHED' : 'UNASSIGNED'}
               </span>
             </div>
 
-            {order?.assignedPartner && order.assignedPartner !== 'Unassigned' ? (
+            {(driverName && driverName !== 'Unassigned') ? (
               <div>
                 <div className={styles.driverInfoRow}>
                   <div className={styles.driverAvatar}>
-                    {order.assignedPartner.slice(0, 1)}
+                    {driverName.slice(0, 1)}
                   </div>
                   <div className={styles.driverDetails}>
-                    <strong>{order.assignedPartner}</strong>
+                    <strong>{driverName}</strong>
                     <span>
-                      {order.partnerPhone || agent.phone || '+91 98765 43210'}
+                      {driverPhone || '+91 98765 43210'}
                     </span>
                     <span style={{ display: 'block', color: '#0f172a', fontWeight: 600, marginTop: 2 }}>
-                      Vehicle: {order.partnerVehicle || agent.vehicle || 'Honda Activa (DL 1Z 4589)'}
+                      Vehicle: {driverVehicle || 'Dedicated Transit Van'}
                     </span>
                   </div>
                 </div>
 
                 <div className={styles.driverActions}>
-                  <a
-                    href={`tel:${order.partnerPhone || agent.phone}`}
-                    className={styles.btnSecondary}
-                    style={{ flex: 1, justifyContent: 'center' }}
+                  {driverPhone && (
+                    <a
+                      href={`tel:${driverPhone}`}
+                      className={styles.driverCallBtn}
+                    >
+                      <Phone size={13} /> Call Driver
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    className={styles.driverReassignBtn}
+                    onClick={() => setAssignModalOpen(true)}
                   >
-                    <Phone size={13} /> Call Rider
-                  </a>
+                    Reassign Rider
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '16px 0' }}>
+                <p style={{ color: '#64748b', fontSize: '0.85rem', margin: '0 0 12px' }}>
+                  No courier or driver allocated to this consignment yet.
+                </p>
+                <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
                   <button
                     type="button"
                     className={styles.btnSecondary}
                     onClick={() => setAssignModalOpen(true)}
-                    style={{ flex: 1, justifyContent: 'center' }}
                   >
-                    <Edit2 size={13} /> Reassign
+                    Select Rider
                   </button>
-                </div>
-                {onNavigate && (
-                  <button
-                    type="button"
-                    className={styles.cardNavBtn}
-                    onClick={() => onNavigate('partners')}
-                    title="Manage Delivery Fleet"
-                  >
-                    Manage Delivery Fleet →
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div style={{ textAlign: 'center', padding: '14px 0' }}>
-                <p style={{ fontSize: '0.85rem', color: '#64748b', margin: '0 0 12px 0' }}>
-                  No delivery partner assigned to this order yet.
-                </p>
-                <div style={{ display: 'flex', gap: 8 }}>
                   <button
                     type="button"
                     className={styles.btnPrimary}
-                    style={{ flex: 1, justifyContent: 'center' }}
-                    onClick={() => setAssignModalOpen(true)}
-                  >
-                    <Bike size={14} /> Assign Rider
-                  </button>
-                  <button
-                    type="button"
-                    className={styles.btnAutoAssign}
-                    style={{ flex: 1, justifyContent: 'center' }}
                     onClick={handleAutoAssign}
                     disabled={autoAssigning}
                   >
-                    <Zap size={14} /> {autoAssigning ? '...' : 'Auto-Dispatch'}
+                    <Zap size={13} /> Auto-Dispatch
                   </button>
                 </div>
-                {onNavigate && (
-                  <div style={{ marginTop: 10 }}>
-                    <button
-                      type="button"
-                      className={styles.cardNavBtn}
-                      onClick={() => onNavigate('partners')}
-                      title="Manage Delivery Fleet"
-                    >
-                      Manage Delivery Fleet →
-                    </button>
-                  </div>
-                )}
               </div>
             )}
           </div>
 
-          {/* Card 3: Financials & Fare Ledger */}
+          {/* Card 3: Fare Ledger & Billing */}
           <div className={styles.detailCard}>
             <div className={styles.cardHeader}>
               <h3><CreditCard size={16} color="#059669" /> Fare Ledger & Billing</h3>
@@ -1613,11 +1933,77 @@ export default function AdminOrderDetailView({
             </div>
 
             <div className={styles.billingList}>
-              {(sKey.includes('confidential') || sKey.includes('vault') || order?.baseCharge !== undefined) ? (
+              {/* If Luggage authoritative pricing is present */}
+              {pricing ? (
+                <>
+                  <div className={styles.billRow}>
+                    <span>Base Route Fare</span>
+                    <span>₹{Number(pricing.base_fare || 499).toFixed(2)}</span>
+                  </div>
+                  {Number(pricing.distance_fee || 0) > 0 && (
+                    <div className={styles.billRow}>
+                      <span>Distance Tariff ({pricing.distance_km || 0} km)</span>
+                      <span>₹{Number(pricing.distance_fee).toFixed(2)}</span>
+                    </div>
+                  )}
+                  {Number(pricing.luggage_handling_fee || 0) > 0 && (
+                    <div className={styles.billRow}>
+                      <span>Luggage Handling & Baggage Surge</span>
+                      <span>₹{Number(pricing.luggage_handling_fee).toFixed(2)}</span>
+                    </div>
+                  )}
+                  {Number(pricing.airport_handling_fee || 0) > 0 && (
+                    <div className={styles.billRow}>
+                      <span>Airport Terminal Handling</span>
+                      <span>₹{Number(pricing.airport_handling_fee).toFixed(2)}</span>
+                    </div>
+                  )}
+                  {Number(pricing.hotel_handling_fee || 0) > 0 && (
+                    <div className={styles.billRow}>
+                      <span>Hotel Front Desk Transfer</span>
+                      <span>₹{Number(pricing.hotel_handling_fee).toFixed(2)}</span>
+                    </div>
+                  )}
+                  {Number(pricing.add_on_fee || 0) > 0 && (
+                    <div className={styles.billRow}>
+                      <span>Add-On Services</span>
+                      <span>₹{Number(pricing.add_on_fee).toFixed(2)}</span>
+                    </div>
+                  )}
+                  {Number(pricing.luggage_protection_fee || 0) > 0 && (
+                    <div className={styles.billRow}>
+                      <span>Luggage Protection Insurance</span>
+                      <span>₹{Number(pricing.luggage_protection_fee).toFixed(2)}</span>
+                    </div>
+                  )}
+                  {Number(pricing.airport_assistance_fee || 0) > 0 && (
+                    <div className={styles.billRow}>
+                      <span>Airport Meet & Assist</span>
+                      <span>₹{Number(pricing.airport_assistance_fee).toFixed(2)}</span>
+                    </div>
+                  )}
+                  {Number(pricing.delivery_speed_fee || 0) > 0 && (
+                    <div className={styles.billRow}>
+                      <span>Delivery Speed Surge</span>
+                      <span>₹{Number(pricing.delivery_speed_fee).toFixed(2)}</span>
+                    </div>
+                  )}
+                  {Number(pricing.discount?.discount_amount || 0) > 0 && (
+                    <div className={styles.billRow} style={{ color: '#059669', fontWeight: 600 }}>
+                      <span>Coupon Discount ({pricing.discount?.coupon_code})</span>
+                      <span>-₹{Number(pricing.discount.discount_amount).toFixed(2)}</span>
+                    </div>
+                  )}
+                  <div className={styles.billRow}>
+                    <span>GST (18% Integrated Tax)</span>
+                    <span>₹{Number(pricing.tax?.total_tax || (amountTotal * 0.18)).toFixed(2)}</span>
+                  </div>
+                </>
+              ) : (sKey.includes('confidential') || sKey.includes('vault') || order?.baseCharge !== undefined) ? (
                 <>
                   <div className={styles.billRow}>
                     <span>Base Vault Inception Rate</span>
-                    <span>₹{Number(order?.baseCharge ?? 49).toFixed(2)}</span>
+                    <span>₹{Number(order?.baseCharge ?? (vaultObj?.basePrice || 49)).toFixed(2)}</span>
                   </div>
                   <div className={styles.billRow}>
                     <span>Distance Transit Tariff</span>
@@ -1668,12 +2054,6 @@ export default function AdminOrderDetailView({
                   </div>
                 </>
               )}
-              {order?.discountAmount > 0 && (
-                <div className={styles.billRow} style={{ color: '#059669', fontWeight: 600 }}>
-                  <span>Promo Coupon Discount</span>
-                  <span>-₹{Number(order.discountAmount).toFixed(2)}</span>
-                </div>
-              )}
 
               <div className={styles.billRowTotal}>
                 <span>Total Amount Paid</span>
@@ -1705,147 +2085,104 @@ export default function AdminOrderDetailView({
           <div className={styles.detailCard}>
             <div className={styles.cardHeader}>
               <h3><FileCheck size={16} color="#087fc1" /> Proof of Delivery (POD)</h3>
-              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: currentStatus === 'DELIVERED' ? '#059669' : '#64748b' }}>
-                {currentStatus === 'DELIVERED' ? 'VERIFIED' : 'PENDING'}
+              <span style={{ fontSize: '0.72rem', background: currentStatus === 'DELIVERED' ? '#ecfdf5' : '#f8fafc', color: currentStatus === 'DELIVERED' ? '#059669' : '#64748b', padding: '2px 6px', borderRadius: 4, fontWeight: 700 }}>
+                {currentStatus === 'DELIVERED' ? 'POD ARCHIVED' : 'AWAITING HANDOVER'}
               </span>
             </div>
 
-            <div className={styles.podBox}>
-              <div className={styles.podStatusLine}>
-                <span>Delivery OTP Code:</span>
-                <strong style={{ fontFamily: 'monospace', letterSpacing: '0.1em', background: '#e2e8f0', padding: '2px 8px', borderRadius: 4 }}>
-                  {order?.deliveryOtp || order?.verificationPin || '7392'}
-                </strong>
-              </div>
-
-              <div className={styles.podStatusLine}>
-                <span>Tamper Seal Status:</span>
-                <strong style={{ color: '#059669' }}>Verified Intact</strong>
-              </div>
-
-              <div className={styles.podStatusLine}>
-                <span>Receiver Signoff:</span>
-                <span>{order?.pod?.recipientName || recipientName}</span>
-              </div>
-
-              {order?.pod?.photoUrl ? (
-                <div className={styles.podImagesGrid}>
-                  <img src={order.pod.photoUrl} alt="POD Photo" className={styles.podImgThumb} />
+            {currentStatus === 'DELIVERED' ? (
+              <div style={{ fontSize: '0.82rem', color: '#334155' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#059669', fontWeight: 700, marginBottom: 8 }}>
+                  <CheckCircle2 size={16} /> Handed Over & Recipient Verified
                 </div>
-              ) : (
-                <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontStyle: 'italic', marginTop: 4 }}>
-                  Digital signature and delivery photo timestamp will appear upon delivery completion.
+                <div><strong>Recipient:</strong> {recipientName}</div>
+                <div><strong>POD Timestamp:</strong> {formatTiming(statusTimings.DELIVERED || order?.updatedAt)}</div>
+                <div><strong>Verification Mode:</strong> Dual OTP Authentication & Signature</div>
+                <div style={{ marginTop: 8, padding: '8px 12px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8 }}>
+                  <small style={{ color: '#166534', fontWeight: 700, display: 'block' }}>AUDIT VERIFICATION</small>
+                  <span style={{ fontSize: '0.75rem', color: '#15803D' }}>Consignment received intact with tamper-evident seal unbroken.</span>
                 </div>
-              )}
-            </div>
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '12px 0', color: '#64748b', fontSize: '0.82rem' }}>
+                <Clock size={20} style={{ margin: '0 auto 6px', display: 'block', color: '#94a3b8' }} />
+                <span>Proof of delivery photo and recipient signature will be captured upon final doorstep handover.</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* -------------------------------------------------------------------- */}
-      {/* 5. ASSIGN PARTNER FLEET MODAL                                        */}
+      {/* 5. MODAL: ASSIGN FLEET RIDER                                         */}
       {/* -------------------------------------------------------------------- */}
       {assignModalOpen && (
         <div className={styles.modalOverlay} onClick={() => setAssignModalOpen(false)}>
-          <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
+          <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHead}>
               <h3><Bike size={18} style={{ display: 'inline', marginRight: 6 }} /> Assign Fleet Rider</h3>
-              <button type="button" className={styles.closeModalBtn} onClick={() => setAssignModalOpen(false)}>
+              <button type="button" onClick={() => setAssignModalOpen(false)}>
                 <X size={18} />
               </button>
             </div>
 
             <div className={styles.modalBody}>
-              <p style={{ fontSize: '0.85rem', color: '#64748b', margin: 0 }}>
-                Select an active, verified delivery rider from the active fleet for Order #{bookingNumber}:
+              <p style={{ color: '#475569', fontSize: '0.88rem', margin: '0 0 14px' }}>
+                Select an active, verified courier executive for consignment <strong>#{bookingNumber}</strong>:
               </p>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 320, overflowY: 'auto' }}>
+              <div className={styles.riderSelectList}>
                 {partners.length === 0 ? (
-                  <div style={{ padding: '20px', textAlign: 'center', color: '#94a3b8' }}>
+                  <div style={{ padding: '16px', textAlign: 'center', color: '#94a3b8' }}>
                     No delivery partners registered in fleet.
                   </div>
                 ) : (
                   partners.map((p) => (
-                    <div
+                    <label
                       key={p.id}
-                      className={`${styles.partnerSelectItem} ${selectedPartnerId === p.id ? styles.partnerSelected : ''}`}
-                      onClick={() => setSelectedPartnerId(p.id)}
+                      className={`${styles.riderRadioItem} ${selectedPartnerId === p.id ? styles.riderRadioActive : ''}`}
                     >
-                      <div>
-                        <strong style={{ fontSize: '0.9rem', color: '#0f172a', display: 'block' }}>{p.name}</strong>
-                        <span style={{ fontSize: '0.78rem', color: '#64748b' }}>
-                          {p.phone} • {p.vehicle}
-                        </span>
+                      <input
+                        type="radio"
+                        name="riderChoice"
+                        value={p.id}
+                        checked={selectedPartnerId === p.id}
+                        onChange={() => setSelectedPartnerId(p.id)}
+                      />
+                      <div className={styles.riderRadioInfo}>
+                        <strong>{p.name || p.fullName}</strong>
+                        <span>{p.phone || p.mobileNumber} • {p.zone || p.city || 'Transit Fleet'}</span>
+                        <small style={{ color: '#64748b' }}>Vehicle: {p.vehicle || 'Delivery Van'}</small>
                       </div>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: p.status === 'AVAILABLE' ? '#059669' : '#d97706' }}>
-                        {p.status || 'ACTIVE'}
+                      <span className={styles.riderStatusTag} style={{ background: p.status === 'ONLINE' ? '#ecfdf5' : '#f8fafc', color: p.status === 'ONLINE' ? '#059669' : '#64748b' }}>
+                        {p.status || 'AVAILABLE'}
                       </span>
-                    </div>
+                    </label>
                   ))
                 )}
               </div>
             </div>
 
             <div className={styles.modalFoot}>
-              <button type="button" className={styles.btnSecondary} onClick={() => setAssignModalOpen(false)}>
+              <button
+                type="button"
+                className={styles.btnSecondary}
+                onClick={() => setAssignModalOpen(false)}
+              >
                 Cancel
               </button>
               <button
                 type="button"
                 className={styles.btnPrimary}
-                disabled={!selectedPartnerId || assigning}
-                onClick={handleConfirmAssign}
+                onClick={handleAssignPartner}
+                disabled={assigning || !selectedPartnerId}
               >
-                {assigning ? 'Dispatching...' : 'Dispatch Selected Rider'}
+                {assigning ? 'Assigning...' : 'Confirm Rider Allocation'}
               </button>
             </div>
           </div>
         </div>
       )}
-
-      {/* -------------------------------------------------------------------- */}
-      {/* 6. PRINT AIRWAY BILL (AWB) HIDDEN TEMPLATE                           */}
-      {/* -------------------------------------------------------------------- */}
-      <div className={styles.printOnlyArea} style={{ display: 'none' }}>
-        <div style={{ border: '2px solid #000', padding: 20, maxWidth: 800, margin: '0 auto' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid #000', paddingBottom: 10 }}>
-            <div>
-              <h1 style={{ margin: 0, fontSize: 24 }}>DELIVEZ EXPRESS LOGISTICS</h1>
-              <p style={{ margin: 0, fontSize: 12 }}>AIRWAY BILL & CONSIGNMENT RECEIPT</p>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <h2 style={{ margin: 0, fontSize: 20 }}>AWB: #{bookingNumber}</h2>
-              <p style={{ margin: 0, fontSize: 12 }}>Date: {new Date().toLocaleDateString()}</p>
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, margin: '20px 0' }}>
-            <div style={{ border: '1px solid #000', padding: 10 }}>
-              <strong>SHIPPER / PICKUP:</strong>
-              <div>{senderName} ({senderPhone})</div>
-              <div>{senderAddress}</div>
-            </div>
-            <div style={{ border: '1px solid #000', padding: 10 }}>
-              <strong>CONSIGNEE / DELIVERY:</strong>
-              <div>{recipientName} ({recipientPhone})</div>
-              <div>{dropoffAddress}</div>
-            </div>
-          </div>
-
-          <div style={{ border: '1px solid #000', padding: 10, marginBottom: 20 }}>
-            <strong>CONSIGNMENT SPECS:</strong>
-            <div>Service: {sMeta.label} • Speed: {order?.speed || 'Standard'}</div>
-            <div>Bags: {totalBags} • Weight: {totalWeight} kg • Barcode Seal: {sealNumber}</div>
-            <div>Declared Fare: ₹{amountTotal} • Payment: {paymentStatus} ({paymentMethod})</div>
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 40 }}>
-            <div>Shipper Signature: __________________</div>
-            <div>Receiver Signature: __________________</div>
-          </div>
-        </div>
-      </div>
     </div>
   )
 }

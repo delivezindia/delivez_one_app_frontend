@@ -2,8 +2,12 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
-  padding: 8px 0 40px;
+  padding: 8px 0 60px;
   animation: fadeIn 0.25s ease-out;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: visible;
+  min-height: 100%;
 }
 
 @keyframes fadeIn {
@@ -909,11 +913,13 @@
   padding: 20px;
 }
 
-.modalBox {
+.modalBox,
+.modalCard {
   background: #ffffff;
   border-radius: 16px;
   width: 100%;
-  max-width: 480px;
+  max-width: 520px;
+  max-height: 90vh;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
@@ -938,6 +944,7 @@
   align-items: center;
   padding: 16px 20px;
   border-bottom: 1px solid #e2e8f0;
+  flex-shrink: 0;
 }
 
 .modalHead h3 {
@@ -960,6 +967,68 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.riderSelectList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 380px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.riderRadioItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.riderRadioItem:hover {
+  border-color: #2563eb;
+  background: #f8fafc;
+}
+
+.riderRadioActive {
+  border-color: #2563eb !important;
+  background: #eff6ff !important;
+}
+
+.riderRadioInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.riderRadioInfo strong {
+  font-size: 0.88rem;
+  color: #0f172a;
+}
+
+.riderRadioInfo span {
+  font-size: 0.78rem;
+  color: #475569;
+}
+
+.riderRadioInfo small {
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+.riderStatusTag {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
 }
 
 .partnerSelectItem {
