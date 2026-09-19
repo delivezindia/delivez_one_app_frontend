@@ -379,9 +379,9 @@ export default function PersonalCourierBookingPage({ serviceSlug }) {
       { title: 'Large Box (10 Kg)', dims: '40 cm (L) x 30 cm (W) x 30 cm (H)', l: 40, w: 30, h: 30, tag: 'Best for Shoes, Helmets, Small Appliances', cap: 'Up to 10 Kg', vol: 'Volume: 36,000 cm³' }
     ],
     '15 Kg': [
-      { title: 'Small Box (15 Kg)', dims: '35 cm (L) x 25 cm (W) x 25 cm (H)', l: 35, w: 25, h: 25, tag: 'Best for Books, Electronics, Heavy Items', cap: 'Up to 15 Kg', vol: 'Volume: 21,875 cm³' },
-      { title: 'Medium Box (15 Kg)', dims: '40 cm (L) x 30 cm (W) x 30 cm (H)', l: 40, w: 30, h: 30, tag: 'Best for Clothes, Appliances, Home Items', cap: 'Up to 15 Kg', vol: 'Volume: 36,000 cm³' },
-      { title: 'Large Box (15 Kg)', dims: '45 cm (L) x 35 cm (W) x 35 cm (H)', l: 45, w: 35, h: 35, tag: 'Best for Multiple Clothes, Blankets, Kitchenware', cap: 'Up to 15 Kg', vol: 'Volume: 55,125 cm³' }
+      { title: 'Medium Box (15 Kg)', dims: '35 cm (L) x 28 cm (W) x 32 cm (H)', l: 35, w: 28, h: 32, tag: 'Best for Clothes, Books, Home Items', cap: 'Up to 15 Kg', vol: 'Volume: 31,360 cm³' },
+      { title: 'Large Box (15 Kg)', dims: '40 cm (L) x 30 cm (W) x 35 cm (H)', l: 40, w: 30, h: 35, tag: 'Best for Appliances, Toys, Accessories', cap: 'Up to 15 Kg', vol: 'Volume: 42,000 cm³' },
+      { title: 'Extra Large Box (15 Kg)', dims: '45 cm (L) x 32 cm (W) x 40 cm (H)', l: 45, w: 32, h: 40, tag: 'Best for Kitchen Items, Medium Appliances', cap: 'Up to 15 Kg', vol: 'Volume: 57,600 cm³' }
     ],
     '25 Kg': [
       { title: 'Medium Box (25 Kg)', dims: '45 cm (L) x 35 cm (W) x 40 cm (H)', l: 45, w: 35, h: 40, tag: 'Best for Clothing, Shoes, Books, Home Items', cap: 'Up to 25 Kg', vol: 'Volume: 63,000 cm³' },

@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'vault_courier_models.dart';
+import 'courier_models.dart';
 
 export 'vault_courier_models.dart';
+export 'courier_models.dart';
 
 /// Delivez Mobile API Client (Flutter / Dart)
 /// Ready-to-use production client for mobile apps.
@@ -125,6 +127,14 @@ class DelivezApiClient {
   Future<Map<String, dynamic>> getCourierOptions() async {
     final res = await http.get(Uri.parse('$baseUrl/courier/options'), headers: _buildHeaders());
     return _handleResponse(res);
+  }
+
+  /// Fetches complete Courier Delivery specifications (Categories, Box Types,
+  /// Parcel Types, Local & Intercity Services, Drop Options, Insurance)
+  Future<CourierDeliveryConfig> getCourierDeliveryConfig() async {
+    final res = await http.get(Uri.parse('$baseUrl/courier/options'), headers: _buildHeaders());
+    final data = _handleResponse(res);
+    return CourierDeliveryConfig.fromJson(data as Map<String, dynamic>);
   }
 
   Future<Map<String, dynamic>> getCourierQuote(Map<String, dynamic> quotePayload) async {

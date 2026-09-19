@@ -114,6 +114,10 @@ export class DelivezApiClient {
     return this.request('/courier/options');
   }
 
+  public getCourierDeliveryConfig() {
+    return this.request('/courier/options');
+  }
+
   public getCourierQuote(payload: Record<string, any>) {
     return this.request('/courier/quote', {
       method: 'POST',

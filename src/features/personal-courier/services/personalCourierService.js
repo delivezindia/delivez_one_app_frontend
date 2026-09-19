@@ -17,9 +17,44 @@ function authorizedRequest(path, options = {}) {
   })
 }
 
+import {
+  fetchCourierDeliveryConfig,
+  COURIER_PACKAGE_CATEGORIES,
+  COURIER_BOX_TYPES,
+  COURIER_PARCEL_TYPES,
+  COURIER_PARCEL_DIMENSIONS,
+  COURIER_LOCAL_OPTIONS,
+  COURIER_INTERCITY_OPTIONS,
+  COURIER_DROP_OPTIONS,
+  COURIER_INSURANCE_OPTIONS,
+  getBoxesForWeight,
+  getParcelDimensions,
+  getPackageCategories,
+  getServiceOptions,
+  getDropOptions,
+  getInsuranceOptions,
+} from '@/services/api/courierDeliveryApi.js'
+
+export {
+  fetchCourierDeliveryConfig,
+  COURIER_PACKAGE_CATEGORIES,
+  COURIER_BOX_TYPES,
+  COURIER_PARCEL_TYPES,
+  COURIER_PARCEL_DIMENSIONS,
+  COURIER_LOCAL_OPTIONS,
+  COURIER_INTERCITY_OPTIONS,
+  COURIER_DROP_OPTIONS,
+  COURIER_INSURANCE_OPTIONS,
+  getBoxesForWeight,
+  getParcelDimensions,
+  getPackageCategories,
+  getServiceOptions,
+  getDropOptions,
+  getInsuranceOptions,
+}
+
 export async function fetchCourierOptions() {
-  const response = await apiRequest('/courier-delivery/options')
-  return response.data
+  return await fetchCourierDeliveryConfig()
 }
 
 export async function fetchSavedAddresses() {

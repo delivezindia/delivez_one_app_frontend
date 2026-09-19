@@ -156,6 +156,55 @@
       "item": [
         {
           "name": "1. Get Courier Options & Service Catalog",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Contains all 8 package categories', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var cats = jsonData.data.package_categories || jsonData.data.packageCategories;",
+                  "    pm.expect(cats).to.be.an('array');",
+                  "    pm.expect(cats.length).to.eql(8);",
+                  "    var codes = cats.map(function(c) { return c.apiCode || c.id; });",
+                  "    pm.expect(codes).to.include('DOCUMENTS');",
+                  "    pm.expect(codes).to.include('ELECTRONICS');",
+                  "    pm.expect(codes).to.include('CLOTHING_APPAREL');",
+                  "});",
+                  "",
+                  "pm.test('Contains box types for 10, 15, and 25 Kg', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var boxes = jsonData.data.box_types || jsonData.data.boxTypes;",
+                  "    pm.expect(boxes).to.be.an('object');",
+                  "    pm.expect(boxes['10 Kg']).to.be.an('array');",
+                  "    pm.expect(boxes['15 Kg']).to.be.an('array');",
+                  "    pm.expect(boxes['25 Kg']).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Contains local and intercity delivery services', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var local = jsonData.data.local_options || jsonData.data.localOptions;",
+                  "    var intercity = jsonData.data.intercity_options || jsonData.data.intercityOptions;",
+                  "    pm.expect(local).to.be.an('array').with.lengthOf(4);",
+                  "    pm.expect(intercity).to.be.an('array').with.lengthOf(5);",
+                  "});",
+                  "",
+                  "pm.test('Contains drop options and insurance options', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var drop = jsonData.data.drop_options || jsonData.data.dropOptions;",
+                  "    var ins = jsonData.data.insurance_options || jsonData.data.insuranceOptions;",
+                  "    pm.expect(drop).to.be.an('array').with.lengthOf(2);",
+                  "    pm.expect(ins).to.be.an('array').with.lengthOf(3);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "GET",
             "header": [
@@ -174,7 +223,7 @@
                 "options"
               ]
             },
-            "description": "Fetches all 6 courier service categories (Local, Intercity, Documents, Parcel, Same Day, Express), vehicle types, and packaging box tiers."
+            "description": "Fetches all 6 courier service categories (Local, Intercity, Documents, Parcel, Same Day, Express), vehicle types, packaging box tiers, self-service drop options, and insurance options."
           }
         },
         {
